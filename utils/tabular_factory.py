@@ -1,4 +1,4 @@
-from tabular import *
+from .tabular import *
 
 def policy_from_matrix(policy_matrix, nS=None, nA=None):
     if nS is None:

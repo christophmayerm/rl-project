@@ -1,27 +1,41 @@
 # Configurable Markov Decision Processes
 
-This repository contains the code to run the experiments of the paper "Configurable Markov Decision Processes"
+This repository contains the code to run the experiments of the paper "Configurable Markov Decision Processes".
 
-- Paper: http://proceedings.mlr.press/v80/metelli18a/metelli18a.pdf
-- Supplementary material: http://proceedings.mlr.press/v80/metelli18a/metelli18a-supp.pdf
-- Poster: https://albertometelli.github.io/download/poster_icml2018.pdf
-- Slides: TBD
+## Setup
 
+This project uses `uv` for virtual environment and package management.
 
-To cite this repository in publications:
+1.  **Create a virtual environment:**
+    ```bash
+    uv venv
+    ```
+    This will create a virtual environment in a `.venv` directory in the project root.
 
-    @InProceedings{metelli2018configurable,
-      title = {Configurable {M}arkov Decision Processes},
-      author = {Metelli, Alberto Maria and Mutti, Mirco and Restelli, Marcello},
-      booktitle = {Proceedings of the 35th International Conference on Machine Learning},
-      pages = {3488--3497},
-      year = {2018},
-      editor = {Dy, Jennifer and Krause, Andreas},
-      volume = {80},
-      series = {Proceedings of Machine Learning Research},
-      address = {Stockholmsmässan, Stockholm Sweden},
-      month = {10--15 Jul},
-      publisher = {PMLR},
-      pdf = {http://proceedings.mlr.press/v80/metelli18a/metelli18a.pdf},
-      url = {http://proceedings.mlr.press/v80/metelli18a.html},
-    }
+2.  **Activate the virtual environment:**
+    ```bash
+    source .venv/bin/activate
+    ```
+
+3.  **Sync the dependencies:**
+    ```bash
+    uv pip sync
+    ```
+    This will install the dependencies specified in `pyproject.toml` and `uv.lock`, ensuring a reproducible environment.
+
+## Running the simulations
+
+To run a simulation, execute the desired script from the `simulations` directory.
+For example:
+
+```bash
+python simulations/racetrack2.py
+```
+
+This will run the `racetrack2` simulation with the default configuration. The output will be saved in the `data/racetrack2_T1` directory.
+
+You can also run the other simulations:
+```bash
+python simulations/ractrack4.py
+python simulations/student_teacher.py
+```

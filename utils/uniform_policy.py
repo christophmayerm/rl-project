@@ -1,5 +1,5 @@
 import numpy as np
-from gym.utils import seeding
+from gymnasium.utils import seeding
 
 
 def categorical_sample(prob_n, np_random):
@@ -9,7 +9,7 @@ def categorical_sample(prob_n, np_random):
     """
     prob_n = np.asarray(prob_n)
     csprob_n = np.cumsum(prob_n)
-    return (csprob_n > np_random.rand()).argmax()
+    return (csprob_n > np_random.random()).argmax()
 
 
 class UniformPolicy(object):
@@ -45,7 +45,7 @@ class UniformPolicy(object):
         return [seed]
 
     def draw_action(self, state, done):
-        actions = self.policy[np.asscalar(state)]
+        actions = self.policy[state.item()]
         i = categorical_sample(actions, self.np_random)
         return i
 

@@ -429,7 +429,7 @@ class RaceTrackConfigurableEnv(discrete.DiscreteEnv):
 
     # form state to index
     def _s_to_i(self, x, y, vx, vy):
-        s_lin = np.asscalar(np.where((self.lin == (x, y)).all(axis=1))[0])
+        s_lin = np.where((self.lin == (x, y)).all(axis=1))[0][0]
         index = s_lin * self.nvel * self.nvel + (vx - self.min_vel) * \
                                                 self.nvel + (vy - self.min_vel)
         return index
@@ -443,9 +443,9 @@ class RaceTrackConfigurableEnv(discrete.DiscreteEnv):
         vy = vy_off + self.min_vel
         # vx computation
         vx_off = (index - vy_off) % (self.nvel * self.nvel)
-        vx = (vx_off / self.nvel) + self.min_vel
+        vx = (vx_off // self.nvel) + self.min_vel
         # s_lin computation
-        s_lin = (index - vx_off - vy_off) / (self.nvel * self.nvel)
+        s_lin = (index - vx_off - vy_off) // (self.nvel * self.nvel)
         x, y = self.lin[s_lin]
         return (x, y, vx, vy)
 

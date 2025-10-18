@@ -1,0 +1,14 @@
+[project]
+name = "rl-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "future>=1.0.0",
+    "gymnasium>=1.2.1",
+    "numpy>=2.2.6",
+    "pandas>=2.3.3",
+    "pillow>=12.0.0",
+    "pip>=25.2",
+]

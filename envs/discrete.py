@@ -1,7 +1,7 @@
 import numpy as np
 
-from gym import Env, spaces
-from gym.utils import seeding
+from gymnasium import Env, spaces
+from gymnasium.utils import seeding
 
 def categorical_sample(prob_n, np_random):
     """
@@ -10,7 +10,7 @@ def categorical_sample(prob_n, np_random):
     """
     prob_n = np.asarray(prob_n)
     csprob_n = np.cumsum(prob_n)
-    return (csprob_n > np_random.rand()).argmax()
+    return (csprob_n > np_random.random()).argmax()
 
 
 class DiscreteEnv(Env):
@@ -52,7 +52,7 @@ class DiscreteEnv(Env):
         return self.s
 
     def _step(self, a):
-        transitions = self.P[np.asscalar(self.s)][np.asscalar(a)]
+        transitions = self.P[self.s.item()][a]
         i = categorical_sample([t[0] for t in transitions], self.np_random)
         p, s, r, d= transitions[i]
         self.s = np.array([s]).ravel()

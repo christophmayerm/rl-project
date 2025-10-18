@@ -1,5 +1,5 @@
 import numpy as np
-from gym.utils import seeding
+from gymnasium.utils import seeding
 
 class TabularPolicy(object):
     """
@@ -15,7 +15,7 @@ class TabularPolicy(object):
         self.policy = rep
         self.nS, self.nA = nS, nA
         self.policy_matrix = np.zeros((self.nS, self.nS * self.nA))
-        for state, actions in rep.iteritems():
+        for state, actions in rep.items():
             self.policy_matrix[state, state*nA: (state+1)*nA] = actions
 
         self._seed()
@@ -25,7 +25,7 @@ class TabularPolicy(object):
         return [seed]
 
     def draw_action(self, state, done):
-        actions = self.policy[np.asscalar(state)]
+        actions = self.policy[state.item()]
         return np.random.choice(range(self.nA), p=actions)
         return i
 
@@ -42,8 +42,8 @@ class TabularModel(object):
         self.model = rep
         self.nS, self.nA = nS, nA
         self.model_matrix =  np.zeros((self.nS * self.nA, self.nS))
-        for state, actions in rep.iteritems():
-            for action, elem in actions.iteritems():
+        for state, actions in rep.items():
+            for action, elem in actions.items():
                 for next_state in elem:
                     self.model_matrix[state*nA+action, next_state[1]] = next_state[0]
         self._seed()
@@ -53,7 +53,7 @@ class TabularModel(object):
         return [seed]
 
     def draw_action(self, state, action, done):
-        next_states = self.model_matrix[np.asscalar(state*self.nA+action)]
+        next_states = self.model_matrix[(state*self.nA+action).item()]
         return np.random.choice(range(self.nS), p=next_states)
         return i
 
@@ -70,8 +70,8 @@ class TabularReward(object):
         self.reward = rep
         self.nS, self.nA = nS, nA
         self.reward_matrix =  np.zeros((self.nS * self.nA, self.nS))
-        for state, actions in rep.iteritems():
-            for action, elem in actions.iteritems():
+        for state, actions in rep.items():
+            for action, elem in actions.items():
                 for next_state in elem:
                     self.reward_matrix[state*nA+action, next_state[1]] = next_state[2]
 

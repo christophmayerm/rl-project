@@ -1,4 +1,4 @@
-import tabular_factory
+from . import tabular_factory
 import numpy as np
 
 def policy_convex_combination(policy1, policy2, coeff):
