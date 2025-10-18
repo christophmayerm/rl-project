@@ -5,10 +5,14 @@ This repository contains the code to run the experiments of the paper "Configura
 ## Setup
 
 This project uses `uv` for virtual environment and package management.
+Make sure you have installd the `uv` package
+On iOS, simply run `brew install uv`. 
 
-1.  **Create a virtual environment:**
+1.  **Set up the virtual environment:**
+
+    Execute the following command in the root directory of the project.
     ```bash
-    uv venv
+    uv sync
     ```
     This will create a virtual environment in a `.venv` directory in the project root.
 
@@ -16,12 +20,6 @@ This project uses `uv` for virtual environment and package management.
     ```bash
     source .venv/bin/activate
     ```
-
-3.  **Sync the dependencies:**
-    ```bash
-    uv pip sync
-    ```
-    This will install the dependencies specified in `pyproject.toml` and `uv.lock`, ensuring a reproducible environment.
 
 ## Running the simulations
 
