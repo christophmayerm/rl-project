@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -469,6 +469,7 @@ dependencies = [
     { name = "pytz" },
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.16.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "six" },
 ]
 
 [package.metadata]
@@ -484,6 +485,7 @@ requires-dist = [
     { name = "python-dateutil" },
     { name = "pytz" },
     { name = "scipy", specifier = ">=1.10.1" },
+    { name = "six" },
 ]
 
 [[package]]

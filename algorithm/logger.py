@@ -63,22 +63,22 @@ class Logger(object):
         self.m_change.append(m_check_target)
 
         # trace print
-        print('----------------------')
-        print('performance: {0}'.format(J_p_m))
-        print('alfa/beta: {0}/{1}'.format(alfa_star, beta_star))
-        print('bound: {0}'.format(bound))
-        print('iteration: {0}'.format(self.iteration))
-        print('condition: {0}\n'.format(convergence))
+        # print('----------------------')
+        # print('performance: {0}'.format(J_p_m))
+        # print('alfa/beta: {0}/{1}'.format(alfa_star, beta_star))
+        # print('bound: {0}'.format(bound))
+        # print('iteration: {0}'.format(self.iteration))
+        # print('condition: {0}\n'.format(convergence))
 
-        print('policy advantage: {0}'.format(p_er_adv))
-        print('alfa star: {0}'.format(alfa_star))
-        print('policy dist sup: {0}'.format(p_dist_sup))
-        print('policy dist mean: {0}'.format(p_dist_mean))
+        # print('policy advantage: {0}'.format(p_er_adv))
+        # print('alfa star: {0}'.format(alfa_star))
+        # print('policy dist sup: {0}'.format(p_dist_sup))
+        # print('policy dist mean: {0}'.format(p_dist_mean))
 
-        print('model advantage: {0}'.format(m_er_adv))
-        print('beta star: {0}'.format(beta_star))
-        print('model dist sup: {0}'.format(m_dist_sup))
-        print('model dist mean: {0}'.format(m_dist_mean))
+        # print('model advantage: {0}'.format(m_er_adv))
+        # print('beta star: {0}'.format(beta_star))
+        # print('model dist sup: {0}'.format(m_dist_sup))
+        # print('model dist mean: {0}'.format(m_dist_mean))
 
         # model vector coefficients computation and print
         if isinstance(self.model_chooser, SetModelChooser):
@@ -95,8 +95,8 @@ class Logger(object):
                 new_model_vector = beta_star * target_vector + (1 - beta_star) * model_vector
                 self.mdp.model_vector = new_model_vector
 
-                print('\ntarget_model: {0}'.format(target_vector))
-                print('current_model: {0}'.format(new_model_vector))
+                # print('\ntarget_model: {0}'.format(target_vector))
+                # print('current_model: {0}'.format(new_model_vector))
                 self.w_current.append(new_model_vector)
                 self.w_target.append(target_vector)
             else:
@@ -104,6 +104,12 @@ class Logger(object):
                 target_vector = np.empty(n_models)
                 target_vector[:] = np.nan
                 self.w_target.append(target_vector)
+        elif isinstance(self.model_chooser, GPModelChooser):
+            # for GP model chooser we do not have a model vector
+            self.w_current.append(self.mdp.model_vector)
+            self.w_target.append(self.model_chooser.prev_target_model_vector)
+            # print('\ncurrent_model_vector: {0}'.format(self.mdp.model_vector))
+            # print('target_model_vector: {0}'.format(self.model_chooser.prev_target_model_vector))
 
         # iteration update
         self.iteration = self.iteration + 1

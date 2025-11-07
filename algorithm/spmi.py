@@ -3,6 +3,7 @@ from algorithm.model_chooser import *
 from utils.evaluator import *
 from utils.tabular import *
 from algorithm.logger import Logger
+from tqdm import tqdm
 
 
 from algorithm.policy_chooser import *
@@ -100,7 +101,9 @@ class SPMI(object):
         # POLICY-MODEL UPDATE LOOP
         # the policy and the model are continuously updated until the iteration_horizon is reached or
         # the relative advantages fall below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI Progress")
         while (p_er_adv > convergence or m_er_adv > convergence) and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -230,7 +233,9 @@ class SPMI(object):
         # POLICY-MODEL UPDATE LOOP
         # the policy and the model are continuously updated until the iteration_horizon is reached or
         # the relative advantages fall below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI SUP Progress")
         while ((p_er_adv + m_er_adv) > convergence) and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -361,7 +366,9 @@ class SPMI(object):
         # POLICY-MODEL UPDATE LOOP
         # the policy and the model are continuously updated until the iteration_horizon is reached or
         # the relative advantages fall below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI-ALT Progress")
         while (p_er_adv > convergence or m_er_adv > convergence) and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -490,7 +497,9 @@ class SPMI(object):
         # POLICY-MODEL UPDATE LOOP
         # the policy and the model are continuously updated until the iteration_horizon is reached or
         # the relative advantages fall below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI-nofull Progress")
         while ((p_er_adv + m_er_adv) > convergence) and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -608,7 +617,9 @@ class SPMI(object):
         # POLICY UPDATE LOOP
         # the policy is continuously updated until the iteration_horizon is reached or
         # the relative advantage falls below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPI+SMI Progress")
         while p_er_adv > convergence and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -760,7 +771,9 @@ class SPMI(object):
         # MODEL UPDATE LOOP
         # the model is continuously updated until the iteration_horizon is reached or
         # the relative advantage falls below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI smi+spi Progress")
         while m_er_adv > convergence and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_models = [(target_model, m_er_adv, m_dist_sup, m_dist_mean)]
             if self.persistent:
