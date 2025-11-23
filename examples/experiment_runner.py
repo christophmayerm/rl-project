@@ -26,8 +26,8 @@ class ExperimentConfig:
     
     # Base configuration
     BASE_CONFIG = {
-        'max_iter': 8000,
-        'eps': 0.000001,
+        'max_iter': 20000,
+        'eps': 0.0000001,
         'verbose': 1,  # Minimal for sweep runs
         'log_interval': 500,
     }
@@ -39,21 +39,45 @@ class ExperimentConfig:
             'curriculum_schedule': None,
             'tags': ['baseline', 'spmi']
         },
+        'sa_pmi_sqrt': {
+            'name': 'SA-PMI-Sqrt',
+            'curriculum_schedule': 'sqrt',
+            'B_min': 0.0,
+            'B_max': 0.05,
+            'K_warmup': 6000,  # 75% of training
+            'tags': ['adversarial', 'sa-pmi', 'sqrt']
+        },
+        'sa_pmi_cosine': {
+            'name': 'SA-PMI-Cosine',
+            'curriculum_schedule': 'cosine',
+            'B_min': 0.0,
+            'B_max': 0.05,
+            'K_warmup': 6000,  # 75% of training
+            'tags': ['adversarial', 'sa-pmi', 'cosine']
+        },
+        'sa_pmi_exponential_improved': {
+            'name': 'SA-PMI-Exponential-v2',
+            'curriculum_schedule': 'exponential',  # Now uses quadratic
+            'B_min': 0.0,
+            'B_max': 0.05,
+            'K_warmup': 6000,  # 75% of training
+            'tags': ['adversarial', 'sa-pmi', 'exponential-v2']
+        },
+        'sa_pmi_smooth': {
+            'name': 'SA-PMI-Smooth',
+            'curriculum_schedule': 'smooth_exponential',
+            'B_min': 0.0,
+            'B_max': 0.05,
+            'K_warmup': 5000,  # 62.5% of training
+            'tags': ['adversarial', 'sa-pmi', 'smooth']
+        },
         'sa_pmi_linear': {
             'name': 'SA-PMI-Linear',
             'curriculum_schedule': 'linear',
             'B_min': 0.0,
             'B_max': 0.05,
-            'K_warmup': 8000,
+            'K_warmup': 6000,  # Keep consistent
             'tags': ['adversarial', 'sa-pmi', 'linear']
-        },
-        'sa_pmi_exponential': {
-            'name': 'SA-PMI-Exponential',
-            'curriculum_schedule': 'exponential',
-            'B_min': 0.0,
-            'B_max': 0.05,
-            'K_warmup':8000,
-            'tags': ['adversarial', 'sa-pmi', 'exponential']
         }
     }
     
@@ -118,21 +142,46 @@ class ExperimentConfig:
     }
     
     # Hyperparameter sweep configurations
+    # Hyperparameter sweep configurations
     SWEEP_CONFIGS = {
-        'sa_pmi_budget_sweep': {
+        # Sweep 1: Compare ALL curriculum schedules (main comparison)
+        'sa_pmi_curriculum_sweep_20000': {
+            'B_max': [0.05],
+            'B_min': [0.0],
+            'K_warmup': [15000],  # 75% of 20000
+            'curriculum_schedule': ['linear', 'exponential', 'sqrt', 'cosine', 'smooth_exponential']
+        },
+        
+        # Sweep 2: Budget sweep for EACH schedule
+        'sa_pmi_budget_sweep_20000': {
             'B_max': [0.01, 0.03, 0.05, 0.07, 0.1],
             'B_min': [0.0],
-            'K_warmup': [8000]
+            'K_warmup': [15000],
+            'curriculum_schedule': ['linear', 'exponential', 'sqrt', 'cosine', 'smooth_exponential']
         },
-        'sa_pmi_warmup_sweep': {
+        
+        # Sweep 3: Warmup sweep for EACH schedule  
+        'sa_pmi_warmup_sweep_20000': {
             'B_max': [0.05],
             'B_min': [0.0],
-            'K_warmup': [7000, 7250, 7500, 8000]
+            'K_warmup': [10000, 12500, 15000, 17500],  # 50%, 62.5%, 75%, 87.5%
+            'curriculum_schedule': ['linear', 'exponential', 'sqrt', 'cosine', 'smooth_exponential']
         },
-        'sa_pmi_curriculum_sweep': {
+        
+        # Sweep 4: B_min sweep for EACH schedule
+        'sa_pmi_bmin_sweep_20000': {
             'B_max': [0.05],
-            'B_min': [0.0, 0.001, 0.005],
-            'curriculum_schedule': ['linear', 'exponential']
+            'B_min': [0.0, 0.001, 0.005, 0.01],
+            'K_warmup': [15000],
+            'curriculum_schedule': ['linear', 'exponential', 'sqrt', 'cosine', 'smooth_exponential']
+        },
+        
+        # Sweep 5: Fine-grained grid for best schedules (based on initial results)
+        'sa_pmi_fine_grid_20000': {
+            'B_max': [0.04, 0.05, 0.06],
+            'B_min': [0.0, 0.005],
+            'K_warmup': [13000, 15000, 17000],
+            'curriculum_schedule': ['cosine', 'sqrt']  # Top 2 from curriculum_sweep
         }
     }
 
