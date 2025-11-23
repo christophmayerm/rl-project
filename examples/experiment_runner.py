@@ -18,6 +18,7 @@ from algorithm.policy_chooser import GreedyPolicyChooser
 from algorithm.model_chooser import GreedyModelChooser
 from utils.tabular import TabularPolicy, TabularModel
 from envs.student_teacher import TeacherStudentEnv
+from envs.gymnasium_envs import create_gym_env
 
 
 class ExperimentConfig:
@@ -25,7 +26,7 @@ class ExperimentConfig:
     
     # Base configuration
     BASE_CONFIG = {
-        'max_iter': 10000,
+        'max_iter': 8000,
         'eps': 0.000001,
         'verbose': 1,  # Minimal for sweep runs
         'log_interval': 500,
@@ -43,22 +44,24 @@ class ExperimentConfig:
             'curriculum_schedule': 'linear',
             'B_min': 0.0,
             'B_max': 0.05,
-            'K_warmup': 10000,
+            'K_warmup': 8000,
             'tags': ['adversarial', 'sa-pmi', 'linear']
         },
         'sa_pmi_exponential': {
             'name': 'SA-PMI-Exponential',
             'curriculum_schedule': 'exponential',
-            'B_min': 0.001,
+            'B_min': 0.0,
             'B_max': 0.05,
-            'K_warmup': 10000,
+            'K_warmup':8000,
             'tags': ['adversarial', 'sa-pmi', 'exponential']
         }
     }
     
     # Environment configurations
     ENVIRONMENTS = {
+        # Teacher-Student (Original toy environment)
         'teacher_student_small': {
+            'type': 'teacher_student',
             'n_literals': 2,
             'max_value': 1,
             'max_update': 1,
@@ -66,18 +69,51 @@ class ExperimentConfig:
             'horizon': 10
         },
         'teacher_student_medium': {
+            'type': 'teacher_student',
             'n_literals': 3,
             'max_value': 2,
             'max_update': 1,
             'max_literals_in_examples': 3,
             'horizon': 15
         },
-        'teacher_student_large': {
-            'n_literals': 4,
-            'max_value': 2,
-            'max_update': 2,
-            'max_literals_in_examples': 4,
-            'horizon': 20
+        
+        # Gymnasium Classic Control (Small discrete environments)
+        'frozen_lake_4x4': {
+            'type': 'gymnasium',
+            'env_name': 'frozen_lake_4x4',
+            'is_slippery': True,
+            'horizon': 100
+        },
+        'frozen_lake_8x8': {
+            'type': 'gymnasium',
+            'env_name': 'frozen_lake_8x8',
+            'is_slippery': True,
+            'horizon': 200
+        },
+        'taxi': {
+            'type': 'gymnasium',
+            'env_name': 'taxi',
+            'horizon': 200
+        },
+        
+        # Gymnasium Classic Control (Tabularized continuous)
+        'cartpole': {
+            'type': 'gymnasium',
+            'env_name': 'cartpole',
+            'n_bins': 8,
+            'horizon': 200
+        },
+        'mountain_car': {
+            'type': 'gymnasium',
+            'env_name': 'mountain_car',
+            'n_bins': 10,
+            'horizon': 200
+        },
+        'acrobot': {
+            'type': 'gymnasium',
+            'env_name': 'acrobot',
+            'n_bins': 6,
+            'horizon': 500
         }
     }
     
@@ -86,12 +122,12 @@ class ExperimentConfig:
         'sa_pmi_budget_sweep': {
             'B_max': [0.01, 0.03, 0.05, 0.07, 0.1],
             'B_min': [0.0],
-            'K_warmup': [10000]
+            'K_warmup': [8000]
         },
         'sa_pmi_warmup_sweep': {
             'B_max': [0.05],
             'B_min': [0.0],
-            'K_warmup': [5000, 10000, 15000, 20000]
+            'K_warmup': [7000, 7250, 7500, 8000]
         },
         'sa_pmi_curriculum_sweep': {
             'B_max': [0.05],
@@ -145,7 +181,19 @@ class ConfigurableMDP:
 
 def create_env(env_config):
     """Create environment from config"""
-    env = TeacherStudentEnv(**env_config)
+    env_type = env_config.get('type', 'teacher_student')
+    
+    if env_type == 'teacher_student':
+        # Remove 'type' key before passing to TeacherStudentEnv
+        config = {k: v for k, v in env_config.items() if k != 'type'}
+        env = TeacherStudentEnv(**config)
+    elif env_type == 'gymnasium':
+        # Remove 'type' key before passing to create_gym_env
+        config = {k: v for k, v in env_config.items() if k != 'type'}
+        env = create_gym_env(**config)
+    else:
+        raise ValueError(f"Unknown environment type: {env_type}")
+    
     return env
 
 
