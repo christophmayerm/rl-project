@@ -27,7 +27,6 @@ class TabularPolicy(object):
     def draw_action(self, state, done):
         actions = self.policy[state.item()]
         return np.random.choice(range(self.nA), p=actions)
-        return i
 
     def get_rep(self):
         return self.policy
@@ -36,16 +35,25 @@ class TabularPolicy(object):
         return self.policy_matrix
 
 class TabularModel(object):
-
-    def __init__(self, rep, nS, nA):
-
+    def __init__(self, *args, **kwargs):
+        if len(args) == 3:
+            if isinstance(args[0], dict):
+                rep, nS, nA = args
+            
+            elif isinstance(args[0], int):
+                nS, nA, rep = args
+            else:
+                raise ValueError("Invalid Arguments to Tabular Model. 2 Options either (rep, nS, nA) or (nS, nA, rep)")
+        
         self.model = rep
         self.nS, self.nA = nS, nA
-        self.model_matrix =  np.zeros((self.nS * self.nA, self.nS))
+        self.model_matrix = np.zeros((self.nS * self.nA, self.nS))
+
         for state, actions in rep.items():
             for action, elem in actions.items():
                 for next_state in elem:
                     self.model_matrix[state*nA+action, next_state[1]] = next_state[0]
+        
         self._seed()
 
     def _seed(self, seed=None):
@@ -55,7 +63,6 @@ class TabularModel(object):
     def draw_action(self, state, action, done):
         next_states = self.model_matrix[(state*self.nA+action).item()]
         return np.random.choice(range(self.nS), p=next_states)
-        return i
 
     def get_rep(self):
         return self.model

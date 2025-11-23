@@ -7,7 +7,6 @@ from utils.tabular_operations import policy_equiv_check, model_equiv_check
 class Logger(object):
 
     def __init__(self, mdp, model_chooser):
-
         self.mdp = mdp
         self.model_chooser = model_chooser
 
@@ -29,13 +28,24 @@ class Logger(object):
         self.p_change = list()
         self.m_change = list()
         self.bound = list()
+        
+        # NEW: Adversarial tracking
+        self.adversarial_budgets = list()
+        self.adversarial_disadvantages = list()
+        self.adversarial_dist_sups = list()
+        self.adversarial_dist_means = list()
 
     # method to collect the execution data and to print the log trace,
     # it also updates the model_vector in the mdp representation for parametric model spaces
     def update(self, J_p_m, alfa_star, beta_star, p_er_adv, m_er_adv,
-                       p_dist_sup, p_dist_mean, m_dist_sup, m_dist_mean,
-                       target_policy, target_policy_old, target_model,
-                       target_model_old, convergence, bound):
+            p_dist_sup, p_dist_mean, m_dist_sup, m_dist_mean,
+            target_policy, target_policy_old, target_model,
+            target_model_old, convergence, bound,
+            # NEW PARAMETERS
+            adversarial_budget=None,
+            adversarial_disadvantage=None,
+            adversarial_dist_sup=None,
+            adversarial_dist_mean=None):
         # data collections
         self.iterations.append(self.iteration)
         self.evaluations.append(J_p_m)
@@ -79,6 +89,19 @@ class Logger(object):
         print('beta star: {0}'.format(beta_star))
         print('model dist sup: {0}'.format(m_dist_sup))
         print('model dist mean: {0}'.format(m_dist_mean))
+
+        if adversarial_budget is not None:
+            self.adversarial_budgets.append(adversarial_budget)
+            self.adversarial_disadvantages.append(adversarial_disadvantage)
+            self.adversarial_dist_sups.append(adversarial_dist_sup)
+            self.adversarial_dist_means.append(adversarial_dist_mean)
+            
+            # Print adversarial info
+            print('\n--- ADVERSARIAL INFO ---')
+            print('adversarial budget: {0}'.format(adversarial_budget))
+            print('adversarial disadvantage: {0}'.format(adversarial_disadvantage))
+            print('adversarial dist sup: {0}'.format(adversarial_dist_sup))
+            print('adversarial dist mean: {0}'.format(adversarial_dist_mean))
 
         # model vector coefficients computation and print
         if isinstance(self.model_chooser, SetModelChooser):
@@ -127,6 +150,11 @@ class Logger(object):
         self.m_change = list()
         self.w_target = list()
         self.bound = list()
+        # NEW: Reset adversarial tracking
+        self.adversarial_budgets = list()
+        self.adversarial_disadvantages = list()
+        self.adversarial_dist_sups = list()
+        self.adversarial_dist_means = list()
 
     # logger method to save the execution data into
     # a csv file (directory path as parameter)
@@ -141,7 +169,15 @@ class Logger(object):
                           self.m_dist_sup, self.m_dist_mean,
                           self.alfas, self.betas, self.p_change,
                           self.m_change, self.bound]
-
+        # NEW: Add adversarial data if available
+        if len(self.adversarial_budgets) > 0:
+            header_string += ';adv_budget;adv_disadvantage;adv_dist_sup;adv_dist_mean'
+            execution_data.extend([
+                self.adversarial_budgets,
+                self.adversarial_disadvantages,
+                self.adversarial_dist_sups,
+                self.adversarial_dist_means
+            ])
         if isinstance(self.model_chooser, SetModelChooser):
 
             if len(self.model_chooser.model_set) == 2:
@@ -177,11 +213,12 @@ class Logger(object):
                                   target[:, 0], target[:, 1],
                                   target[:, 2], target[:, 3]]
 
-        execution_data = np.array(execution_data).T
 
+        execution_data = np.array(execution_data).T
+        
         if entries is not None:
             filter = np.arange(0, len(execution_data), len(execution_data) / entries)
             execution_data = execution_data[filter]
-
+        
         np.savetxt(dir_path + '/' + file_name, execution_data,
-                   delimiter=';', header=header_string, fmt='%.30e')
+                delimiter=';', header=header_string, fmt='%.30e')
