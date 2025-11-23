@@ -1,0 +1,72 @@
+[
+  {
+    "algorithm": "spmi",
+    "environment": "teacher_student_small",
+    "seed": 0,
+    "final_performance": 8.645125832452884,
+    "initial_performance": 0.8015137734192271,
+    "improvement": 7.843612059033656,
+    "iterations": 7670,
+    "final_alpha": 1.0,
+    "final_beta": 0.0
+  },
+  {
+    "algorithm": "spmi",
+    "environment": "teacher_student_small",
+    "seed": 1,
+    "final_performance": 8.645125832452884,
+    "initial_performance": 0.8015137734192271,
+    "improvement": 7.843612059033656,
+    "iterations": 7670,
+    "final_alpha": 1.0,
+    "final_beta": 0.0
+  },
+  {
+    "algorithm": "sa_pmi_linear",
+    "environment": "teacher_student_small",
+    "seed": 0,
+    "final_performance": 8.579023245046741,
+    "initial_performance": 0.7968160415932956,
+    "improvement": 7.782207203453446,
+    "iterations": 7699,
+    "final_alpha": 1.0,
+    "final_beta": 0.0,
+    "final_adversarial_budget": 0.0038490000000000004
+  },
+  {
+    "algorithm": "sa_pmi_linear",
+    "environment": "teacher_student_small",
+    "seed": 1,
+    "final_performance": 8.579023245046741,
+    "initial_performance": 0.7968160415932956,
+    "improvement": 7.782207203453446,
+    "iterations": 7699,
+    "final_alpha": 1.0,
+    "final_beta": 0.0,
+    "final_adversarial_budget": 0.0038490000000000004
+  },
+  {
+    "algorithm": "sa_pmi_exponential",
+    "environment": "teacher_student_small",
+    "seed": 0,
+    "final_performance": 8.644501542576545,
+    "initial_performance": 0.7968117251748728,
+    "improvement": 7.8476898174016725,
+    "iterations": 7670,
+    "final_alpha": 0.9804086742183553,
+    "final_beta": 0.0,
+    "final_adversarial_budget": 3.418219914176578e-05
+  },
+  {
+    "algorithm": "sa_pmi_exponential",
+    "environment": "teacher_student_small",
+    "seed": 1,
+    "final_performance": 8.644501542576545,
+    "initial_performance": 0.7968117251748728,
+    "improvement": 7.8476898174016725,
+    "iterations": 7670,
+    "final_alpha": 0.9804086742183553,
+    "final_beta": 0.0,
+    "final_adversarial_budget": 3.418219914176578e-05
+  }
+]
