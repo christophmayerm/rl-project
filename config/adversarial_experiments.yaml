@@ -1,0 +1,302 @@
+# config/experiments.yaml
+# Research-grade configuration for SA-PMI experiments
+
+# =============================================================================
+# ENVIRONMENT CONFIGURATIONS
+# =============================================================================
+environments:
+  # Teacher-Student environments
+  teacher_student_small:
+    type: teacher_student
+    params:
+      n_literals: 2
+      max_value: 1
+      max_update: 1
+      max_literals_in_examples: 2
+      horizon: 10
+    training:
+      max_iter: 10000
+      eps: 1.0e-7
+      K_warmup_ratio: 0.75
+      log_interval: 250
+    adversarial:
+      B_max: 0.05
+      B_min: 0.0
+    difficulty: easy
+    
+  teacher_student_medium:
+    type: teacher_student
+    params:
+      n_literals: 3
+      max_value: 2
+      max_update: 1
+      max_literals_in_examples: 3
+      horizon: 15
+    training:
+      max_iter: 12000
+      eps: 1.0e-7
+      K_warmup_ratio: 0.75
+      log_interval: 300
+    adversarial:
+      B_max: 0.05
+      B_min: 0.0
+    difficulty: medium
+
+  # Frozen Lake 4x4 - Slippery (default)
+  frozen_lake_4x4:
+    type: gymnasium
+    params:
+      env_name: frozen_lake_4x4
+      is_slippery: true
+      horizon: 100
+    training:
+      max_iter: 15000
+      eps: 1.0e-7
+      K_warmup_ratio: 0.75
+      log_interval: 375
+    adversarial:
+      B_max: 0.04
+      B_min: 0.0
+    difficulty: medium
+    
+  # Frozen Lake 4x4 - Deterministic
+  frozen_lake_4x4_det:
+    type: gymnasium
+    params:
+      env_name: frozen_lake_4x4
+      is_slippery: false
+      horizon: 100
+    training:
+      max_iter: 8000
+      eps: 1.0e-7
+      K_warmup_ratio: 0.70
+      log_interval: 200
+    adversarial:
+      B_max: 0.05
+      B_min: 0.0
+    difficulty: easy
+
+  # Frozen Lake 8x8 - Slippery (HARD!)
+  frozen_lake_8x8:
+    type: gymnasium
+    params:
+      env_name: frozen_lake_8x8
+      is_slippery: true
+      horizon: 200
+    training:
+      max_iter: 40000  # INCREASED for difficulty
+      eps: 1.0e-9      # TIGHTER convergence
+      K_warmup_ratio: 0.85  # LONGER warmup (85%)
+      log_interval: 1000
+    adversarial:
+      B_max: 0.03      # REDUCED budget
+      B_min: 0.0
+    difficulty: very_hard
+    notes: "Extremely sparse rewards. Consider using deterministic version first."
+    
+  # Frozen Lake 8x8 - Deterministic
+  frozen_lake_8x8_det:
+    type: gymnasium
+    params:
+      env_name: frozen_lake_8x8
+      is_slippery: false
+      horizon: 200
+    training:
+      max_iter: 20000
+      eps: 1.0e-8
+      K_warmup_ratio: 0.75
+      log_interval: 500
+    adversarial:
+      B_max: 0.05
+      B_min: 0.0
+    difficulty: medium
+    
+  # Frozen Lake 8x8 - Moderate (reduced slip)
+  frozen_lake_8x8_moderate:
+    type: gymnasium
+    params:
+      env_name: frozen_lake_8x8
+      is_slippery: true
+      slip_probability: 0.5  # Custom: 50% slip instead of default
+      horizon: 200
+    training:
+      max_iter: 30000
+      eps: 1.0e-8
+      K_warmup_ratio: 0.80
+      log_interval: 750
+    adversarial:
+      B_max: 0.04
+      B_min: 0.0
+    difficulty: hard
+
+  # Taxi environment
+  taxi:
+    type: gymnasium
+    params:
+      env_name: taxi
+      horizon: 200
+    training:
+      max_iter: 25000
+      eps: 1.0e-8
+      K_warmup_ratio: 0.75
+      log_interval: 625
+    adversarial:
+      B_max: 0.05
+      B_min: 0.0
+    difficulty: medium
+
+  # Tabularized continuous control
+  cartpole:
+    type: gymnasium
+    params:
+      env_name: cartpole
+      n_bins: 8
+      horizon: 200
+    training:
+      max_iter: 25000
+      eps: 1.0e-8
+      K_warmup_ratio: 0.75
+      log_interval: 625
+    adversarial:
+      B_max: 0.05
+      B_min: 0.0
+    difficulty: medium
+    
+  mountain_car:
+    type: gymnasium
+    params:
+      env_name: mountain_car
+      n_bins: 10
+      horizon: 200
+    training:
+      max_iter: 30000
+      eps: 1.0e-9
+      K_warmup_ratio: 0.75
+      log_interval: 750
+    adversarial:
+      B_max: 0.05
+      B_min: 0.0
+    difficulty: hard
+    
+  acrobot:
+    type: gymnasium
+    params:
+      env_name: acrobot
+      n_bins: 6
+      horizon: 500
+    training:
+      max_iter: 30000
+      eps: 1.0e-9
+      K_warmup_ratio: 0.75
+      log_interval: 750
+    adversarial:
+      B_max: 0.05
+      B_min: 0.0
+    difficulty: hard
+
+# =============================================================================
+# ALGORITHM CONFIGURATIONS
+# =============================================================================
+algorithms:
+  spmi:
+    name: SPMI-Baseline
+    curriculum_schedule: null
+    tags: [baseline, spmi]
+    
+  sa_pmi_linear:
+    name: SA-PMI-Linear
+    curriculum_schedule: linear
+    tags: [adversarial, sa-pmi, linear]
+    
+  sa_pmi_exponential:
+    name: SA-PMI-Exponential-v2
+    curriculum_schedule: exponential
+    tags: [adversarial, sa-pmi, exponential]
+    
+  sa_pmi_sqrt:
+    name: SA-PMI-Sqrt
+    curriculum_schedule: sqrt
+    tags: [adversarial, sa-pmi, sqrt]
+    
+  sa_pmi_cosine:
+    name: SA-PMI-Cosine
+    curriculum_schedule: cosine
+    tags: [adversarial, sa-pmi, cosine]
+    
+  sa_pmi_smooth:
+    name: SA-PMI-Smooth
+    curriculum_schedule: smooth_exponential
+    tags: [adversarial, sa-pmi, smooth]
+
+# =============================================================================
+# SWEEP CONFIGURATIONS
+# =============================================================================
+sweeps:
+  curriculum_comparison:
+    description: "Compare all curriculum schedules"
+    parameters:
+      B_max: [0.05]
+      B_min: [0.0]
+      curriculum_schedule: [linear, exponential, sqrt, cosine, smooth_exponential]
+      
+  budget_sweep:
+    description: "Test different adversarial budgets"
+    parameters:
+      B_max: [0.01, 0.02, 0.03, 0.04, 0.05, 0.07, 0.1]
+      B_min: [0.0]
+      curriculum_schedule: [linear, exponential, sqrt, cosine, smooth_exponential]
+      
+  warmup_sweep:
+    description: "Test different warmup durations"
+    parameters:
+      B_max: [0.05]
+      B_min: [0.0]
+      K_warmup_ratio: [0.50, 0.625, 0.75, 0.85, 0.90]
+      curriculum_schedule: [linear, exponential, sqrt, cosine, smooth_exponential]
+      
+  bmin_sweep:
+    description: "Test different minimum budgets"
+    parameters:
+      B_max: [0.05]
+      B_min: [0.0, 0.001, 0.005, 0.01, 0.02]
+      curriculum_schedule: [linear, exponential, sqrt, cosine, smooth_exponential]
+      
+  frozen_lake_tuning:
+    description: "Special tuning for Frozen Lake 8x8"
+    parameters:
+      B_max: [0.01, 0.02, 0.03, 0.04]
+      B_min: [0.0]
+      K_warmup_ratio: [0.80, 0.85, 0.90]
+      curriculum_schedule: [cosine, sqrt]
+    environments: [frozen_lake_8x8, frozen_lake_8x8_det]
+
+# =============================================================================
+# DEFAULT SETTINGS
+# =============================================================================
+defaults:
+  seeds: [0, 1, 2]
+  verbose: 1
+  use_wandb: true
+  
+# Performance expectations (for validation)
+expected_performance:
+  teacher_student_small:
+    random: 0.0
+    good: 0.50
+    expert: 0.90
+  frozen_lake_4x4:
+    random: 0.01
+    good: 0.30
+    expert: 0.70
+  frozen_lake_8x8:
+    random: 0.001
+    good: 0.08
+    expert: 0.40
+  frozen_lake_8x8_det:
+    random: 0.01
+    good: 0.50
+    expert: 0.90
+  taxi:
+    random: 0.0
+    good: 0.40
+    expert: 0.80
