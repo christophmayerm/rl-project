@@ -24,13 +24,82 @@ from envs.gymnasium_envs import create_gym_env
 class ExperimentConfig:
     """Configuration for experiments"""
     
-    # Base configuration
+    # Environment-specific recommended settings (research-grade)
+    RECOMMENDED_SETTINGS = {
+        'teacher_student_small': {
+            'max_iter': 10000,
+            'eps': 1e-7,
+            'K_warmup': 7500,   # 75% of max_iter
+            'verbose': 1,
+            'log_interval': 250,
+        },
+        'teacher_student_medium': {
+            'max_iter': 12000,
+            'eps': 1e-7,
+            'K_warmup': 9000,   # 75% of max_iter
+            'verbose': 1,
+            'log_interval': 300,
+        },
+        'frozen_lake_4x4': {
+            'max_iter': 15000,
+            'eps': 1e-7,
+            'K_warmup': 11250,  # 75% of max_iter
+            'verbose': 1,
+            'log_interval': 375,
+        },
+        'frozen_lake_8x8': {
+            'max_iter': 20000,
+            'eps': 1e-8,
+            'K_warmup': 15000,  # 75% of max_iter
+            'verbose': 1,
+            'log_interval': 500,
+        },
+        'taxi': {
+            'max_iter': 20000,
+            'eps': 1e-8,
+            'K_warmup': 15000,  # 75% of max_iter
+            'verbose': 1,
+            'log_interval': 500,
+        },
+        'cartpole': {
+            'max_iter': 25000,
+            'eps': 1e-8,
+            'K_warmup': 18750,  # 75% of max_iter
+            'verbose': 1,
+            'log_interval': 625,
+        },
+        'mountain_car': {
+            'max_iter': 30000,
+            'eps': 1e-9,
+            'K_warmup': 22500,  # 75% of max_iter
+            'verbose': 1,
+            'log_interval': 750,
+        },
+        'acrobot': {
+            'max_iter': 30000,
+            'eps': 1e-9,
+            'K_warmup': 22500,  # 75% of max_iter
+            'verbose': 1,
+            'log_interval': 750,
+        }
+    }
+    
+    # Default base configuration (fallback)
     BASE_CONFIG = {
         'max_iter': 20000,
-        'eps': 0.0000001,
-        'verbose': 1,  # Minimal for sweep runs
+        'eps': 1e-7,
+        'verbose': 1,
         'log_interval': 500,
     }
+    
+    @staticmethod
+    def get_base_config(environment_name):
+        """Get environment-specific configuration"""
+        if environment_name in ExperimentConfig.RECOMMENDED_SETTINGS:
+            return ExperimentConfig.RECOMMENDED_SETTINGS[environment_name].copy()
+        else:
+            print(f"Warning: No recommended settings for {environment_name}, using defaults")
+            return ExperimentConfig.BASE_CONFIG.copy()
     
     # Algorithm configurations
     ALGORITHMS = {
@@ -44,7 +113,6 @@ class ExperimentConfig:
             'curriculum_schedule': 'sqrt',
             'B_min': 0.0,
             'B_max': 0.05,
-            'K_warmup': 6000,  # 75% of training
             'tags': ['adversarial', 'sa-pmi', 'sqrt']
         },
         'sa_pmi_cosine': {
@@ -52,15 +120,13 @@ class ExperimentConfig:
             'curriculum_schedule': 'cosine',
             'B_min': 0.0,
             'B_max': 0.05,
-            'K_warmup': 6000,  # 75% of training
             'tags': ['adversarial', 'sa-pmi', 'cosine']
         },
         'sa_pmi_exponential_improved': {
             'name': 'SA-PMI-Exponential-v2',
-            'curriculum_schedule': 'exponential',  # Now uses quadratic
+            'curriculum_schedule': 'exponential',
             'B_min': 0.0,
             'B_max': 0.05,
-            'K_warmup': 6000,  # 75% of training
             'tags': ['adversarial', 'sa-pmi', 'exponential-v2']
         },
         'sa_pmi_smooth': {
@@ -68,7 +134,6 @@ class ExperimentConfig:
             'curriculum_schedule': 'smooth_exponential',
             'B_min': 0.0,
             'B_max': 0.05,
-            'K_warmup': 5000,  # 62.5% of training
             'tags': ['adversarial', 'sa-pmi', 'smooth']
         },
         'sa_pmi_linear': {
@@ -76,7 +141,6 @@ class ExperimentConfig:
             'curriculum_schedule': 'linear',
             'B_min': 0.0,
             'B_max': 0.05,
-            'K_warmup': 6000,  # Keep consistent
             'tags': ['adversarial', 'sa-pmi', 'linear']
         }
     }
@@ -141,47 +205,29 @@ class ExperimentConfig:
         }
     }
     
-    # Hyperparameter sweep configurations
-    # Hyperparameter sweep configurations
+    # Hyperparameter sweep configurations (auto-adjust K_warmup based on environment)
     SWEEP_CONFIGS = {
-        # Sweep 1: Compare ALL curriculum schedules (main comparison)
-        'sa_pmi_curriculum_sweep_20000': {
+        'sa_pmi_curriculum_sweep': {
             'B_max': [0.05],
             'B_min': [0.0],
-            'K_warmup': [15000],  # 75% of 20000
             'curriculum_schedule': ['linear', 'exponential', 'sqrt', 'cosine', 'smooth_exponential']
+            # K_warmup will be auto-set from RECOMMENDED_SETTINGS
         },
-        
-        # Sweep 2: Budget sweep for EACH schedule
-        'sa_pmi_budget_sweep_20000': {
+        'sa_pmi_budget_sweep': {
             'B_max': [0.01, 0.03, 0.05, 0.07, 0.1],
             'B_min': [0.0],
-            'K_warmup': [15000],
             'curriculum_schedule': ['linear', 'exponential', 'sqrt', 'cosine', 'smooth_exponential']
         },
-        
-        # Sweep 3: Warmup sweep for EACH schedule  
-        'sa_pmi_warmup_sweep_20000': {
+        'sa_pmi_warmup_sweep': {
             'B_max': [0.05],
             'B_min': [0.0],
-            'K_warmup': [10000, 12500, 15000, 17500],  # 50%, 62.5%, 75%, 87.5%
+            'K_warmup_ratio': [0.50, 0.625, 0.75, 0.875],  # Ratios of max_iter
             'curriculum_schedule': ['linear', 'exponential', 'sqrt', 'cosine', 'smooth_exponential']
         },
-        
-        # Sweep 4: B_min sweep for EACH schedule
-        'sa_pmi_bmin_sweep_20000': {
+        'sa_pmi_bmin_sweep': {
             'B_max': [0.05],
             'B_min': [0.0, 0.001, 0.005, 0.01],
-            'K_warmup': [15000],
             'curriculum_schedule': ['linear', 'exponential', 'sqrt', 'cosine', 'smooth_exponential']
-        },
-        
-        # Sweep 5: Fine-grained grid for best schedules (based on initial results)
-        'sa_pmi_fine_grid_20000': {
-            'B_max': [0.04, 0.05, 0.06],
-            'B_min': [0.0, 0.005],
-            'K_warmup': [13000, 15000, 17000],
-            'curriculum_schedule': ['cosine', 'sqrt']  # Top 2 from curriculum_sweep
         }
     }
 
@@ -233,11 +279,9 @@ def create_env(env_config):
     env_type = env_config.get('type', 'teacher_student')
     
     if env_type == 'teacher_student':
-        # Remove 'type' key before passing to TeacherStudentEnv
         config = {k: v for k, v in env_config.items() if k != 'type'}
         env = TeacherStudentEnv(**config)
     elif env_type == 'gymnasium':
-        # Remove 'type' key before passing to create_gym_env
         config = {k: v for k, v in env_config.items() if k != 'type'}
         env = create_gym_env(**config)
     else:
@@ -278,6 +322,28 @@ def run_single_experiment(algo_name, algo_config, env_name, env_config,
     conf_mdp = ConfigurableMDP(env)
     initial_policy, initial_model = create_initial_policy_model(env)
     
+    # Get environment-specific base config if not provided
+    if base_config is None:
+        base_config = ExperimentConfig.get_base_config(env_name)
+        print(f"Using recommended settings for {env_name}:")
+        print(f"  max_iter: {base_config['max_iter']}")
+        print(f"  eps: {base_config['eps']}")
+        if 'K_warmup' in base_config:
+            print(f"  K_warmup: {base_config['K_warmup']}")
+    
+    # Determine K_warmup for adversarial algorithms
+    K_warmup = None
+    if 'K_warmup' in algo_config:
+        K_warmup = algo_config['K_warmup']
+    elif 'K_warmup_ratio' in algo_config:
+        K_warmup = int(base_config['max_iter'] * algo_config['K_warmup_ratio'])
+    elif 'K_warmup' in base_config:
+        # Use environment's recommended K_warmup
+        K_warmup = base_config['K_warmup']
+    else:
+        # Default: 75% of max_iter
+        K_warmup = int(base_config['max_iter'] * 0.75)
+    
     # Prepare wandb config
     full_config = {
         **base_config,
@@ -288,12 +354,15 @@ def run_single_experiment(algo_name, algo_config, env_name, env_config,
         'algorithm': algo_name
     }
     
+    if K_warmup is not None:
+        full_config['K_warmup'] = K_warmup
+    
     wandb_config = {
         'project': wandb_project,
         'name': f"{algo_config['name']}_{env_name}_seed{seed}",
         'config': full_config,
         'tags': algo_config.get('tags', []) + [env_name, f'seed_{seed}'],
-        'group': f"{algo_name}_{env_name}",  # Group related runs
+        'group': f"{algo_name}_{env_name}",
         'job_type': 'experiment'
     }
     
@@ -311,7 +380,7 @@ def run_single_experiment(algo_name, algo_config, env_name, env_config,
             curriculum_schedule=algo_config['curriculum_schedule'],
             B_min=algo_config.get('B_min', 0.0),
             B_max=algo_config.get('B_max', 0.05),
-            K_warmup=algo_config.get('K_warmup', 10000)
+            K_warmup=K_warmup
         )
     else:
         algorithm = SPMI(
@@ -333,6 +402,9 @@ def run_single_experiment(algo_name, algo_config, env_name, env_config,
     # Run algorithm
     print(f"\n{'='*70}")
     print(f"Running: {algo_name} on {env_name} (seed={seed})")
+    if is_adversarial:
+        print(f"  Schedule: {algo_config['curriculum_schedule']}")
+        print(f"  K_warmup: {K_warmup} ({K_warmup/base_config['max_iter']*100:.1f}% of max_iter)")
     print(f"{'='*70}")
     
     if is_adversarial:
@@ -352,10 +424,14 @@ def run_single_experiment(algo_name, algo_config, env_name, env_config,
         'iterations': algorithm.logger.iteration,
         'final_alpha': algorithm.logger.alfas[-1] if algorithm.logger.alfas else None,
         'final_beta': algorithm.logger.betas[-1] if algorithm.logger.betas else None,
+        'max_iter': base_config['max_iter'],
+        'eps': base_config['eps'],
     }
     
-    if is_adversarial and algorithm.logger.adversarial_budgets:
-        results['final_adversarial_budget'] = algorithm.logger.adversarial_budgets[-1]
+    if is_adversarial:
+        results['K_warmup'] = K_warmup
+        if algorithm.logger.adversarial_budgets:
+            results['final_adversarial_budget'] = algorithm.logger.adversarial_budgets[-1]
     
     # Close logger
     algorithm.logger.close()
@@ -367,22 +443,13 @@ def run_benchmark(algorithms=None, environments=None, seeds=None,
                  wandb_project="sa-pmi-benchmark", base_config=None):
     """
     Run full benchmark across algorithms, environments, and seeds
-    
-    Args:
-        algorithms: List of algorithm names (default: all)
-        environments: List of environment names (default: all)
-        seeds: List of random seeds (default: [0, 1, 2, 3, 4])
-        wandb_project: W&B project name
-        base_config: Base configuration dict
     """
     if algorithms is None:
         algorithms = list(ExperimentConfig.ALGORITHMS.keys())
     if environments is None:
         environments = list(ExperimentConfig.ENVIRONMENTS.keys())
     if seeds is None:
-        seeds = [0, 1, 2, 3, 4]  # 5 seeds for statistical significance
-    if base_config is None:
-        base_config = ExperimentConfig.BASE_CONFIG
+        seeds = [0, 1, 2, 3, 4]
     
     print("\n" + "="*70)
     print("BENCHMARK CONFIGURATION")
@@ -415,7 +482,6 @@ def run_benchmark(algorithms=None, environments=None, seeds=None,
                     import traceback
                     traceback.print_exc()
     
-    # Save summary
     save_benchmark_summary(all_results, wandb_project)
     
     return all_results
@@ -424,23 +490,16 @@ def run_benchmark(algorithms=None, environments=None, seeds=None,
 def run_hyperparameter_sweep(sweep_name, algorithm='sa_pmi_linear', 
                              environment='teacher_student_small',
                              seeds=None, wandb_project="sa-pmi-sweep"):
-    """
-    Run hyperparameter sweep
-    
-    Args:
-        sweep_name: Name of sweep configuration
-        algorithm: Base algorithm to sweep
-        environment: Environment to use
-        seeds: Random seeds
-        wandb_project: W&B project name
-    """
+    """Run hyperparameter sweep"""
     if seeds is None:
-        seeds = [0, 1, 2]  # Fewer seeds for sweeps
+        seeds = [0, 1, 2]
     
     sweep_config = ExperimentConfig.SWEEP_CONFIGS[sweep_name]
-    base_algo_config = ExperimentConfig.ALGORITHMS[algorithm].copy()
+    base_algo_config = ExperimentConfig.ALGORITHMS.get(algorithm, {}).copy()
     env_config = ExperimentConfig.ENVIRONMENTS[environment]
-    base_config = ExperimentConfig.BASE_CONFIG
+    
+    # Get environment-specific base config
+    base_config = ExperimentConfig.get_base_config(environment)
     
     # Generate all hyperparameter combinations
     param_names = list(sweep_config.keys())
@@ -452,6 +511,7 @@ def run_hyperparameter_sweep(sweep_name, algorithm='sa_pmi_linear',
     print("="*70)
     print(f"Algorithm: {algorithm}")
     print(f"Environment: {environment}")
+    print(f"Base Config: max_iter={base_config['max_iter']}, eps={base_config['eps']}")
     print(f"Parameters: {param_names}")
     print(f"Combinations: {len(combinations)}")
     print(f"Seeds per combination: {len(seeds)}")
@@ -464,7 +524,11 @@ def run_hyperparameter_sweep(sweep_name, algorithm='sa_pmi_linear',
         # Create modified config
         modified_config = base_algo_config.copy()
         for param_name, param_value in zip(param_names, combination):
-            modified_config[param_name] = param_value
+            if param_name == 'K_warmup_ratio':
+                # Convert ratio to actual K_warmup
+                modified_config['K_warmup'] = int(base_config['max_iter'] * param_value)
+            else:
+                modified_config[param_name] = param_value
         
         # Add sweep identifier to name
         param_str = "_".join([f"{k}={v}" for k, v in zip(param_names, combination)])
@@ -485,7 +549,6 @@ def run_hyperparameter_sweep(sweep_name, algorithm='sa_pmi_linear',
             except Exception as e:
                 print(f"\n✗ ERROR in sweep {param_str}/seed{seed}: {e}")
     
-    # Save sweep summary
     save_sweep_summary(all_results, sweep_name, wandb_project)
     
     return all_results
@@ -504,7 +567,6 @@ def save_benchmark_summary(results, project_name):
     
     print(f"\n✓ Benchmark summary saved to: {filepath}")
     
-    # Print summary statistics
     print_summary_statistics(results)
 
 
@@ -528,7 +590,6 @@ def print_summary_statistics(results):
     print("BENCHMARK SUMMARY STATISTICS")
     print("="*70)
     
-    # Group by algorithm and environment
     from collections import defaultdict
     grouped = defaultdict(list)
     
@@ -536,15 +597,15 @@ def print_summary_statistics(results):
         key = (r['algorithm'], r['environment'])
         grouped[key].append(r['final_performance'])
     
-    print(f"\n{'Algorithm':<25} {'Environment':<25} {'Mean±Std':<20} {'Min':<10} {'Max':<10}")
-    print("-" * 90)
+    print(f"\n{'Algorithm':<30} {'Environment':<25} {'Mean±Std':<20} {'Min':<10} {'Max':<10}")
+    print("-" * 95)
     
     for (algo, env), perfs in sorted(grouped.items()):
         mean = np.mean(perfs)
         std = np.std(perfs)
         min_val = np.min(perfs)
         max_val = np.max(perfs)
-        print(f"{algo:<25} {env:<25} {mean:.4f}±{std:.4f}      {min_val:.4f}    {max_val:.4f}")
+        print(f"{algo:<30} {env:<25} {mean:.4f}±{std:.4f}      {min_val:.4f}    {max_val:.4f}")
     
     print("="*70)
 
@@ -591,7 +652,7 @@ if __name__ == '__main__':
             
             algo_config = ExperimentConfig.ALGORITHMS[args.algorithm]
             env_config = ExperimentConfig.ENVIRONMENTS[args.environment]
-            base_config = ExperimentConfig.BASE_CONFIG
+            base_config = ExperimentConfig.get_base_config(args.environment)
             base_config['verbose'] = 2  # More verbose for single runs
             
             results = run_single_experiment(

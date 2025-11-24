@@ -14,7 +14,7 @@ class AdversarialModelChooser(object):
         """
         :param nS: number of states
         :param nA: number of actions
-        :param budget_schedule: 'linear', 'exponential', or 'step'
+        :param budget_schedule: 'linear', 'exponential', 'smooth_exponential', or 'step'
         :param B_min: minimum adversarial budget (for curriculum warmup)
         :param B_max: maximum adversarial budget
         :param K_warmup: iterations to reach full adversarial strength
@@ -36,14 +36,32 @@ class AdversarialModelChooser(object):
             budget = self.B_min + (self.B_max - self.B_min) * progress
             
         elif self.budget_schedule == 'exponential':
+            # IMPROVED: Smoother exponential that reaches B_max earlier
+            # Use progress^2 to create a curve that accelerates in the middle
             progress = min(1.0, k / self.K_warmup)
-            # Avoid division by zero if B_min is 0
-            if self.B_min > 0:
-                budget = self.B_min * np.exp(np.log(self.B_max / self.B_min) * progress)
-            else:
-                # Use linear interpolation in log space from a small epsilon
-                epsilon = 1e-6
-                budget = epsilon * np.exp(np.log(self.B_max / epsilon) * progress)
+            # Quadratic interpolation creates smoother transition
+            budget = self.B_min + (self.B_max - self.B_min) * (progress ** 2)
+            
+        elif self.budget_schedule == 'smooth_exponential':
+            # ALTERNATIVE: Sigmoid-like curve for very smooth transitions
+            progress = min(1.0, k / self.K_warmup)
+            # Maps [0,1] to smoother curve using tanh
+            # This reaches ~95% of B_max at 80% progress
+            alpha = 5.0  # Controls steepness (higher = steeper)
+            smooth_progress = 0.5 * (1 + np.tanh(alpha * (progress - 0.5)))
+            budget = self.B_min + (self.B_max - self.B_min) * smooth_progress
+            
+        elif self.budget_schedule == 'sqrt':
+            # NEW: Square root schedule - faster initial growth, slower later
+            # Good for building robustness early
+            progress = min(1.0, k / self.K_warmup)
+            budget = self.B_min + (self.B_max - self.B_min) * np.sqrt(progress)
+            
+        elif self.budget_schedule == 'cosine':
+            # NEW: Cosine annealing schedule (smooth S-curve)
+            progress = min(1.0, k / self.K_warmup)
+            cosine_progress = 0.5 * (1 - np.cos(np.pi * progress))
+            budget = self.B_min + (self.B_max - self.B_min) * cosine_progress
             
         elif self.budget_schedule == 'step':
             budget = self.B_max if k >= self.K_warmup else self.B_min
