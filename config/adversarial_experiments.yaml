@@ -277,6 +277,7 @@ defaults:
   seeds: [0, 1, 2]
   verbose: 1
   use_wandb: true
+  progress_style: 'rich'  # NEW: 'standard', 'rich', 'dual', 'minimal', 'none'
   
 # Performance expectations (for validation)
 expected_performance:

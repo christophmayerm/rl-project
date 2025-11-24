@@ -3,7 +3,7 @@ from algorithm.model_chooser import *
 from utils.evaluator import *
 from utils.tabular import *
 from algorithm.logger import Logger
-
+from utils import evaluator
 
 from algorithm.policy_chooser import *
 from utils.tabular_operations import policy_convex_combination, model_convex_combination, policy_equiv_check, model_equiv_check
@@ -1121,16 +1121,18 @@ class SPMI(object):
 
     # method to linearly combine target and current policy with coefficient alfa
     def policy_combination(self, alfa, target, current):
-
         new_policy = policy_convex_combination(target, current, alfa)
-
+        
+        # Clear cache after policy update
+        evaluator.clear_cache()
+        
         return new_policy
 
-    # method to linearly combine target and current model with coefficient beta
-    # along with the update of the model coefficients in the mdp representation
     def model_combination(self, beta, target, current):
-
         new_model = model_convex_combination(self.mdp.P, target, current, beta)
         self.mdp.set_model(new_model.get_rep())
-
+        
+        # Clear cache after model update
+        evaluator.clear_cache()
+        
         return new_model

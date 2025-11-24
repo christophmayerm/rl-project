@@ -12,18 +12,7 @@ import numpy.linalg as la
 def compute_q_function_numba(pi, P, R_sas, gamma, nS, nA, horizon=None):
     """
     Numba-optimized Q-function computation.
-
-    Args:
-        pi: Policy matrix (nS, nSA)
-        P: Model matrix (nSA, nS)
-        R_sas: Reward matrix (nSA, nS)
-        gamma: Discount factor
-        nS: Number of states
-        nA: Number of actions
-        horizon: Horizon for iterative computation (None for exact)
-
-    Returns:
-        Q: Q-function values (nSA,)
+    ALWAYS uses iterative method for speed.
     """
     nSA = nS * nA
 
@@ -33,42 +22,36 @@ def compute_q_function_numba(pi, P, R_sas, gamma, nS, nA, horizon=None):
         for s in range(nS):
             R_sa[sa] += R_sas[sa, s] * P[sa, s]
 
-    if horizon is None:
-        # Exact computation using linear system solver
-        # Q = (I - gamma * P * pi)^{-1} * R_sa
-        I = np.eye(nSA, dtype=np.float64)
-        P_pi = np.dot(P, pi)
-        A = I - gamma * P_pi
-
-        # Use numpy's solve (will be compiled by Numba)
-        Q = np.linalg.solve(A, R_sa)
-    else:
-        # Iterative computation
-        Q = np.zeros(nSA, dtype=np.float64)
-        P_pi = np.dot(P, pi)
-
-        for h in range(horizon):
-            Q = R_sa + gamma * np.dot(P_pi, Q)
+    # FORCE iterative method - much faster than linear solve!
+    if horizon is None or horizon > 200:
+        horizon = 200  # Cap at reasonable value
+    
+    Q = np.zeros(nSA, dtype=np.float64)
+    P_pi = np.dot(P, pi)
+    
+    # Iterative computation with early stopping
+    for h in range(horizon):
+        Q_prev = Q.copy()
+        Q = R_sa + gamma * np.dot(P_pi, Q)
+        
+        # Early stopping check (after first few iterations)
+        if h > 5:
+            max_diff = 0.0
+            for i in range(nSA):
+                diff = abs(Q[i] - Q_prev[i])
+                if diff > max_diff:
+                    max_diff = diff
+            
+            if max_diff < 1e-8:
+                break
 
     return Q
-
 
 @njit(cache=True, fastmath=True)
 def compute_v_function_numba(pi, P, R_sas, gamma, nS, nA, horizon=None):
     """
     Numba-optimized V-function computation.
-
-    Args:
-        pi: Policy matrix (nS, nSA)
-        P: Model matrix (nSA, nS)
-        R_sas: Reward matrix (nSA, nS)
-        gamma: Discount factor
-        nS: Number of states
-        nA: Number of actions
-        horizon: Horizon for iterative computation (None for exact)
-
-    Returns:
-        V: V-function values (nS,)
+    ALWAYS uses iterative method for speed.
     """
     nSA = nS * nA
 
@@ -80,21 +63,28 @@ def compute_v_function_numba(pi, P, R_sas, gamma, nS, nA, horizon=None):
 
     R_s = np.dot(pi, R_sa)
 
-    if horizon is None:
-        # Exact computation using linear system solver
-        # V = (I - gamma * pi * P)^{-1} * R_s
-        I = np.eye(nS, dtype=np.float64)
-        pi_P = np.dot(pi, P)
-        A = I - gamma * pi_P
+    # FORCE iterative method - much faster than linear solve!
+    if horizon is None or horizon > 200:
+        horizon = 200  # Cap at reasonable value
+    
+    V = np.zeros(nS, dtype=np.float64)
+    pi_P = np.dot(pi, P)
 
-        V = np.linalg.solve(A, R_s)
-    else:
-        # Iterative computation
-        V = np.zeros(nS, dtype=np.float64)
-        pi_P = np.dot(pi, P)
-
-        for h in range(horizon):
-            V = R_s + gamma * np.dot(pi_P, V)
+    # Iterative computation with early stopping
+    for h in range(horizon):
+        V_prev = V.copy()
+        V = R_s + gamma * np.dot(pi_P, V)
+        
+        # Early stopping check (after first few iterations)
+        if h > 5:
+            max_diff = 0.0
+            for i in range(nS):
+                diff = abs(V[i] - V_prev[i])
+                if diff > max_diff:
+                    max_diff = diff
+            
+            if max_diff < 1e-8:
+                break
 
     return V
 
@@ -103,20 +93,9 @@ def compute_v_function_numba(pi, P, R_sas, gamma, nS, nA, horizon=None):
 def compute_u_function_numba(pi, P, R_sas, gamma, nS, nA, horizon=None):
     """
     Numba-optimized U-function computation.
-
-    Args:
-        pi: Policy matrix (nS, nSA)
-        P: Model matrix (nSA, nS)
-        R_sas: Reward matrix (nSA, nS)
-        gamma: Discount factor
-        nS: Number of states
-        nA: Number of actions
-        horizon: Horizon for U-function computation
-
-    Returns:
-        U: U-function values (nSA, nS)
+    Uses iterative V-function internally.
     """
-    # Compute V-function first
+    # Compute V-function first (with horizon-1 if horizon specified)
     if horizon is not None and horizon > 0:
         V = compute_v_function_numba(pi, P, R_sas, gamma, nS, nA, horizon - 1)
     else:

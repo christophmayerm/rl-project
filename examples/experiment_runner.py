@@ -23,6 +23,8 @@ from utils.tabular import TabularPolicy, TabularModel
 from envs.student_teacher import TeacherStudentEnv
 from envs.gymnasium_envs import create_gym_env
 
+import cProfile
+import pstats
 
 class ExperimentRunner:
     """Main experiment runner with YAML configuration"""
@@ -190,7 +192,10 @@ class ExperimentRunner:
             print(f"  B_max: {adversarial_config['B_max']}")
             print(f"  B_min: {adversarial_config['B_min']}")
         print(f"{'='*70}\n")
-        
+
+        profiler = cProfile.Profile()
+        profiler.enable()
+
         # Create algorithm
         if is_adversarial:
             algorithm = SPMI(
@@ -214,8 +219,14 @@ class ExperimentRunner:
                 max_iter=training_config['max_iter'],
                 persistent=True
             )
+
+        profiler.disable()
+        stats = pstats.Stats(profiler)
+        stats.sort_stats('cumulative')
+        stats.print_stats(20)  # Top 20 slowest functions
         
         # Configure logger
+        algorithm.logger.progress_style = training_config.get('progress_style', 'rich')
         algorithm.logger.verbose = training_config.get('verbose', 1)
         algorithm.logger.log_interval = training_config['log_interval']
         
@@ -241,13 +252,20 @@ class ExperimentRunner:
             algorithm.logger._init_wandb(wandb_config)
         
         algorithm.logger.set_max_iter(training_config['max_iter'])
-        
+
+        profiler = cProfile.Profile()
+        profiler.enable()
         # Run!
         if is_adversarial:
             policy, model_coop, model_adv = algorithm.sa_pmi(initial_policy, initial_model)
         else:
             policy, model = algorithm.spmi(initial_policy, initial_model)
-        
+
+        profiler.disable()
+        stats = pstats.Stats(profiler)
+        stats.sort_stats('cumulative')
+        stats.print_stats(20)  # Top 20 slowest functions
+
         # Extract results
         results = {
             'algorithm': algo_name,

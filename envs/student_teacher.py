@@ -56,16 +56,27 @@ class TeacherStudentEnv(discrete.DiscreteEnv):
         self.R_sas = r_sas(self.P, self.nS, self.nA)
         self.R = r_sa(self.R_sas, self.nS, self.nA)
 
+        self._cached_P_sas = None
+        self._cached_P_hash = None
+
 
         super(TeacherStudentEnv, self).__init__(self.nS, self.nA, self.P, self.isd)
 
     def set_model(self, model):
-        self.P = copy.deepcopy(model)
 
-        self.P_sas = p_sas(self.P, self.nS, self.nA)
+        model_hash = hash(str(model))  # Quick hash
+        if model_hash == self._cached_P_hash:
+            return
+        
+        self.P = model
+        self._cached_P_sas = p_sas(self.P, self.nS, self.nA)
+        self.P_sas = self._cached_P_sas
+
         self.P_sa = p_sa(self.P_sas, self.nS, self.nA)
         self.R_sas = r_sas(self.P, self.nS, self.nA)
         self.R = r_sa(self.R_sas, self.nS, self.nA)
+
+        self._cached_P_hash = model_hash
 
     def get_valid_actions(self, s):
         return range(self.nA)
@@ -155,7 +166,6 @@ class TeacherStudentEnv(discrete.DiscreteEnv):
         return action_indexes
 
     def _build_P(self):
-
         for s in range(self.nS):
             print("%s / %s" % (s, self.nS))
             for a in range(self.nA):
@@ -168,15 +178,23 @@ class TeacherStudentEnv(discrete.DiscreteEnv):
                     reward = 0.
 
                 for s1 in range(self.nS):
-
                     if self._decode_state(s1)[2] == self._decode_action(a):
                         sum_prob += 1.
                         l.append((1., s1, reward, False))
                     else:
                         l.append((0., s1, 0., False))
 
-                for i in range(len(l)):
-                    l[i] = (l[i][0] / sum_prob, l[i][1], l[i][2], l[i][3])
+                # FIX: Check if there are any valid transitions
+                if sum_prob > 0:
+                    for i in range(len(l)):
+                        l[i] = (l[i][0] / sum_prob, l[i][1], l[i][2], l[i][3])
+                else:
+                    # No valid transitions - create self-loop with 0 reward
+                    for i in range(len(l)):
+                        if l[i][1] == s:  # Self-loop
+                            l[i] = (1.0, s, 0., False)
+                        else:
+                            l[i] = (0., l[i][1], 0., False)
 
     # method to reset the MDP state to an initial one
     def reset(self):
