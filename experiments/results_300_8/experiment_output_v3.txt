@@ -1,0 +1,3091 @@
+======================================================================
+SPMI vs F-SPMI Experimental Comparison
+======================================================================
+
+[1/5] Setting up environment...
+  State space: 10
+  Action space: 4
+  Discount factor: 0.95
+  Horizon: 20
+
+[2/5] Running Standard SPMI...
+----------------------
+performance: 5.307419800862583
+alfa/beta: 0.0013116570117667533/0.0
+bound: 0.0004603576959063067
+iteration: 0
+condition: 0.0
+
+policy advantage: 0.7019482864445209
+alfa star: 0.0013116570117667533
+policy dist sup: 1.5
+policy dist mean: 1.4635372689085475
+model advantage: 0.4565625668007678
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.839007232780729
+----------------------
+performance: 5.318459590308245
+alfa/beta: 0.001311565989887101/0.0
+bound: 0.0004590327626546028
+iteration: 1
+condition: 0.0
+
+policy advantage: 0.6999766175609907
+alfa star: 0.001311565989887101
+policy dist sup: 1.4980325144823499
+policy dist mean: 1.461444606618338
+model advantage: 0.4569952145767393
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8395738565614648
+----------------------
+performance: 5.32946834303857
+alfa/beta: 0.0013114852139274385/0.0
+bound: 0.00045771881950128625
+iteration: 2
+condition: 0.0
+
+policy advantage: 0.698015981637458
+alfa star: 0.0013114852139274385
+policy dist sup: 1.4960677459846097
+policy dist mean: 1.459354897581754
+model advantage: 0.4574233548697165
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8401342502150839
+----------------------
+performance: 5.340446310332733
+alfa/beta: 0.0013114146168709045/0.0
+bound: 0.0004564157386407198
+iteration: 3
+condition: 0.0
+
+policy advantage: 0.6960662673255062
+alfa star: 0.0013114146168709045
+policy dist sup: 1.4941056752567172
+policy dist mean: 1.4572681211234815
+model advantage: 0.45784702085811385
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8406884592572978
+----------------------
+performance: 5.351393740617651
+alfa/beta: 0.0013113541326996722/0.0
+bound: 0.00045512339419548733
+iteration: 4
+condition: 0.0
+
+policy advantage: 0.6941273647546741
+alfa star: 0.0013113541326996722
+policy dist sup: 1.4921462832350358
+policy dist mean: 1.4551842567770528
+model advantage: 0.4582662453232182
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8412365286686521
+----------------------
+performance: 5.3623108795100825
+alfa/beta: 0.0013113036963786513/0.0
+bound: 0.00045384166218010325
+iteration: 5
+condition: 0.0
+
+policy advantage: 0.6921991655075032
+alfa star: 0.0013113036963786513
+policy dist sup: 1.490189551039923
+policy dist mean: 1.4531032842821456
+model advantage: 0.4586810606553209
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8417785029026028
+----------------------
+performance: 5.3731979698579835
+alfa/beta: 0.0013112632438395228/0.0
+bound: 0.0004525704204655234
+iteration: 6
+condition: 0.0
+
+policy advantage: 0.6902815625950858
+alfa star: 0.0013112632438395228
+policy dist sup: 1.4882354599733396
+policy dist mean: 1.4510251835819097
+model advantage: 0.4590914988597285
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8423144258934352
+----------------------
+performance: 5.384055251781138
+alfa/beta: 0.001311232711965124/0.0
+bound: 0.00045130954874446523
+iteration: 7
+condition: 0.0
+
+policy advantage: 0.6883744504331264
+alfa star: 0.001311232711965124
+policy dist sup: 1.486283991516498
+policy dist mean: 1.4489499348203443
+model advantage: 0.4594975915626536
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8428443410640368
+----------------------
+performance: 5.394882962710934
+alfa/beta: 0.0013112120385741245/0.0
+bound: 0.000450058928497484
+iteration: 8
+condition: 0.0
+
+policy advantage: 0.6864777248184816
+alfa star: 0.0013112120385741245
+policy dist sup: 1.4843351273275514
+policy dist mean: 1.4468775183397318
+model advantage: 0.4598993700170209
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8433682913335356
+----------------------
+performance: 5.405681337429557
+alfa/beta: 0.001311201162406038/0.0
+bound: 0.00044881844295981225
+iteration: 9
+condition: 0.0
+
+policy advantage: 0.6845912829061801
+alfa star: 0.001311201162406038
+policy dist sup: 1.482388849239321
+policy dist mean: 1.4448079146780908
+model advantage: 0.46029686510813494
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8438863191247816
+----------------------
+performance: 5.4164506081083506
+alfa/beta: 0.0013112000231065369/0.0
+bound: 0.000447587977088929
+iteration: 10
+condition: 0.0
+
+policy advantage: 0.6827150231869116
+alfa star: 0.0013112000231065369
+policy dist sup: 1.4804451392570608
+policy dist mean: 1.4427411045666938
+model advantage: 0.46069010735926935
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.844398466371709
+----------------------
+performance: 5.427191004345579
+alfa/beta: 0.0013112085612130525/0.0
+bound: 0.0004463674175328406
+iteration: 11
+condition: 0.0
+
+policy advantage: 0.6808488454649624
+alfa star: 0.0013112085612130525
+policy dist sup: 1.478503979556259
+policy dist mean: 1.4406770689276147
+model advantage: 0.46107912693713893
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8449047745265521
+----------------------
+performance: 5.4379027532034225
+alfa/beta: 0.0013112267181406773/0.0
+bound: 0.0004451566525990564
+iteration: 12
+condition: 0.0
+
+policy advantage: 0.6789926508365992
+alfa star: 0.0013112267181406773
+policy dist sup: 1.4765653524804772
+policy dist mean: 1.4386157888713218
+model advantage: 0.46146395365728
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8454052845669378
+----------------------
+performance: 5.448586079244388
+alfa/beta: 0.0013112544361683575/0.0
+bound: 0.00044395557222425225
+iteration: 13
+condition: 0.0
+
+policy advantage: 0.6771463416688885
+alfa star: 0.0013112544361683575
+policy dist sup: 1.4746292405392238
+policy dist mean: 1.436557245694308
+model advantage: 0.4618446169893247
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8459000370028437
+----------------------
+performance: 5.4592412045669825
+alfa/beta: 0.0013112916584253525/0.0
+bound: 0.000442764067944585
+iteration: 14
+condition: 0.0
+
+policy advantage: 0.6753098215789344
+alfa star: 0.0013112916584253525
+policy dist sup: 1.4726956264058633
+policy dist mean: 1.434501420876762
+model advantage: 0.46222114606218917
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8463890718834337
+----------------------
+performance: 5.469868348840851
+alfa/beta: 0.0013113383288779778/0.0
+bound: 0.000441582032866657
+iteration: 15
+condition: 0.0
+
+policy advantage: 0.6734829954135306
+alfa star: 0.0013113383288779778
+policy dist sup: 1.4707644929155577
+policy dist mean: 1.4324482960802714
+model advantage: 0.46259356966916226
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8468724288037692
+----------------------
+performance: 5.480467729341193
+alfa/beta: 0.0013113943923165935/0.0
+bound: 0.00044040936163910235
+iteration: 16
+condition: 0.0
+
+policy advantage: 0.6716657692292158
+alfa star: 0.0013113943923165935
+policy dist sup: 1.4688358230632448
+policy dist mean: 1.4303978531455792
+model advantage: 0.4629619162729005
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8473501469114051
+----------------------
+performance: 5.491039560982638
+alfa/beta: 0.0013114597943428802/0.0
+bound: 0.0004392459504247954
+iteration: 17
+condition: 0.0
+
+policy advantage: 0.6698580502727252
+alfa star: 0.0013114597943428802
+policy dist sup: 1.466909600001646
+policy dist mean: 1.4283500740903583
+model advantage: 0.4633262140103408
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8478222649128602
+----------------------
+performance: 5.501584056352485
+alfa/beta: 0.00131153448135735/0.0
+bound: 0.0004380916968736499
+iteration: 18
+condition: 0.0
+
+policy advantage: 0.6680597469618252
+alfa star: 0.00131153448135735
+policy dist sup: 1.464985807039308
+policy dist mean: 1.4263049411070348
+model advantage: 0.4636864906975214
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.848288821079978
+----------------------
+performance: 5.512101425743362
+alfa/beta: 0.0013116184005471081/0.0
+bound: 0.0004369465000960019
+iteration: 19
+condition: 0.0
+
+policy advantage: 0.6662707688665253
+alfa star: 0.0013116184005471081
+policy dist sup: 1.463064427638677
+policy dist mean: 1.424262436560642
+model advantage: 0.4640427738343109
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8487498532561739
+----------------------
+performance: 5.522591877185343
+alfa/beta: 0.0013117114998738614/0.0
+bound: 0.00043581026063655885
+iteration: 20
+condition: 0.0
+
+policy advantage: 0.6644910266906524
+alfa star: 0.0013117114998738614
+policy dist sup: 1.4611454454142
+policy dist mean: 1.4222225429867055
+model advantage: 0.46439509060906603
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8492053988625692
+----------------------
+performance: 5.533055616477443
+alfa/beta: 0.0013118137280621626/0.0
+bound: 0.0004346828804489102
+iteration: 21
+condition: 0.0
+
+policy advantage: 0.6627204322537963
+alfa star: 0.0013118137280621626
+policy dist sup: 1.459228844130462
+policy dist mean: 1.4201852430891737
+model advantage: 0.4647434679031986
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8496554949040211
+----------------------
+performance: 5.543492847218652
+alfa/beta: 0.0013119250345878788/0.0
+bound: 0.00043356426287056527
+iteration: 22
+condition: 0.0
+
+policy advantage: 0.6609588984735898
+alfa star: 0.0013119250345878788
+policy dist sup: 1.4573146077003474
+policy dist mean: 1.4181505197383681
+model advantage: 0.46508793229565876
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8501001779750446
+----------------------
+performance: 5.5539037708383425
+alfa/beta: 0.0013120453696668978/0.0
+bound: 0.000432454312598531
+iteration: 23
+condition: 0.0
+
+policy advantage: 0.6592063393483452
+alfa star: 0.0013120453696668978
+policy dist sup: 1.4554027201832347
+policy dist mean: 1.4161183559689767
+model advantage: 0.46542851006735225
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.850539484265632
+----------------------
+performance: 5.564288586626177
+alfa/beta: 0.0013121746842440515/0.0
+bound: 0.0004313529356653988
+iteration: 24
+condition: 0.0
+
+policy advantage: 0.6574626699400208
+alfa star: 0.0013121746842440515
+policy dist sup: 1.4534931657832177
+policy dist mean: 1.4140887349780726
+model advantage: 0.4657652272054652
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8509734495669693
+----------------------
+performance: 5.574647491761565
+alfa/beta: 0.0013123129299822457/0.0
+bound: 0.00043026003941592703
+iteration: 25
+condition: 0.0
+
+policy advantage: 0.6557278063575096
+alfa star: 0.0013123129299822457
+policy dist sup: 1.4515859288473552
+policy dist mean: 1.4120616401231656
+model advantage: 0.46609810940772745
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8514021092770535
+----------------------
+performance: 5.584980681342514
+alfa/beta: 0.0013124600592518201/0.0
+bound: 0.00042917553248412603
+iteration: 26
+condition: 0.0
+
+policy advantage: 0.6540016657402608
+alfa star: 0.0013124600592518201
+policy dist sup: 1.4496809938639483
+policy dist mean: 1.41003705492029
+model advantage: 0.4664271820865853
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8518254984062157
+----------------------
+performance: 5.595288348414036
+alfa/beta: 0.0013126160251201021/0.0
+bound: 0.00042809932477081005
+iteration: 27
+condition: 0.0
+
+policy advantage: 0.6522841662422028
+alfa star: 0.0013126160251201021
+policy dist sup: 1.4477783454608455
+policy dist mean: 1.4080149630421166
+model advantage: 0.4667524703733225
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8522436515825464
+----------------------
+performance: 5.605570683996102
+alfa/beta: 0.001312780781341158/0.0
+bound: 0.0004270313274216153
+iteration: 28
+condition: 0.0
+
+policy advantage: 0.6505752270159733
+alfa star: 0.001312780781341158
+policy dist sup: 1.4458779684037717
+policy dist mean: 1.4059953483160919
+model advantage: 0.4670739991220908
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8526566030572259
+----------------------
+performance: 5.6158278771110375
+alfa/beta: 0.0013129542823457651/0.0
+bound: 0.000425971452805485
+iteration: 29
+condition: 0.0
+
+policy advantage: 0.6488747681974594
+alfa star: 0.0013129542823457651
+policy dist sup: 1.4439798475946866
+policy dist mean: 1.4039781947226175
+model advantage: 0.4673917929138849
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8530643867097684
+----------------------
+performance: 5.626060114810541
+alfa/beta: 0.0013131364832315473/0.0
+bound: 0.00042491961449357994
+iteration: 30
+condition: 0.0
+
+policy advantage: 0.6471827108906139
+alfa star: 0.0013131364832315473
+policy dist sup: 1.442083968070166
+policy dist mean: 1.4019634863932455
+model advantage: 0.4677058760604367
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8534670360531702
+----------------------
+performance: 5.636267582202179
+alfa/beta: 0.001313327339753327/0.0
+bound: 0.00042387572723864077
+iteration: 31
+condition: 0.0
+
+policy advantage: 0.6454989771525724
+alfa star: 0.001313327339753327
+policy dist sup: 1.4401903149998097
+policy dist mean: 1.3999512076089116
+model advantage: 0.4680162726080595
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8538645842389772
+----------------------
+performance: 5.64645046247547
+alfa/beta: 0.0013135268083136402/0.0
+bound: 0.0004228397069547581
+iteration: 32
+condition: 0.0
+
+policy advantage: 0.6438234899790389
+alfa star: 0.0013135268083136402
+policy dist sup: 1.4382988736846727
+policy dist mean: 1.3979413427981875
+model advantage: 0.4683230063414069
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8542570640622599
+----------------------
+performance: 5.6566089369275305
+alfa/beta: 0.0013137348459534516/0.0
+bound: 0.0004218114706975669
+iteration: 33
+condition: 0.0
+
+policy advantage: 0.6421561732899526
+alfa star: 0.0013137348459534516
+policy dist sup: 1.4364096295557205
+policy dist mean: 1.3959338765355676
+model advantage: 0.468626100787185
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8546445079665086
+----------------------
+performance: 5.666743184988263
+alfa/beta: 0.0013139514103430315/0.0
+bound: 0.000420790936644838
+iteration: 34
+condition: 0.0
+
+policy advantage: 0.6404969519154177
+alfa star: 0.0013139514103430315
+policy dist sup: 1.43452256817231
+policy dist mean: 1.393928793539776
+model advantage: 0.46892557921779066
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8550269480484449
+----------------------
+performance: 5.676853384245184
+alfa/beta: 0.001314176459773019/0.0
+bound: 0.0004197780240774661
+iteration: 35
+condition: 0.0
+
+policy advantage: 0.6388457515818978
+alfa star: 0.001314176459773019
+policy dist sup: 1.432637675220691
+policy dist mean: 1.3919260786721028
+model advantage: 0.4692214646548949
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8554044160627503
+----------------------
+performance: 5.686939710467757
+alfa/beta: 0.00131440995314564/0.0
+bound: 0.00041877265336083867
+iteration: 36
+condition: 0.0
+
+policy advantage: 0.6372024988986636
+alfa star: 0.00131440995314564
+policy dist sup: 1.4307549365125323
+policy dist mean: 1.38992571693477
+model advantage: 0.4695137798729626
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8557769434267222
+----------------------
+performance: 5.697002337631395
+alfa/beta: 0.0013146518499661084/0.0
+bound: 0.000417774745926586
+iteration: 37
+condition: 0.0
+
+policy advantage: 0.6355671213444931
+alfa star: 0.0013146518499661084
+policy dist sup: 1.4288743379834676
+policy dist mean: 1.387927693469311
+model advantage: 0.4698025474027145
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8561445612248433
+----------------------
+performance: 5.707041437941016
+alfa/beta: 0.0013149021103341812/0.0
+bound: 0.00041678422425469653
+iteration: 38
+condition: 0.0
+
+policy advantage: 0.6339395472546183
+alfa star: 0.0013149021103341812
+policy dist sup: 1.4269958656916686
+policy dist mean: 1.3859319935549852
+model advantage: 0.4700877895345268
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8565073002132815
+----------------------
+performance: 5.717057181854251
+alfa/beta: 0.0013151606949358637/0.0
+bound: 0.0004158010118559813
+iteration: 39
+condition: 0.0
+
+policy advantage: 0.6323197058079031
+alfa star: 0.0013151606949358637
+policy dist sup: 1.4251195058164325
+policy dist mean: 1.383938602607211
+model advantage: 0.47036952832178525
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8568651908243117
+----------------------
+performance: 5.727049738104229
+alfa/beta: 0.0013154275650352982/0.0
+bound: 0.0004148250332549081
+iteration: 40
+condition: 0.0
+
+policy advantage: 0.6307075270142704
+alfa star: 0.0013154275650352982
+policy dist sup: 1.4232452446567965
+policy dist mean: 1.3819475061760214
+model advantage: 0.4706477855841674
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8572182631706649
+----------------------
+performance: 5.73701927372205
+alfa/beta: 0.0013157026824667628/0.0
+bound: 0.000413856213972751
+iteration: 41
+condition: 0.0
+
+policy advantage: 0.6291029417023413
+alfa star: 0.0013157026824667628
+policy dist sup: 1.4213730686301693
+policy dist mean: 1.3799586899445528
+model advantage: 0.47092258291088784
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8575665470498111
+----------------------
+performance: 5.74696595405881
+alfa/beta: 0.0013159860096268654/0.0
+bound: 0.00041289448051110163
+iteration: 42
+condition: 0.0
+
+policy advantage: 0.6275058815073173
+alfa star: 0.0013159860096268654
+policy dist sup: 1.4195029642709867
+policy dist mean: 1.3779721397275444
+model advantage: 0.4711939416638789
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8579100719481637
+----------------------
+performance: 5.75688994280735
+alfa/beta: 0.0013162775094668518/0.0
+bound: 0.00041193976033568563
+iteration: 43
+condition: 0.0
+
+policy advantage: 0.6259162788590664
+alfa star: 0.0013162775094668518
+policy dist sup: 1.4176349182293824
+policy dist mean: 1.3759878414698636
+model advantage: 0.47146188298091607
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8582488670452191
+----------------------
+performance: 5.766791402023583
+alfa/beta: 0.0013165771454850686/0.0
+bound: 0.0004109919818605087
+iteration: 44
+condition: 0.0
+
+policy advantage: 0.6243340669704338
+alfa star: 0.0013165771454850686
+policy dist sup: 1.4157689172698822
+policy dist mean: 1.374005781245058
+model advantage: 0.4717264277787052
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8585829612176304
+----------------------
+performance: 5.776670492147541
+alfa/beta: 0.0013168848817195654/0.0
+bound: 0.0004100510744323089
+iteration: 45
+condition: 0.0
+
+policy advantage: 0.6227591798257586
+alfa star: 0.0013168848817195654
+policy dist sup: 1.4139049482701163
+policy dist mean: 1.3720259452539205
+model advantage: 0.4719875967559085
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8589123830432103
+----------------------
+performance: 5.786527372024027
+alfa/beta: 0.001317200682740831/0.0
+bound: 0.0004091169683153169
+iteration: 46
+condition: 0.0
+
+policy advantage: 0.6211915521696
+alfa star: 0.001317200682740831
+policy dist sup: 1.412042998219551
+policy dist mean: 1.370048319823089
+model advantage: 0.47224541039612256
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8592371608048751
+----------------------
+performance: 5.796362198922971
+alfa/beta: 0.0013175245136446705/0.0
+bound: 0.0004081895946763126
+iteration: 47
+condition: 0.0
+
+policy advantage: 0.6196311194956623
+alfa star: 0.0013175245136446705
+policy dist sup: 1.410183054218237
+policy dist mean: 1.3680728914036497
+model advantage: 0.4724998889708152
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8595573224945197
+----------------------
+performance: 5.806175128559439
+alfa/beta: 0.0013178563400452123/0.0
+bound: 0.0004072688855699749
+iteration: 48
+condition: 0.0
+
+policy advantage: 0.6180778180359212
+alfa star: 0.0013178563400452123
+policy dist sup: 1.408325103475578
+policy dist mean: 1.3660996465697726
+model advantage: 0.47275105254220257
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8598728958168318
+----------------------
+performance: 5.81596631511335
+alfa/beta: 0.001318196128068038/0.0
+bound: 0.00040635477392451084
+iteration: 49
+condition: 0.0
+
+policy advantage: 0.6165315847499395
+alfa star: 0.001318196128068038
+policy dist sup: 1.406469133309118
+policy dist mean: 1.3641285720173646
+model advantage: 0.47299892096608925
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8601839081930465
+----------------------
+performance: 5.825735911248838
+alfa/beta: 0.0013185438443434388/0.0
+bound: 0.00040544719352756265
+iteration: 50
+condition: 0.0
+
+policy advantage: 0.6149923573143716
+alfa star: 0.0013185438443434388
+policy dist sup: 1.4046151311433426
+policy dist mean: 1.3621596545627404
+model advantage: 0.4732435138946637
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8604903867646385
+----------------------
+performance: 5.835484068133366
+alfa/beta: 0.0013188994559998177/0.0
+bound: 0.00040454607901239996
+iteration: 51
+condition: 0.0
+
+policy advantage: 0.6134600741126637
+alfa star: 0.0013188994559998177
+policy dist sup: 1.4027630845085017
+policy dist mean: 1.3601928811413135
+model advantage: 0.4734848507792387
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8607923583969569
+----------------------
+performance: 5.845210935456465
+alfa/beta: 0.0013192629306571675/0.0
+bound: 0.0004036513658443512
+iteration: 52
+condition: 0.0
+
+policy advantage: 0.6119346742249165
+alfa star: 0.0013192629306571675
+policy dist sup: 1.400912981039447
+policy dist mean: 1.3582282388063083
+model advantage: 0.47372295087295924
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8610898496828028
+----------------------
+performance: 5.854916661448269
+alfa/beta: 0.001319634236420716/0.0
+bound: 0.00040276299030752205
+iteration: 53
+condition: 0.0
+
+policy advantage: 0.6104160974179457
+alfa star: 0.001319634236420716
+policy dist sup: 1.3990648084744852
+policy dist mean: 1.356265714727487
+model advantage: 0.47395783323345836
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8613828869459477
+----------------------
+performance: 5.864601392897635
+alfa/beta: 0.0013200133418746582/0.0
+bound: 0.00040188088949175143
+iteration: 54
+condition: 0.0
+
+policy advantage: 0.6089042841355039
+alfa star: 0.0013200133418746582
+policy dist sup: 1.3972185546542506
+policy dist mean: 1.354305296189899
+model advantage: 0.47418951672548076
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8616714962445995
+----------------------
+performance: 5.8742652751701225
+alfa/beta: 0.0013204002160760225/0.0
+bound: 0.00040100500127982766
+iteration: 55
+condition: 0.0
+
+policy advantage: 0.6073991754886832
+alfa star: 0.0013204002160760225
+policy dist sup: 1.3953742075205922
+policy dist mean: 1.3523469705926416
+model advantage: 0.47441802002345046
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8619557033748086
+----------------------
+performance: 5.883908452225584
+alfa/beta: 0.0013207948285486166/0.0
+bound: 0.00040013526433492675
+iteration: 56
+condition: 0.0
+
+policy advantage: 0.6059007132464682
+alfa star: 0.0013207948285486166
+policy dist sup: 1.3935317551154751
+policy dist mean: 1.3503907254476473
+model advantage: 0.47464336161401116
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8622355338738277
+----------------------
+performance: 5.893531066635527
+alfa/beta: 0.001321197149277117/0.0
+bound: 0.0003992716180883122
+iteration: 57
+condition: 0.0
+
+policy advantage: 0.6044088398264718
+alfa star: 0.001321197149277117
+policy dist sup: 1.3916911855799003
+policy dist mean: 1.3484365483784828
+model advantage: 0.47486555979852224
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8625110130234145
+----------------------
+performance: 5.903133259600212
+alfa/beta: 0.0013216071487012534/0.0
+bound: 0.0003984140027272547
+iteration: 58
+condition: 0.0
+
+policy advantage: 0.6029234982858213
+alfa star: 0.0013216071487012534
+policy dist sup: 1.389852487152838
+policy dist mean: 1.3464844271191656
+model advantage: 0.47508463269551365
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8627821658530828
+----------------------
+performance: 5.912715170965434
+alfa/beta: 0.001322024797710094/0.0
+bound: 0.0003975623591831811
+iteration: 59
+condition: 0.0
+
+policy advantage: 0.6014446323122032
+alfa star: 0.001322024797710094
+policy dist sup: 1.3880156481701764
+policy dist mean: 1.344534349512998
+model advantage: 0.4753005982431014
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8630490171433043
+----------------------
+performance: 5.922276939239146
+alfa/beta: 0.0013224500676364366/0.0
+bound: 0.00039671662912004385
+iteration: 60
+condition: 0.0
+
+policy advantage: 0.5999721862150608
+alfa star: 0.0013224500676364366
+policy dist sup: 1.386180657063686
+policy dist mean: 1.3425863035114158
+model advantage: 0.4755134742013709
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8633115914286593
+----------------------
+performance: 5.931818701607716
+alfa/beta: 0.001322882930251303/0.0
+bound: 0.00039587675492291083
+iteration: 61
+condition: 0.0
+
+policy advantage: 0.5985061049169448
+alfa star: 0.001322882930251303
+policy dist sup: 1.3843475023599958
+policy dist mean: 1.3406402771728585
+model advantage: 0.475723278154719
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8635699130009418
+----------------------
+performance: 5.941340593952013
+alfa/beta: 0.0013233233577585352/0.0
+bound: 0.00039504267968676945
+iteration: 62
+condition: 0.0
+
+policy advantage: 0.5970463339450134
+alfa star: 0.0013233233577585352
+policy dist sup: 1.3825161726795878
+policy dist mean: 1.338696258661649
+model advantage: 0.4759300275141559
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8638240059122124
+----------------------
+performance: 5.950842750863225
+alfa/beta: 0.0013237713227894766/0.0
+bound: 0.00039421434720553076
+iteration: 63
+condition: 0.0
+
+policy advantage: 0.5955928194226698
+alfa star: 0.0013237713227894766
+policy dist sup: 1.380686656735802
+policy dist mean: 1.3367542362468927
+model advantage: 0.47613373951958404
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8640738939778086
+----------------------
+performance: 5.960325305658392
+alfa/beta: 0.0013242267983977645/0.0
+bound: 0.00039339170196124845
+iteration: 64
+condition: 0.0
+
+policy advantage: 0.5941455080613516
+alfa star: 0.0013242267983977645
+policy dist sup: 1.378858943333857
+policy dist mean: 1.3348141983013924
+model advantage: 0.4763344312420279
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8643196007793063
+----------------------
+performance: 5.969788390395785
+alfa/beta: 0.0013246897580542038/0.0
+bound: 0.0003925746891135269
+iteration: 65
+condition: 0.0
+
+policy advantage: 0.5927043471524499
+alfa star: 0.0013246897580542038
+policy dist sup: 1.3770330213698838
+policy dist mean: 1.3328761333005723
+model advantage: 0.47653211958583647
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8645611496674338
+----------------------
+performance: 5.979232135889989
+alfa/beta: 0.0013251601756417433/0.0
+bound: 0.000391763254489134
+iteration: 66
+condition: 0.0
+
+policy advantage: 0.5912692845593741
+alfa star: 0.0013251601756417433
+policy dist sup: 1.3752088798299726
+policy dist mean: 1.3309400298214267
+model advantage: 0.47672682129085053
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8647985637649482
+----------------------
+performance: 5.98865667172679
+alfa/beta: 0.001325638025450529/0.0
+bound: 0.0003909573445717946
+iteration: 67
+condition: 0.0
+
+policy advantage: 0.5898402687097399
+alfa star: 0.001325638025450529
+policy dist sup: 1.373386507789233
+policy dist mean: 1.3290058765414718
+model advantage: 0.47691855293454005
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.86503186596946
+----------------------
+performance: 5.998062126277812
+alfa/beta: 0.001326123282173056/0.0
+bound: 0.0003901569064921793
+iteration: 68
+condition: 0.0
+
+policy advantage: 0.5884172485876991
+alfa star: 0.001326123282173056
+policy dist sup: 1.371565894410867
+policy dist mean: 1.3270736622377264
+model advantage: 0.4771073309341016
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8652610789562238
+----------------------
+performance: 6.007448626714968
+alfa/beta: 0.0013266159208994053/0.0
+bound: 0.0003893618880180717
+iteration: 69
+condition: 0.0
+
+policy advantage: 0.587000173726388
+alfa star: 0.0013266159208994053
+policy dist sup: 1.3697470289452542
+policy dist mean: 1.3251433757856879
+model advantage: 0.47729317154853074
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.865486225180877
+----------------------
+performance: 6.01681629902468
+alfa/beta: 0.001327115917112562/0.0
+bound: 0.0003885722375447169
+iteration: 70
+condition: 0.0
+
+policy advantage: 0.585588994200511
+alfa star: 0.001327115917112562
+policy dist sup: 1.3679299007290509
+policy dist mean: 1.3232150061583412
+model advantage: 0.47747609088066234
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8657073268821454
+----------------------
+performance: 6.026165268021856
+alfa/beta: 0.0013276232466838144/0.0
+bound: 0.0003877879040853418
+iteration: 71
+condition: 0.0
+
+policy advantage: 0.5841836606190387
+alfa star: 0.0013276232466838144
+policy dist sup: 1.366114499184299
+policy dist mean: 1.3212885424251701
+model advantage: 0.47765610487916993
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8659244060845068
+----------------------
+performance: 6.035495657363711
+alfa/beta: 0.0013281378858682434/0.0
+bound: 0.0003870088372618497
+iteration: 72
+condition: 0.0
+
+policy advantage: 0.5827841241180323
+alfa star: 0.0013281378858682434
+policy dist sup: 1.3643008138175503
+policy dist mean: 1.319363973751181
+model advantage: 0.47783322934055683
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8661374846008074
+----------------------
+performance: 6.0448075895633595
+alfa/beta: 0.0013286598113002948/0.0
+bound: 0.00038623498729568737
+iteration: 73
+condition: 0.0
+
+policy advantage: 0.5813903363535893
+alfa star: 0.0013286598113002948
+policy dist sup: 1.3624888342189982
+policy dist mean: 1.3174412893959455
+model advantage: 0.47800747991108833
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8663465840348492
+----------------------
+performance: 6.054101186003199
+alfa/beta: 0.0013291889999894003/0.0
+bound: 0.00038546630499886037
+iteration: 74
+condition: 0.0
+
+policy advantage: 0.5800022494948937
+alfa star: 0.0013291889999894003
+policy dist sup: 1.360678550061626
+policy dist mean: 1.3155204787126555
+model advantage: 0.47817887208872306
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8665517257839339
+----------------------
+performance: 6.063376566948106
+alfa/beta: 0.0013297254293157333/0.0
+bound: 0.0003847027417651371
+iteration: 75
+condition: 0.0
+
+policy advantage: 0.578619816217401
+alfa star: 0.0013297254293157333
+policy dist sup: 1.3588699511003626
+policy dist mean: 1.3136015311471874
+model advantage: 0.47834742122499574
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8667529310413693
+----------------------
+performance: 6.072633851558438
+alfa/beta: 0.001330269077025971/0.0
+bound: 0.0003839442495613781
+iteration: 76
+condition: 0.0
+
+policy advantage: 0.5772429896961098
+alfa star: 0.001330269077025971
+policy dist sup: 1.3570630271712514
+policy dist mean: 1.3116844362371793
+model advantage: 0.47851314252687716
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8669502207989375
+----------------------
+performance: 6.081873157902856
+alfa/beta: 0.0013308199212291856/0.0
+bound: 0.000383190780919043
+iteration: 77
+condition: 0.0
+
+policy advantage: 0.575871723598962
+alfa star: 0.0013308199212291856
+policy dist sup: 1.3552577681906302
+policy dist mean: 1.3097691836111234
+model advantage: 0.4786760510586188
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8671436158493304
+----------------------
+performance: 6.091094602970925
+alfa/beta: 0.001331377940392787/0.0
+bound: 0.0003824422889258445
+iteration: 78
+condition: 0.0
+
+policy advantage: 0.5745059720803474
+alfa star: 0.001331377940392787
+policy dist sup: 1.3534541641543214
+policy dist mean: 1.3078557629874705
+model advantage: 0.4788361617435428
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8673331367885471
+----------------------
+performance: 6.100298302685575
+alfa/beta: 0.0013319431133385342/0.0
+bound: 0.0003816987272175419
+iteration: 79
+condition: 0.0
+
+policy advantage: 0.5731456897747061
+alfa star: 0.0013319431133385342
+policy dist sup: 1.3516522051368338
+policy dist mean: 1.305944164173741
+model advantage: 0.4789934893658377
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8675188040182541
+----------------------
+performance: 6.1094843719153555
+alfa/beta: 0.001332515419238618/0.0
+bound: 0.0003809600499698845
+iteration: 80
+condition: 0.0
+
+policy advantage: 0.5717908317902395
+alfa star: 0.001332515419238618
+policy dist sup: 1.3498518812905729
+policy dist mean: 1.3040343770656544
+model advantage: 0.4791480485723042
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.867700637748116
+----------------------
+performance: 6.118652924486497
+alfa/beta: 0.0013330948376118292/0.0
+bound: 0.00038022621189070523
+iteration: 81
+condition: 0.0
+
+policy advantage: 0.5704413537027282
+alfa star: 0.0013330948376118292
+policy dist sup: 1.348053182845065
+policy dist mean: 1.3021263916462669
+model advantage: 0.4792998538740813
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8678786579980868
+----------------------
+performance: 6.127804073194861
+alfa/beta: 0.0013336813483197656/0.0
+bound: 0.0003794971682121351
+iteration: 82
+condition: 0.0
+
+policy advantage: 0.5690972115494357
+alfa star: 0.0013336813483197656
+policy dist sup: 1.346256100106188
+policy dist mean: 1.3002201979851176
+model advantage: 0.47944891964835623
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8680528846006714
+----------------------
+performance: 6.13693792981763
+alfa/beta: 0.001334274931563138/0.0
+bound: 0.00037877287468297767
+iteration: 83
+condition: 0.0
+
+policy advantage: 0.5677583618231296
+alfa star: 0.001334274931563138
+policy dist sup: 1.3444606234554146
+policy dist mean: 1.2983157862373957
+model advantage: 0.4795952601400341
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8682233372031555
+----------------------
+performance: 6.146054605124898
+alfa/beta: 0.0013348755678781144/0.0
+bound: 0.0003780532875611944
+iteration: 84
+condition: 0.0
+
+policy advantage: 0.5664247614661772
+alfa star: 0.0013348755678781144
+policy dist sup: 1.3426667433490642
+policy dist mean: 1.2964131466431035
+model advantage: 0.4797388894633997
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8683900352697961
+----------------------
+performance: 6.155154208891097
+alfa/beta: 0.0013354832381327452/0.0
+bound: 0.0003773383636065358
+iteration: 85
+condition: 0.0
+
+policy advantage: 0.5650963678647516
+alfa star: 0.0013354832381327452
+policy dist sup: 1.3408744503175651
+policy dist mean: 1.2945122695262445
+model advantage: 0.4798798216037383
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.86855299808399
+----------------------
+performance: 6.164236849906187
+alfa/beta: 0.0013360979235234342/0.0
+bound: 0.0003766280600732912
+iteration: 86
+condition: 0.0
+
+policy advantage: 0.5637731388431206
+alfa star: 0.0013360979235234342
+policy dist sup: 1.3390837349647255
+policy dist mean: 1.2926131452940177
+model advantage: 0.48001807041894695
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.868712244750407
+----------------------
+performance: 6.173302635986766
+alfa/beta: 0.0013367196055714965/0.0
+bound: 0.00037592233470317354
+iteration: 87
+condition: 0.0
+
+policy advantage: 0.5624550326580317
+alfa star: 0.0013367196055714965
+policy dist sup: 1.3372945879670153
+policy dist mean: 1.2907157644360145
+model advantage: 0.4801536496411119
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8688677941970879
+----------------------
+performance: 6.182351673986979
+alfa/beta: 0.0013373482661197646/0.0
+bound: 0.00037522114571832496
+iteration: 88
+condition: 0.0
+
+policy advantage: 0.5611420079931857
+alfa star: 0.0013373482661197646
+policy dist sup: 1.3355070000728548
+policy dist mean: 1.288820117523435
+model advantage: 0.48028657287807575
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8690196651775199
+----------------------
+performance: 6.191384069809313
+alfa/beta: 0.0013379838873292407/0.0
+bound: 0.00037452445181443357
+iteration: 89
+condition: 0.0
+
+policy advantage: 0.5598340239537929
+alfa star: 0.0013379838873292407
+policy dist sup: 1.3337209621019168
+policy dist mean: 1.2869261952083138
+model advantage: 0.48041685361496594
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8691678762726771
+----------------------
+performance: 6.200399928415188
+alfa/beta: 0.0013386264516758281/0.0
+bound: 0.0003738322121539793
+iteration: 90
+condition: 0.0
+
+policy advantage: 0.5585310400612185
+alfa star: 0.0013386264516758281
+policy dist sup: 1.3319364649444312
+policy dist mean: 1.2850339882227515
+model advantage: 0.4805445052157141
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8693124458930381
+----------------------
+performance: 6.209399353835429
+alfa/beta: 0.0013392759419471121/0.0
+bound: 0.00037314438635959336
+iteration: 91
+condition: 0.0
+
+policy advantage: 0.5572330162477134
+alfa star: 0.0013392759419471121
+policy dist sup: 1.3301534995605049
+policy dist mean: 1.2831434873781598
+model advantage: 0.4806695409245536
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8694533922805678
+----------------------
+performance: 6.218382449180593
+alfa/beta: 0.0013399323412391995/0.0
+bound: 0.0003724609345075291
+iteration: 92
+condition: 0.0
+
+policy advantage: 0.5559399128512248
+alfa star: 0.0013399323412391995
+policy dist sup: 1.3283720569794468
+policy dist mean: 1.2812546835645109
+model advantage: 0.4807919738674798
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8695907335106742
+----------------------
+performance: 6.22734931665114
+alfa/beta: 0.0013405956329536018/0.0
+bound: 0.00037178181712124107
+iteration: 93
+condition: 0.0
+
+policy advantage: 0.5546516906102864
+alfa star: 0.0013405956329536018
+policy dist sup: 1.3265921282991018
+policy dist mean: 1.2793675677496057
+model advantage: 0.4809118170537127
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8697244874941411
+----------------------
+performance: 6.236300057547476
+alfa/beta: 0.0013412658007942008/0.0
+bound: 0.00037110699516508544
+iteration: 94
+condition: 0.0
+
+policy advantage: 0.5533683106589948
+alfa star: 0.0013412658007942008
+policy dist sup: 1.324813704685193
+policy dist mean: 1.2774821309783388
+model advantage: 0.4810290833771237
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8698546719790272
+----------------------
+performance: 6.245234772279836
+alfa/beta: 0.0013419428287642385/0.0
+bound: 0.0003704364300381137
+iteration: 95
+condition: 0.0
+
+policy advantage: 0.5520897345220576
+alfa star: 0.0013419428287642385
+policy dist sup: 1.3230367773706755
+policy dist mean: 1.2755983643719864
+model advantage: 0.4811437856176417
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8699813045525441
+----------------------
+performance: 6.254153560378033
+alfa/beta: 0.0013426267011633713/0.0
+bound: 0.00036977008356797617
+iteration: 96
+condition: 0.0
+
+policy advantage: 0.5508159241099173
+alfa star: 0.0013426267011633713
+policy dist sup: 1.3212613376550915
+policy dist mean: 1.2737162591274904
+model advantage: 0.4812559364426494
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8701044026429045
+----------------------
+performance: 6.263056520501122
+alfa/beta: 0.00134331740258479/0.0
+bound: 0.0003691079180049353
+iteration: 97
+condition: 0.0
+
+policy advantage: 0.5495468417139593
+alfa star: 0.00134331740258479
+policy dist sup: 1.319487376903941
+policy dist mean: 1.2718358065167594
+model advantage: 0.48136554840835144
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.870223983521145
+----------------------
+performance: 6.271943750446844
+alfa/beta: 0.0013440149179123559/0.0
+bound: 0.00036844989601596354
+iteration: 98
+condition: 0.0
+
+policy advantage: 0.5482824500017796
+alfa star: 0.0013440149179123559
+policy dist sup: 1.317714886548055
+policy dist mean: 1.269956997885978
+model advantage: 0.48147263396112394
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.870340064302928
+----------------------
+performance: 6.280815347160998
+alfa/beta: 0.0013447192323178345/0.0
+bound: 0.00036779598067896325
+iteration: 99
+condition: 0.0
+
+policy advantage: 0.5470227120125429
+alfa star: 0.0013447192323178345
+policy dist sup: 1.3159438580829792
+policy dist mean: 1.2680798246549216
+model advantage: 0.4815772054388513
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8704526619503127
+----------------------
+performance: 6.289671406746699
+alfa/beta: 0.001345430331258132/0.0
+bound: 0.0003671461354770584
+iteration: 100
+condition: 0.0
+
+policy advantage: 0.5457675911523929
+alfa star: 0.001345430331258132
+policy dist sup: 1.3141742830683643
+policy dist mean: 1.2662042783162795
+model advantage: 0.48167927507223524
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8705617932735026
+----------------------
+performance: 6.298512024473459
+alfa/beta: 0.0013461482004726091/0.0
+bound: 0.00036650032429299943
+iteration: 101
+condition: 0.0
+
+policy advantage: 0.5445170511899472
+alfa star: 0.0013461482004726091
+policy dist sup: 1.3124061531273647
+policy dist mean: 1.2643303504349923
+model advantage: 0.4817788549860955
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8706674749325745
+----------------------
+performance: 6.307337294786159
+alfa/beta: 0.0013468728259804345/0.0
+bound: 0.00036585851140365466
+iteration: 102
+condition: 0.0
+
+policy advantage: 0.5432710562518533
+alfa star: 0.0013468728259804345
+policy dist sup: 1.3106394599460434
+policy dist mean: 1.2624580326475907
+model advantage: 0.481875957200642
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8707697234391782
+----------------------
+performance: 6.316147311313938
+alfa/beta: 0.0013476041940779894/0.0
+bound: 0.0003652206614745941
+iteration: 103
+condition: 0.0
+
+policy advantage: 0.5420295708184146
+alfa star: 0.0013476041940779894
+policy dist sup: 1.308874195272784
+policy dist mean: 1.2605873166615407
+model advantage: 0.48197059363273953
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8708685551582105
+----------------------
+performance: 6.324942166878902
+alfa/beta: 0.00134834229133631/0.0
+bound: 0.0003645867395547651
+iteration: 104
+condition: 0.0
+
+policy advantage: 0.5407925597192859
+alfa star: 0.00134834229133631
+policy dist sup: 1.3071103509177142
+policy dist mean: 1.258718194254612
+model advantage: 0.4820627760971465
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8709639863094771
+----------------------
+performance: 6.333721953504768
+alfa/beta: 0.0013490871045985732/0.0
+bound: 0.00036395671107124477
+iteration: 105
+condition: 0.0
+
+policy advantage: 0.5395599881292197
+alfa star: 0.0013490871045985732
+policy dist sup: 1.3053479187521284
+policy dist mean: 1.2568506572742288
+model advantage: 0.4821525163077427
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8710560329693178
+----------------------
+performance: 6.342486762425355
+alfa/beta: 0.0013498386209776431/0.0
+bound: 0.0003633305418240978
+iteration: 106
+condition: 0.0
+
+policy advantage: 0.5383318215638986
+alfa star: 0.0013498386209776431
+policy dist sup: 1.3035868907079253
+policy dist mean: 1.2549846976368562
+model advantage: 0.4822398258787348
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8711447110722228
+----------------------
+performance: 6.351236684092975
+alfa/beta: 0.001350596827853648/0.0
+bound: 0.0003627081979813037
+iteration: 107
+condition: 0.0
+
+policy advantage: 0.5371080258758123
+alfa star: 0.001350596827853648
+policy dist sup: 1.3018272587770476
+policy dist mean: 1.2531203073273707
+model advantage: 0.48232471632585183
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8712300364124164
+----------------------
+performance: 6.35997180818672
+alfa/beta: 0.0013513617128716078/0.0
+bound: 0.0003620896460737754
+iteration: 108
+condition: 0.0
+
+policy advantage: 0.5358885672502064
+alfa star: 0.0013513617128716078
+policy dist sup: 1.30006901501093
+policy dist mean: 1.2512574783984545
+model advantage: 0.48240719906751856
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8713120246454262
+----------------------
+performance: 6.368692223620621
+alfa/beta: 0.0013521332639390893/0.0
+bound: 0.00036147485299045044
+iteration: 109
+condition: 0.0
+
+policy advantage: 0.5346734122010832
+alfa star: 0.0013521332639390893
+policy dist sup: 1.2983121515199536
+policy dist mean: 1.2493962029699877
+model advantage: 0.4824872854260133
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.871390691289629
+----------------------
+performance: 6.377398018551711
+alfa/beta: 0.0013529114692239234/0.0
+bound: 0.0003608637859734719
+iteration: 110
+condition: 0.0
+
+policy advantage: 0.5334625275672705
+alfa star: 0.0013529114692239234
+policy dist sup: 1.2965566604729069
+policy dist mean: 1.2475364732284517
+model advantage: 0.4825649866286135
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8714660517277751
+----------------------
+performance: 6.38608928038796
+alfa/beta: 0.0013536963171519511/0.0
+bound: 0.0003602564126134432
+iteration: 111
+condition: 0.0
+
+policy advantage: 0.532255880508545
+alfa star: 0.0013536963171519511
+policy dist sup: 1.2948025340964544
+policy dist mean: 1.2456782814263403
+model advantage: 0.48264031380872446
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8715381212084925
+----------------------
+performance: 6.394766095796159
+alfa/beta: 0.0013544877964048142/0.0
+bound: 0.0003596527008447596
+iteration: 112
+condition: 0.0
+
+policy advantage: 0.5310534385018122
+alfa star: 0.0013544877964048142
+policy dist sup: 1.2930497646746089
+policy dist mean: 1.2438216198815737
+model advantage: 0.48271327800699165
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8716069148477714
+----------------------
+performance: 6.403428550709614
+alfa/beta: 0.0013552858959177772/0.0
+bound: 0.0003590526189410133
+iteration: 113
+condition: 0.0
+
+policy advantage: 0.529855169337343
+alfa star: 0.0013552858959177772
+policy dist sup: 1.2912983445482134
+policy dist mean: 1.2419664809769262
+model advantage: 0.48278389017239404
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8716724476304296
+----------------------
+performance: 6.412076730335822
+alfa/beta: 0.0013560906048776088/0.0
+bound: 0.0003584561355104803
+iteration: 114
+condition: 0.0
+
+policy advantage: 0.528661041115069
+alfa star: 0.0013560906048776088
+policy dist sup: 1.289548266114425
+policy dist mean: 1.2401128571594517
+model advantage: 0.48285216116333396
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.871734734411556
+----------------------
+performance: 6.420710719163996
+alfa/beta: 0.0013569019127204762/0.0
+bound: 0.00035786321949166956
+iteration: 115
+condition: 0.0
+
+policy advantage: 0.5274710222409272
+alfa star: 0.0013569019127204762
+policy dist sup: 1.287799521826211
+policy dist mean: 1.2382607409399258
+model advantage: 0.4829181017486983
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8717937899179384
+----------------------
+performance: 6.429330600972494
+alfa/beta: 0.0013577198091298964/0.0
+bound: 0.00035727384014895254
+iteration: 116
+condition: 0.0
+
+policy advantage: 0.5262850814232634
+alfa star: 0.0013577198091298964
+policy dist sup: 1.2860521041918445
+policy dist mean: 1.236410124892287
+model advantage: 0.48298172260892197
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8718496287494686
+----------------------
+performance: 6.437936458836182
+alfa/beta: 0.0013585442840347176/0.0
+bound: 0.0003566879670682573
+iteration: 117
+condition: 0.0
+
+policy advantage: 0.5251031876692835
+alfa star: 0.0013585442840347176
+policy dist sup: 1.28430600577441
+policy dist mean: 1.2345610016530875
+model advantage: 0.48304303433701334
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8719022653805308
+----------------------
+performance: 6.446528375133695
+alfa/beta: 0.0013593753276071364/0.0
+bound: 0.00035610557015283294
+iteration: 118
+condition: 0.0
+
+policy advantage: 0.5239253102815598
+alfa star: 0.0013593753276071364
+policy dist sup: 1.2825612191913138
+policy dist mean: 1.2327133639209502
+model advantage: 0.48310204743959223
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.871951714161374
+----------------------
+performance: 6.45510643155453
+alfa/beta: 0.0013602129302607458/0.0
+bound: 0.0003555266196190782
+iteration: 119
+condition: 0.0
+
+policy advantage: 0.522751418854584
+alfa star: 0.0013602129302607458
+policy dist sup: 1.2808177371137992
+policy dist mean: 1.2308672044560356
+model advantage: 0.483158772337899
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8719979893194632
+----------------------
+performance: 6.463670709106188
+alfa/beta: 0.0013610570826486457/0.0
+bound: 0.0003549510859924481
+iteration: 120
+condition: 0.0
+
+policy advantage: 0.5215814832713788
+alfa star: 0.0013610570826486457
+policy dist sup: 1.2790755522664696
+policy dist mean: 1.2290225160795023
+model advantage: 0.4832132193687918
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8720411049608106
+----------------------
+performance: 6.47222128812106
+alfa/beta: 0.0013619077756615475/0.0
+bound: 0.00035437894010341013
+iteration: 121
+condition: 0.0
+
+policy advantage: 0.5204154737001488
+alfa star: 0.0013619077756615475
+policy dist sup: 1.2773346574268147
+policy dist mean: 1.227179291672996
+model advantage: 0.4832653987857315
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8720810750712998
+----------------------
+performance: 6.4807582482633785
+alfa/beta: 0.0013627650004259416/0.0
+bound: 0.0003538101530834691
+iteration: 122
+condition: 0.0
+
+policy advantage: 0.5192533605909799
+alfa star: 0.0013627650004259416
+policy dist sup: 1.2755950454247431
+policy dist mean: 1.2253375241781135
+model advantage: 0.48331532075975414
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8721179135179754
+----------------------
+performance: 6.489281668535969
+alfa/beta: 0.0013636287483022997/0.0
+bound: 0.0003532446963612674
+iteration: 123
+condition: 0.0
+
+policy advantage: 0.5180951146726005
+alfa star: 0.0013636287483022997
+policy dist sup: 1.2738567091421218
+policy dist mean: 1.2234972065959087
+model advantage: 0.48336299538043137
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8721516340503361
+----------------------
+performance: 6.497791627286944
+alfa/beta: 0.0013644990108832831/0.0
+bound: 0.0003526825416587211
+iteration: 124
+condition: 0.0
+
+policy advantage: 0.516940706949166
+alfa star: 0.0013644990108832831
+policy dist sup: 1.2721196415123177
+policy dist mean: 1.2216583319863763
+model advantage: 0.48340843265681793
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8721822503015968
+----------------------
+performance: 6.506288202216346
+alfa/beta: 0.0013653757799920283/0.0
+bound: 0.0003521236609872458
+iteration: 125
+condition: 0.0
+
+policy advantage: 0.5157901086971115
+alfa star: 0.0013653757799920283
+policy dist sup: 1.270383835519749
+policy dist mean: 1.2198208934679473
+model advantage: 0.48345164251838496
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8722097757899339
+----------------------
+performance: 6.514771470382687
+alfa/beta: 0.0013662590476804213/0.0
+bound: 0.00035156802664401845
+iteration: 126
+condition: 0.0
+
+policy advantage: 0.5146432914620346
+alfa star: 0.0013662590476804213
+policy dist sup: 1.2686492841994368
+policy dist mean: 1.2179848842170036
+model advantage: 0.4834926348159404
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.872234223919726
+----------------------
+performance: 6.52324150820936
+alfa/beta: 0.0013671488062274278/0.0
+bound: 0.0003510156112083088
+iteration: 127
+condition: 0.0
+
+policy advantage: 0.5135002270556299
+alfa star: 0.0013671488062274278
+policy dist sup: 1.266915980636566
+policy dist mean: 1.2161502974673855
+model advantage: 0.48353141932254184
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8722556079827712
+----------------------
+performance: 6.531698391491052
+alfa/beta: 0.0013680450481374537/0.0
+bound: 0.00035046638753786575
+iteration: 128
+condition: 0.0
+
+policy advantage: 0.5123608875526631
+alfa star: 0.0013680450481374537
+policy dist sup: 1.2651839179660485
+policy dist mean: 1.2143171265099024
+model advantage: 0.4835680057343936
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8722739411594831
+----------------------
+performance: 6.540142195399977
+alfa/beta: 0.0013689477661387285/0.0
+bound: 0.0003499203287653591
+iteration: 129
+condition: 0.0
+
+policy advantage: 0.5112252452879906
+alfa star: 0.0013689477661387285
+policy dist sup: 1.2634530893720917
+policy dist mean: 1.2124853646918636
+model advantage: 0.48360240367173235
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8722892365200868
+----------------------
+performance: 6.54857299449215
+alfa/beta: 0.001369856953181725/0.0
+bound: 0.00034937740829487604
+iteration: 130
+condition: 0.0
+
+policy advantage: 0.5100932728536183
+alfa star: 0.001369856953181725
+policy dist sup: 1.2617234880877748
+policy dist mean: 1.2106550054165939
+model advantage: 0.4836346226797006
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8723015070257799
+----------------------
+performance: 6.556990862713464
+alfa/beta: 0.0013707726024376075/0.0
+bound: 0.0003488375997984735
+iteration: 131
+condition: 0.0
+
+policy advantage: 0.5089649430958062
+alfa star: 0.0013707726024376075
+policy dist sup: 1.259995107394625
+policy dist mean: 1.208826042142979
+model advantage: 0.48366467222921516
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8723107655299007
+----------------------
+performance: 6.565395873405763
+alfa/beta: 0.0013716947072967198/0.0
+bound: 0.00034830087721278826
+iteration: 132
+condition: 0.0
+
+policy advantage: 0.5078402291122133
+alfa star: 0.0013716947072967198
+policy dist sup: 1.258267940622203
+policy dist mean: 1.2069984683849944
+model advantage: 0.483692561717815
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8723170247790621
+----------------------
+performance: 6.573788099312823
+alfa/beta: 0.0013726232613670692/0.0
+bound: 0.00034776721473567853
+iteration: 133
+condition: 0.0
+
+policy advantage: 0.5067191042490691
+alfa star: 0.0013726232613670692
+policy dist sup: 1.2565419811476903
+policy dist mean: 1.2051722777112468
+model advantage: 0.4837183004705017
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8723202974142813
+----------------------
+performance: 6.58216761258625
+alfa/beta: 0.0013735582584728898/0.0
+bound: 0.00034723658682294967
+iteration: 134
+condition: 0.0
+
+policy advantage: 0.5056015420984099
+alfa star: 0.0013735582584728898
+policy dist sup: 1.2548172223954828
+policy dist mean: 1.2033474637445298
+model advantage: 0.4837418977405742
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8723205959720957
+----------------------
+performance: 6.59053448479129
+alfa/beta: 0.001374499692653192/0.0
+bound: 0.00034670896818510223
+iteration: 135
+condition: 0.0
+
+policy advantage: 0.5044875164953309
+alfa star: 0.001374499692653192
+policy dist sup: 1.2530936578367875
+policy dist mean: 1.2015240201613706
+model advantage: 0.48376336271044623
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8723179328856592
+----------------------
+performance: 6.59888878691263
+alfa/beta: 0.0013754475581603594/0.0
+bound: 0.0003461843337841417
+iteration: 136
+condition: 0.0
+
+policy advantage: 0.5033770015152859
+alfa star: 0.0013754475581603594
+policy dist sup: 1.251371280989225
+policy dist mean: 1.1997019406915879
+model advantage: 0.48378270449245125
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8723123204858283
+----------------------
+performance: 6.607230589360026
+alfa/beta: 0.0013764018494587659/0.0
+bound: 0.00034566265883043557
+iteration: 137
+condition: 0.0
+
+policy advantage: 0.5022699714714252
+alfa star: 0.0013764018494587659
+policy dist sup: 1.2496500854164365
+policy dist mean: 1.1978812191178592
+model advantage: 0.48379993212965
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8723037710022363
+----------------------
+performance: 6.615559961973965
+alfa/beta: 0.0013773625612234365/0.0
+bound: 0.00034514391877962005
+iteration: 138
+condition: 0.0
+
+policy advantage: 0.5011664009119683
+alfa star: 0.0013773625612234365
+policy dist sup: 1.2479300647276932
+policy dist mean: 1.1960618492752797
+model advantage: 0.4838150545966103
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8722922965643476
+----------------------
+performance: 6.623876974031188
+alfa/beta: 0.0013783296883387087/0.0
+bound: 0.00034462808932954857
+iteration: 139
+condition: 0.0
+
+policy advantage: 0.5000662646176132
+alfa star: 0.0013783296883387087
+policy dist sup: 1.246211212577512
+policy dist mean: 1.1942438250509446
+model advantage: 0.4838280808001929
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8722779092025075
+----------------------
+performance: 6.632181694250173
+alfa/beta: 0.001379303225896937/0.0
+bound: 0.00034411514641728713
+iteration: 140
+condition: 0.0
+
+policy advantage: 0.49896953759897866
+alfa star: 0.001379303225896937
+policy dist sup: 1.2444935226652758
+policy dist mean: 1.1924271403835183
+model advantage: 0.48383901958031256
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8722606208489712
+----------------------
+performance: 6.6404741907965334
+alfa/beta: 0.0013802831691972282/0.0
+bound: 0.0003436050662161627
+iteration: 141
+condition: 0.0
+
+policy advantage: 0.49787619509408804
+alfa star: 0.0013802831691972282
+policy dist sup: 1.2427769887348556
+policy dist mean: 1.1906117892628179
+model advantage: 0.48384787971070364
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8722404433389234
+----------------------
+performance: 6.648754531288387
+alfa/beta: 0.001381269513744189/0.0
+bound: 0.0003430978251328462
+iteration: 142
+condition: 0.0
+
+policy advantage: 0.4967862125658815
+alfa star: 0.001381269513744189
+policy dist sup: 1.2410616045742393
+policy dist mean: 1.1887977657294009
+model advantage: 0.48385466989966613
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8722173884114883
+----------------------
+performance: 6.6570227828015955
+alfa/beta: 0.001382262255246701/0.0
+bound: 0.0003425933998044818
+iteration: 143
+condition: 0.0
+
+policy advantage: 0.49569956569976226
+alfa star: 0.001382262255246701
+policy dist sup: 1.2393473640151624
+policy dist mean: 1.1869850638741535
+model advantage: 0.48385939879080125
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8721914677107204
+----------------------
+performance: 6.6652790118750325
+alfa/beta: 0.0013832613896167373/0.0
+bound: 0.00034209176709586566
+iteration: 144
+condition: 0.0
+
+policy advantage: 0.494616230401182
+alfa star: 0.0013832613896167373
+policy dist sup: 1.2376342609327449
+policy dist mean: 1.185173677837884
+model advantage: 0.48386207496375294
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.872162692786586
+----------------------
+performance: 6.673523284515671
+alfa/beta: 0.0013842669129681838/0.0
+bound: 0.00034159290409665945
+iteration: 145
+condition: 0.0
+
+policy advantage: 0.49353618279325384
+alfa star: 0.0013842669129681838
+policy dist sup: 1.2359222892451298
+policy dist mean: 1.1833636018109275
+model advantage: 0.48386270693491656
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.872131075095939
+----------------------
+performance: 6.681755666203734
+alfa/beta: 0.0013852788216156915/0.0
+bound: 0.000341096788118645
+iteration: 146
+condition: 0.0
+
+policy advantage: 0.49245939921439613
+alfa star: 0.0013852788216156915
+policy dist sup: 1.234211442913128
+policy dist mean: 1.1815548300327405
+model advantage: 0.48386130315815845
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8720966260034702
+----------------------
+performance: 6.689976221897666
+alfa/beta: 0.001386297112073558/0.0
+bound: 0.00034060339669302736
+iteration: 147
+condition: 0.0
+
+policy advantage: 0.4913858562160154
+alfa star: 0.001386297112073558
+policy dist sup: 1.2325017159398646
+policy dist mean: 1.1797473567915184
+model advantage: 0.483857872025514
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8720593567826624
+----------------------
+performance: 6.698185016039145
+alfa/beta: 0.001387321781054632/0.0
+bound: 0.00034011270756777087
+iteration: 148
+condition: 0.0
+
+policy advantage: 0.4903155305602131
+alfa star: 0.001387321781054632
+policy dist sup: 1.2307931023704313
+policy dist mean: 1.1779411764237981
+model advantage: 0.48385242186788774
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8720192786167186
+----------------------
+performance: 6.70638211255797
+alfa/beta: 0.0013883528254692295/0.0
+bound: 0.00033962469870497513
+iteration: 149
+condition: 0.0
+
+policy advantage: 0.48924839921752616
+alfa star: 0.0013883528254692295
+policy dist sup: 1.229085596291541
+policy dist mean: 1.176136283314081
+model advantage: 0.4838449609557336
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8719764025994894
+----------------------
+performance: 6.7145675748768845
+alfa/beta: 0.0013893902424240894/0.0
+bound: 0.00033913934827829316
+iteration: 150
+condition: 0.0
+
+policy advantage: 0.48818443936469824
+alfa star: 0.0013893902424240894
+policy dist sup: 1.2273791918311863
+policy dist mean: 1.1743326718944487
+model advantage: 0.4838354974997361
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8719307397363845
+----------------------
+performance: 6.72274146591643
+alfa/beta: 0.00139043402922135/0.0
+bound: 0.0003386566346703882
+iteration: 151
+condition: 0.0
+
+policy advantage: 0.4871236283824808
+alfa star: 0.00139043402922135
+policy dist sup: 1.2256738831583016
+policy dist mean: 1.172530336644185
+model advantage: 0.48382403965147175
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8718823009452689
+----------------------
+performance: 6.730903848099618
+alfa/beta: 0.0013914841833575294/0.0
+bound: 0.0003381765364704209
+iteration: 152
+condition: 0.0
+
+policy advantage: 0.48606594385346236
+alfa star: 0.0013914841833575294
+policy dist sup: 1.2239696644824307
+policy dist mean: 1.170729272089413
+model advantage: 0.4838105955040799
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8718310970573635
+----------------------
+performance: 6.739054783356619
+alfa/beta: 0.0013925407025225532/0.0
+bound: 0.0003376990324715798
+iteration: 153
+condition: 0.0
+
+policy advantage: 0.48501136355992513
+alfa star: 0.0013925407025225532
+policy dist sup: 1.222266530053394
+policy dist mean: 1.1689294728027138
+model advantage: 0.48379517309290376
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8717771388181139
+----------------------
+performance: 6.747194333129424
+alfa/beta: 0.0013936035845987917/0.0
+bound: 0.00033722410166864774
+iteration: 154
+condition: 0.0
+
+policy advantage: 0.4839598654817354
+alfa star: 0.0013936035845987917
+policy dist sup: 1.2205644741609634
+policy dist mean: 1.1671309334027717
+model advantage: 0.4837777803961439
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8717204368880649
+----------------------
+performance: 6.755322558376359
+alfa/beta: 0.0013946728276601143/0.0
+bound: 0.0003367517232555988
+iteration: 155
+condition: 0.0
+
+policy advantage: 0.4829114277942556
+alfa star: 0.0013946728276601143
+policy dist sup: 1.2188634911345386
+policy dist mean: 1.165333648554011
+model advantage: 0.48375842533548735
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8716610018437194
+----------------------
+performance: 6.763439519576628
+alfa/beta: 0.0013957484299709803/0.0
+bound: 0.0003362818766232368
+iteration: 156
+condition: 0.0
+
+policy advantage: 0.48186602886628876
+alfa star: 0.0013957484299709803
+policy dist sup: 1.2171635753428265
+policy dist mean: 1.1635376129662363
+model advantage: 0.4837371157767355
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8715988441783828
+----------------------
+performance: 6.771545276734767
+alfa/beta: 0.001396830389985536/0.0
+bound: 0.0003358145413568616
+iteration: 157
+condition: 0.0
+
+policy advantage: 0.4808236472580454
+alfa star: 0.001396830389985536
+policy dist sup: 1.215464721193524
+policy dist mean: 1.1617428213942818
+model advantage: 0.483713859530431
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8715339743030047
+----------------------
+performance: 6.779639889385038
+alfa/beta: 0.0013979187063467373/0.0
+bound: 0.000335349697233973
+iteration: 158
+condition: 0.0
+
+policy advantage: 0.4797842617191409
+alfa star: 0.0013979187063467373
+policy dist sup: 1.2137669231330053
+policy dist mean: 1.1599492686376616
+model advantage: 0.48368866435246455
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8714664025470059
+----------------------
+performance: 6.787723416595823
+alfa/beta: 0.0013990133778855132/0.0
+bound: 0.0003348873242220128
+iteration: 159
+condition: 0.0
+
+policy advantage: 0.47874785118662117
+alfa star: 0.0013990133778855132
+policy dist sup: 1.2120701756460126
+policy dist mean: 1.1581569495402204
+model advantage: 0.4836615379446806
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8713961391590943
+----------------------
+performance: 6.79579591697387
+alfa/beta: 0.001400114403619903/0.0
+bound: 0.00033442740247612463
+iteration: 160
+condition: 0.0
+
+policy advantage: 0.4777143947830045
+alfa star: 0.001400114403619903
+policy dist sup: 1.210374473255348
+policy dist mean: 1.1563658589897965
+model advantage: 0.4836324879554771
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8713231943080773
+----------------------
+performance: 6.803857448668591
+alfa/beta: 0.0014012217827542616/0.0
+bound: 0.00033396991233695835
+iteration: 161
+condition: 0.0
+
+policy advantage: 0.4766838718143567
+alfa star: 0.0014012217827542616
+policy dist sup: 1.2086798105215693
+policy dist mean: 1.1545759919178755
+model advantage: 0.4836015219803962
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8712475780836568
+----------------------
+performance: 6.81190806937627
+alfa/beta: 0.0014023355146784732/0.0
+bound: 0.0003335148343285115
+iteration: 162
+condition: 0.0
+
+policy advantage: 0.47565626176839665
+alfa star: 0.0014023355146784732
+policy dist sup: 1.2069861820426913
+policy dist mean: 1.1527873432992597
+model advantage: 0.4835686475627043
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8711693004972214
+----------------------
+performance: 6.819947836344197
+alfa/beta: 0.00140345559896715/0.0
+bound: 0.0003330621491559777
+iteration: 163
+condition: 0.0
+
+policy advantage: 0.47463154431260846
+alfa star: 0.00140345559896715
+policy dist sup: 1.2052935824538866
+policy dist mean: 1.1509999081517364
+model advantage: 0.4835338721939687
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8710883714826264
+----------------------
+performance: 6.827976806374785
+alfa/beta: 0.0014045820353788994/0.0
+bound: 0.0003326118377036503
+iteration: 164
+condition: 0.0
+
+policy advantage: 0.4736096992923949
+alfa star: 0.0014045820353788994
+policy dist sup: 1.2036020064271926
+policy dist mean: 1.1492136815357443
+model advantage: 0.48349720331463075
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8710048008969635
+----------------------
+performance: 6.835995035829636
+alfa/beta: 0.00140571482385559/0.0
+bound: 0.0003321638810328481
+iteration: 165
+condition: 0.0
+
+policy advantage: 0.4725907067292498
+alfa star: 0.00140571482385559
+policy dist sup: 1.2019114486712188
+policy dist mean: 1.1474286585540507
+model advantage: 0.48345864831456303
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8709185985213233
+----------------------
+performance: 6.8440025806335365
+alfa/beta: 0.0014068539645216212/0.0
+bound: 0.0003317182603798625
+iteration: 166
+condition: 0.0
+
+policy advantage: 0.4715745468189488
+alfa star: 0.0014068539645216212
+policy dist sup: 1.20022190393086
+policy dist mean: 1.1456448343514298
+model advantage: 0.48341821453362827
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8708297740615485
+----------------------
+performance: 6.851999496278471
+alfa/beta: 0.0014079994576832505/0.0
+bound: 0.00033127495715394914
+iteration: 167
+condition: 0.0
+
+policy advantage: 0.4705611999297718
+alfa star: 0.0014079994576832505
+policy dist sup: 1.198533366987009
+policy dist mean: 1.1438622041143378
+model advantage: 0.48337590926222307
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8707383371489761
+----------------------
+performance: 6.859985837827492
+alfa/beta: 0.0014091513038278789/0.0
+bound: 0.0003308339529353258
+iteration: 168
+condition: 0.0
+
+policy advantage: 0.46955064660073653
+alfa star: 0.0014091513038278789
+policy dist sup: 1.196845832656276
+policy dist mean: 1.1420807630706076
+model advantage: 0.48333173974182464
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8706442973411788
+----------------------
+performance: 6.86796165991862
+alfa/beta: 0.0014103095036234353/0.0
+bound: 0.0003303952294732282
+iteration: 169
+condition: 0.0
+
+policy advantage: 0.46854286753987096
+alfa star: 0.0014103095036234353
+policy dist sup: 1.1951592957907076
+policy dist mean: 1.1403005064891236
+model advantage: 0.4832857131655271
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.870547664122685
+----------------------
+performance: 6.875927016768693
+alfa/beta: 0.0014114740579177032/0.0
+bound: 0.00032995876868396407
+iteration: 170
+condition: 0.0
+
+policy advantage: 0.4675378436224897
+alfa star: 0.0014114740579177032
+policy dist sup: 1.19347375127751
+policy dist mean: 1.138521429679518
+model advantage: 0.48323783667856196
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8704484469056993
+----------------------
+performance: 6.883881962177154
+alfa/beta: 0.0014126449677377112/0.0
+bound: 0.00032952455264901296
+iteration: 171
+condition: 0.0
+
+policy advantage: 0.4665355558895058
+alfa star: 0.0014126449677377112
+policy dist sup: 1.191789194038776
+policy dist mean: 1.1367435279918645
+model advantage: 0.483188117378832
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8703466550308165
+----------------------
+performance: 6.8918265495297755
+alfa/beta: 0.0014138222342891243/0.0
+bound: 0.000329092563613147
+iteration: 172
+condition: 0.0
+
+policy advantage: 0.46553598554575865
+alfa star: 0.0014138222342891243
+policy dist sup: 1.190105619031213
+policy dist mean: 1.1349667968163746
+model advantage: 0.4831365623174155
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8702422977677214
+----------------------
+performance: 6.899760831802361
+alfa/beta: 0.0014150058589556607/0.0
+bound: 0.00032866278398257625
+iteration: 173
+condition: 0.0
+
+policy advantage: 0.4645391139583612
+alfa star: 0.0014150058589556607
+policy dist sup: 1.1884230212458742
+policy dist mean: 1.1331912315830923
+model advantage: 0.4830831784990885
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8701353843158808
+----------------------
+performance: 6.907684861564466
+alfa/beta: 0.0014161958432985294/0.0
+bound: 0.00032823519632312726
+iteration: 174
+condition: 0.0
+
+policy advantage: 0.4635449226550742
+alfa star: 0.0014161958432985294
+policy dist sup: 1.1867413957078936
+policy dist mean: 1.131416827761598
+model advantage: 0.4830279728828201
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8700259238052301
+----------------------
+performance: 6.915598690982953
+alfa/beta: 0.0014173921890558558/0.0
+bound: 0.0003278097833584307
+iteration: 175
+condition: 0.0
+
+policy advantage: 0.46255339332268974
+alfa star: 0.0014173921890558558
+policy dist sup: 1.1850607374762216
+policy dist mean: 1.1296435808607155
+model advantage: 0.4829709523822712
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8699139252968542
+----------------------
+performance: 6.923502371825602
+alfa/beta: 0.0014185948981421752/0.0
+bound: 0.00032738652796815887
+iteration: 176
+condition: 0.0
+
+policy advantage: 0.4615645078054515
+alfa star: 0.0014185948981421752
+policy dist sup: 1.183381041643366
+policy dist mean: 1.1278714864282189
+model advantage: 0.4829121238662905
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.869799397783656
+----------------------
+performance: 6.931395955464671
+alfa/beta: 0.001419803972647897/0.0
+bound: 0.00032696541318626263
+iteration: 177
+condition: 0.0
+
+policy advantage: 0.46057824810347686
+alfa star: 0.001419803972647897
+policy dist sup: 1.1817023033351326
+policy dist mean: 1.1261005400505386
+model advantage: 0.48285149415939754
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8696823501910167
+----------------------
+performance: 6.9392794928803605
+alfa/beta: 0.0014210194148388108/0.0
+bound: 0.00032654642219925005
+iteration: 178
+condition: 0.0
+
+policy advantage: 0.4595945963712127
+alfa star: 0.0014210194148388108
+policy dist sup: 1.1800245177103703
+policy dist mean: 1.1243307373524827
+model advantage: 0.4827890700422632
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8695627913774564
+----------------------
+performance: 6.947153034664318
+alfa/beta: 0.0014222412271556032/0.0
+bound: 0.0003261295383444802
+iteration: 179
+condition: 0.0
+
+policy advantage: 0.4586135349159012
+alfa star: 0.0014222412271556032
+policy dist sup: 1.178347679960718
+policy dist mean: 1.1225620739969437
+model advantage: 0.482724858252184
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8694407301352768
+----------------------
+performance: 6.955016631023022
+alfa/beta: 0.0014234694122133868/0.0
+bound: 0.00032571474510848333
+iteration: 180
+condition: 0.0
+
+policy advantage: 0.45763504619607054
+alfa star: 0.0014234694122133868
+policy dist sup: 1.1766717853103548
+policy dist mean: 1.120794545684626
+model advantage: 0.4826588654835553
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8693161751912049
+----------------------
+performance: 6.962870331781201
+alfa/beta: 0.0014247039728012545/0.0
+bound: 0.00032530202612530426
+iteration: 181
+condition: 0.0
+
+policy advantage: 0.4566591128200408
+alfa star: 0.0014247039728012545
+policy dist sup: 1.1749968290157509
+policy dist mean: 1.11902814815376
+model advantage: 0.48259109838832315
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8691891352070239
+----------------------
+performance: 6.970714186385171
+alfa/beta: 0.0014259449118818501/0.0
+bound: 0.0003248913651748704
+iteration: 182
+condition: 0.0
+
+policy advantage: 0.45568571754445175
+alfa star: 0.0014259449118818501
+policy dist sup: 1.1733228063654235
+policy dist mean: 1.1172628771798299
+model advantage: 0.48252156357645837
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8690596187802
+----------------------
+performance: 6.978548243906139
+alfa/beta: 0.0014271922325909282/0.0
+bound: 0.0003244827461813706
+iteration: 183
+condition: 0.0
+
+policy advantage: 0.45471484327279976
+alfa star: 0.0014271922325909282
+policy dist sup: 1.1716497126796916
+policy dist mean: 1.1154987285752989
+model advantage: 0.4824502676163946
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8689276344445025
+----------------------
+performance: 6.98637255304351
+alfa/beta: 0.0014284459382369848/0.0
+bound: 0.00032407615321167855
+iteration: 184
+condition: 0.0
+
+policy advantage: 0.45374647305400934
+alfa star: 0.0014284459382369848
+policy dist sup: 1.1699775433104378
+policy dist mean: 1.1137356981893383
+model advantage: 0.4823772170354824
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8687931906706126
+----------------------
+performance: 6.994187162128088
+alfa/beta: 0.0014297060323008523/0.0
+bound: 0.00032367157047377687
+iteration: 185
+condition: 0.0
+
+policy advantage: 0.452780590081006
+alfa star: 0.0014297060323008523
+policy dist sup: 1.1683062936408675
+policy dist mean: 1.11197378190756
+model advantage: 0.48230241832043164
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8686562958667323
+----------------------
+performance: 7.001992119125314
+alfa/beta: 0.0014309725184353226/0.0
+bound: 0.0003232689823152063
+iteration: 186
+condition: 0.0
+
+policy advantage: 0.45181717768931073
+alfa star: 0.0014309725184353226
+policy dist sup: 1.1666359590852742
+policy dist mean: 1.1102129756517485
+model advantage: 0.4822258779177447
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8685169583791804
+----------------------
+performance: 7.009787471638416
+alfa/beta: 0.001432245400464808/0.0
+bound: 0.0003228683732215469
+iteration: 187
+condition: 0.0
+
+policy advantage: 0.45085621935565817
+alfa star: 0.001432245400464808
+policy dist sup: 1.1649665350888045
+policy dist mean: 1.1084532753795997
+model advantage: 0.4821476022341503
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8683751864929841
+----------------------
+performance: 7.017573266911562
+alfa/beta: 0.0014335246823849997/0.0
+bound: 0.000322469727814912
+iteration: 188
+condition: 0.0
+
+policy advantage: 0.44989769869662666
+alfa star: 0.0014335246823849997
+policy dist sup: 1.1632980171272282
+policy dist mean: 1.1066946770844577
+model advantage: 0.48206759763702395
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8682309884324644
+----------------------
+performance: 7.025349551832946
+alfa/beta: 0.0014348103683625357/0.0
+bound: 0.00032207303085245837
+iteration: 189
+condition: 0.0
+
+policy advantage: 0.4489415994672819
+alfa star: 0.0014348103683625357
+policy dist sup: 1.1616304007067066
+policy dist mean: 1.1049371767950587
+model advantage: 0.48198587045482333
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8680843723618161
+----------------------
+performance: 7.033116372937876
+alfa/beta: 0.001436102462734697/0.0
+bound: 0.00032167826722492436
+iteration: 190
+condition: 0.0
+
+policy advantage: 0.44798790555984247
+alfa star: 0.001436102462734697
+policy dist sup: 1.1599636813635676
+policy dist mean: 1.103180770575272
+model advantage: 0.4819024269774874
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8679353463856782
+----------------------
+performance: 7.040873776411783
+alfa/beta: 0.0014374009700091174/0.0
+bound: 0.0003212854219551851
+iteration: 191
+condition: 0.0
+
+policy advantage: 0.44703660100235926
+alfa star: 0.0014374009700091174
+policy dist sup: 1.1582978546640788
+policy dist mean: 1.1014254545238484
+model advantage: 0.48181727345686165
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8677839185496997
+----------------------
+performance: 7.048621808093239
+alfa/beta: 0.0014387058948634966/0.0
+bound: 0.0003208944801968229
+iteration: 192
+condition: 0.0
+
+policy advantage: 0.4460876699574087
+alfa star: 0.0014387058948634966
+policy dist sup: 1.156632916204225
+policy dist mean: 1.0996712247741667
+model advantage: 0.4817304161070946
+beta star: 0.0
+model dist sup: 1.8
+model dist mean: 0.8676300968411004
+----------------------
+performance: 7.05635432489334
+alfa/beta: 0.0/0.0013319315804581856
+bound: 0.00032075700263823476
+iteration: 193
+condition: 0.0
+
+policy advantage: 0.44594769690715713
+alfa star: 0.0
+policy dist sup: 1.6150103794635033
+policy dist mean: 1.128146576810209
+model advantage: 0.4816418611050486
+beta star: 0.0013319315804581856
+model dist sup: 1.8
+model dist mean: 0.8674738891892221
+----------------------
+performance: 7.064077989589522
+alfa/beta: 0.0/0.0013330980649433402
+bound: 0.0003203735742437111
+iteration: 194
+condition: 0.0
+
+policy advantage: 0.44599386970245763
+alfa star: 0.0
+policy dist sup: 1.6150103794635033
+policy dist mean: 1.1277429037851225
+model advantage: 0.480645171827367
+beta star: 0.0013330980649433402
+model dist sup: 1.7976025231551753
+model dist mean: 0.8660748435769279
+----------------------
+performance: 7.0717928202532265
+alfa/beta: 0.0/0.0013342677685719956
+bound: 0.00031999095739063723
+iteration: 195
+condition: 0.0
+
+policy advantage: 0.4460382908283324
+alfa star: 0.0
+policy dist sup: 1.6150103794635033
+policy dist mean: 1.1273394773186547
+model advantage: 0.4796502844899096
+beta star: 0.0013342677685719956
+model dist sup: 1.7952061427100197
+model dist mean: 0.8646771704330348
+----------------------
+performance: 7.079498834900056
+alfa/beta: 0.0/0.001335440700934867
+bound: 0.000319609149488871
+iteration: 196
+condition: 0.0
+
+policy advantage: 0.44608096681117165
+alfa star: 0.0
+policy dist sup: 1.6150103794635033
+policy dist mean: 1.1269362969200147
+model advantage: 0.47865719423577635
+beta star: 0.001335440700934867
+model dist sup: 1.7928108570158594
+model dist mean: 0.8632808673194539
+----------------------
+performance: 7.0871960514900785
+alfa/beta: 0.0/0.0013366168716718349
+bound: 0.00031922814795919087
+iteration: 197
+condition: 0.0
+
+policy advantage: 0.4461219041507589
+alfa star: 0.0
+policy dist sup: 1.6150103794635033
+policy dist mean: 1.12653336210003
+model advantage: 0.47766589622634575
+beta star: 0.0013366168716718349
+model dist sup: 1.7904166644283226
+model dist mean: 0.8618859318053956
+----------------------
+performance: 7.094884487927998
+alfa/beta: 0.0/0.0013377962904721906
+bound: 0.0003188479502332348
+iteration: 198
+condition: 0.0
+
+policy advantage: 0.44616110932041086
+alfa star: 0.0
+policy dist sup: 1.6150103794635033
+policy dist mean: 1.1261306723711462
+model advantage: 0.47667638564118564
+beta star: 0.0013377962904721906
+model dist sup: 1.7880235633073251
+model dist mean: 0.8604923614673452
+----------------------
+performance: 7.102564162063446
+alfa/beta: 0.0/0.0013389789670749008
+bound: 0.0003184685537534453
+iteration: 199
+condition: 0.0
+
+policy advantage: 0.44619858876710095
+alfa star: 0.0
+policy dist sup: 1.6150103794635033
+policy dist mean: 1.1257282272474165
+model advantage: 0.4756886576779672
+beta star: 0.0013389789670749008
+model dist sup: 1.7856315520170556
+model dist mean: 0.8591001538890304
+  Iterations: 200
+  Final performance: 7.1026
+  Wall time: 0.10s
+
+[3/5] Running Federated SPMI with varying N...
+
+  N = 2 agents:
+  Run 1/3...
+  Run 2/3...
+  Run 3/3...
+    Final perf: 6.2668 ± 0.0835
+    Total samples: 400000 ± 0
+    Wall time: 3.55s ± 0.01s
+
+  N = 4 agents:
+  Run 1/3...
+  Run 2/3...
+  Run 3/3...
+    Final perf: 6.3031 ± 0.0161
+    Total samples: 800000 ± 0
+    Wall time: 7.14s ± 0.02s
+
+  N = 8 agents:
+  Run 1/3...
+  Run 2/3...
+  Run 3/3...
+    Final perf: 6.3544 ± 0.0053
+    Total samples: 1600000 ± 0
+    Wall time: 14.00s ± 0.12s
+
+[4/5] Generating plots...
+Saved: experiments/results/convergence_comparison.png
+Saved: experiments/results/sample_efficiency.png
+Saved: experiments/results/step_sizes.png
+Saved: experiments/results/advantages.png
+Saved: experiments/results/bound_values.png
+Saved: experiments/results/scalability.png
+Saved: experiments/results/summary_figure.png
+
+[5/5] Saving results...
+
+Results saved to: experiments/results/
+
+======================================================================
+EXPERIMENT SUMMARY
+======================================================================
+
+Standard SPMI:
+  - Uses exact matrix computation
+  - Converged in 200 iterations
+  - Final performance: 7.1026
+
+Federated SPMI:
+  N=2: Performance 6.2668 ± 0.0835
+         Samples: 400000
+  N=4: Performance 6.3031 ± 0.0161
+         Samples: 800000
+  N=8: Performance 6.3544 ± 0.0053
+         Samples: 1600000
+
+======================================================================
+KEY OBSERVATIONS
+======================================================================
+
+1. CONVERGENCE RATE:
+   - SPMI converges faster per iteration (exact computation)
+   - F-SPMI requires more rounds but collects real samples
+
+2. SAMPLE EFFICIENCY:
+   - F-SPMI shows how much data is needed for sample-based learning
+   - More agents = more samples per round = faster learning
+
+3. SCALABILITY:
+   - F-SPMI performance improves with more agents
+   - Variance decreases with more parallel exploration
+
+4. SAFE LEARNING:
+   - Both maintain monotonic improvement guarantees
+   - Step sizes (α, β) show safe, conservative updates
+
