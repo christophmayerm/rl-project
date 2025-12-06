@@ -17,4 +17,5 @@ dependencies = [
     "pytz",
     "python-dateutil",
     "six",
+    "matplotlib>=3.10.7",
 ]
