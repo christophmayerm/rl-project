@@ -15,7 +15,7 @@ from utils.uniform_policy import UniformPolicy
 from utils.tabular import *
 
 track = 'T1'
-simulation_name = 'racetrack2_' + track
+simulation_name = 'racetrack4_' + track
 dir_path = "./data/" + simulation_name
 
 if not os.path.exists(dir_path):
@@ -32,7 +32,9 @@ initial_model = TabularModel(mdp.P, mdp.nS, mdp.nA)
 initial_policy = TabularPolicy(uniform_policy.get_rep(), mdp.nS, mdp.nA)
 
 model_set = [TabularModel(mdp.P_highspeed_noboost, mdp.nS, mdp.nA),
-             TabularModel(mdp.P_lowspeed_noboost, mdp.nS, mdp.nA)]
+             TabularModel(mdp.P_lowspeed_noboost, mdp.nS, mdp.nA),
+             TabularModel(mdp.P_highspeed_boost, mdp.nS, mdp.nA),
+             TabularModel(mdp.P_lowspeed_boost, mdp.nS, mdp.nA)]
 
 policy_chooser = GreedyPolicyChooser(mdp.nS, mdp.nA)
 model_chooser = SetModelChooser(model_set, mdp.nS, mdp.nA)
@@ -61,7 +63,6 @@ spmi = SPMI(
     delta_q=1,
     metrics_evaluator=metrics_evaluator,
 )
-
 #-------------------------------------------------------------------------------
 #SPMI
 spmi.spmi(initial_policy, initial_model)
@@ -69,14 +70,12 @@ spmi.spmi(initial_policy, initial_model)
 spmi.logger.save(dir_path, 'spmi.csv')
 metrics_evaluator.save(dir_path, "metrics_spmi.csv")
 
-
-#-------------------------------------------------------------------------------
-#SPMI-sup
+# #-------------------------------------------------------------------------------
+# #SPMI-sup
 # mdp.set_initial_configuration(original_model)
 # spmi.spmi_sup(initial_policy, initial_model)
 
 # spmi.logger.save(dir_path, 'spmi_sup.csv')
-# metrics_evaluator.save(dir_path, "metrics_spmi_sup.csv")
 
 # #-------------------------------------------------------------------------------
 # #SPMI-alt
@@ -84,7 +83,6 @@ metrics_evaluator.save(dir_path, "metrics_spmi.csv")
 # spmi.spmi_alt(initial_policy, initial_model)
 
 # spmi.logger.save(dir_path, 'spmi_alt.csv')
-# metrics_evaluator.save(dir_path, "metrics_spmi_alt.csv")
 
 # #-------------------------------------------------------------------------------
 # #SPI+SMI
@@ -92,7 +90,6 @@ metrics_evaluator.save(dir_path, "metrics_spmi.csv")
 # spmi.spi_smi(initial_policy, initial_model)
 
 # spmi.logger.save(dir_path, 'spi_smi.csv')
-# metrics_evaluator.save(dir_path, "metrics_spi_smi.csv")
 
 # #-------------------------------------------------------------------------------
 # #SMI+SPI
@@ -100,4 +97,4 @@ metrics_evaluator.save(dir_path, "metrics_spmi.csv")
 # spmi.smi_spi(initial_policy, initial_model)
 
 # spmi.logger.save(dir_path, 'smi_spi.csv')
-# metrics_evaluator.save(dir_path, "metrics_smi_spi.csv")
+

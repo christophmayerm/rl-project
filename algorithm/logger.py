@@ -63,22 +63,22 @@ class Logger(object):
         self.m_change.append(m_check_target)
 
         # trace print
-        print('----------------------')
-        print('performance: {0}'.format(J_p_m))
-        print('alfa/beta: {0}/{1}'.format(alfa_star, beta_star))
-        print('bound: {0}'.format(bound))
-        print('iteration: {0}'.format(self.iteration))
-        print('condition: {0}\n'.format(convergence))
+        # print('----------------------')
+        # print('performance: {0}'.format(J_p_m))
+        # print('alfa/beta: {0}/{1}'.format(alfa_star, beta_star))
+        # print('bound: {0}'.format(bound))
+        # print('iteration: {0}'.format(self.iteration))
+        # print('condition: {0}\n'.format(convergence))
 
-        print('policy advantage: {0}'.format(p_er_adv))
-        print('alfa star: {0}'.format(alfa_star))
-        print('policy dist sup: {0}'.format(p_dist_sup))
-        print('policy dist mean: {0}'.format(p_dist_mean))
+        # print('policy advantage: {0}'.format(p_er_adv))
+        # print('alfa star: {0}'.format(alfa_star))
+        # print('policy dist sup: {0}'.format(p_dist_sup))
+        # print('policy dist mean: {0}'.format(p_dist_mean))
 
-        print('model advantage: {0}'.format(m_er_adv))
-        print('beta star: {0}'.format(beta_star))
-        print('model dist sup: {0}'.format(m_dist_sup))
-        print('model dist mean: {0}'.format(m_dist_mean))
+        # print('model advantage: {0}'.format(m_er_adv))
+        # print('beta star: {0}'.format(beta_star))
+        # print('model dist sup: {0}'.format(m_dist_sup))
+        # print('model dist mean: {0}'.format(m_dist_mean))
 
         # model vector coefficients computation and print
         if isinstance(self.model_chooser, SetModelChooser):
@@ -95,8 +95,8 @@ class Logger(object):
                 new_model_vector = beta_star * target_vector + (1 - beta_star) * model_vector
                 self.mdp.model_vector = new_model_vector
 
-                print('\ntarget_model: {0}'.format(target_vector))
-                print('current_model: {0}'.format(new_model_vector))
+                # print('\ntarget_model: {0}'.format(target_vector))
+                # print('current_model: {0}'.format(new_model_vector))
                 self.w_current.append(new_model_vector)
                 self.w_target.append(target_vector)
             else:
@@ -104,6 +104,12 @@ class Logger(object):
                 target_vector = np.empty(n_models)
                 target_vector[:] = np.nan
                 self.w_target.append(target_vector)
+        elif isinstance(self.model_chooser, GPModelChooser):
+            # for GP model chooser we do not have a model vector
+            self.w_current.append(self.mdp.model_vector)
+            self.w_target.append(self.model_chooser.prev_target_model_vector)
+            # print('\ncurrent_model_vector: {0}'.format(self.mdp.model_vector))
+            # print('target_model_vector: {0}'.format(self.model_chooser.prev_target_model_vector))
 
         # iteration update
         self.iteration = self.iteration + 1
@@ -144,38 +150,35 @@ class Logger(object):
 
         if isinstance(self.model_chooser, SetModelChooser):
 
-            if len(self.model_chooser.model_set) == 2:
-                header_string = header_string + ';w_current[0];w_current[1];w_target[0];w_target[1]'
+            width = len(self.model_chooser.model_set)
+            if hasattr(self.mdp, 'model_vector'):
+                width = max(width, len(self.mdp.model_vector))
 
-                current = np.array(self.w_current)
-                target = np.array(self.w_target)
+            header_string = header_string + ';' + ';'.join([f'w_current[{i}]' for i in range(width)]) + ';' + \
+                            ';'.join([f'w_target[{i}]' for i in range(width)])
 
-                execution_data = [self.iterations, self.evaluations,
-                                  self.p_advantages, self.m_advantages,
-                                  self.p_dist_sup, self.p_dist_mean,
-                                  self.m_dist_sup, self.m_dist_mean,
-                                  self.alfas, self.betas, self.p_change,
-                                  self.m_change, self.bound,
-                                  current[:, 0], current[:, 1],
-                                  target[:, 0], target[:, 1]]
+            n = len(self.iterations)
+            current = np.full((n, width), np.nan)
+            target = np.full((n, width), np.nan)
 
-            if len(self.model_chooser.model_set) == 4:
-                header_string = header_string + ';w_current[0];w_current[1];w_current[2];w_current[3]' \
-                                                ';w_target[0];w_target[1];w_target[2];w_target[3]'
+            for idx, vec in enumerate(self.w_current):
+                vec = np.asarray(vec).ravel()
+                current[idx, :min(width, len(vec))] = vec[:width]
+            for idx, vec in enumerate(self.w_target):
+                vec = np.asarray(vec).ravel()
+                target[idx, :min(width, len(vec))] = vec[:width]
 
-                current = np.array(self.w_current)
-                target = np.array(self.w_target)
+            execution_data = [self.iterations, self.evaluations,
+                              self.p_advantages, self.m_advantages,
+                              self.p_dist_sup, self.p_dist_mean,
+                              self.m_dist_sup, self.m_dist_mean,
+                              self.alfas, self.betas, self.p_change,
+                              self.m_change, self.bound]
 
-                execution_data = [self.iterations, self.evaluations,
-                                  self.p_advantages, self.m_advantages,
-                                  self.p_dist_sup, self.p_dist_mean,
-                                  self.m_dist_sup, self.m_dist_mean,
-                                  self.alfas, self.betas, self.p_change,
-                                  self.m_change, self.bound,
-                                  current[:, 0], current[:, 1],
-                                  current[:, 2], current[:, 3],
-                                  target[:, 0], target[:, 1],
-                                  target[:, 2], target[:, 3]]
+            for i in range(width):
+                execution_data.append(current[:, i])
+            for i in range(width):
+                execution_data.append(target[:, i])
 
         execution_data = np.array(execution_data).T
 

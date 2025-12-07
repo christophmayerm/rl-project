@@ -17,4 +17,7 @@ dependencies = [
     "pytz",
     "python-dateutil",
     "six",
+    "matplotlib>=3.10.7",
+    "scikit-learn>=1.7.2",
+    "tqdm>=4.67.1",
 ]

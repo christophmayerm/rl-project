@@ -1,8 +1,12 @@
 import numpy as np
+from time import time
 from utils import evaluator
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel, Matern, WhiteKernel
 from utils.tabular import TabularModel
+from utils.tabular_factory import model_from_matrix
 
-from utils.tabular_operations import model_mean_tv_distance, model_sup_tv_distance
+from utils.tabular_operations import model_mean_tv_distance, model_sup_tv_distance, model_equiv_check, model_convex_combination_set
 
 
 class ModelChooser(object):
@@ -48,6 +52,101 @@ class GreedyModelChooser(ModelChooser):
 
         return greedy_model_rep
 
+class GPModelChooser(ModelChooser):
+    def __init__(self, model_set, nS, nA, init_model_vector, beta, original_model):
+        super(GPModelChooser, self).__init__(nS, nA)
+        # kernel = ConstantKernel(1.0) * RBF(length_scale=1.0)
+        kernel = Matern(nu=2.5, length_scale_bounds=(1e-2, 10)) + WhiteKernel(noise_level=0.1)
+
+        self.model_set = model_set
+        self.n_models = len(self.model_set)
+        self.prev_target_model_vector = init_model_vector
+        self.first_iteration = True
+        self.original_model = original_model
+        self.nr_iterations_pause = 100  # only do fitting every n iterations
+        self.iteration = 0
+        # GP
+        self.gp = GaussianProcessRegressor(
+            kernel=kernel, 
+            normalize_y=True,
+            n_restarts_optimizer=10,
+            alpha=1e-6
+        )
+        self.beta = beta
+        # store explored points in parameter space
+        self.experience_X = [list(np.eye(self.n_models)[i]) for i in range(self.n_models)]
+        self.experience_y = []
+        self.fitting_times = []
+        self.prediction_times = []
+
+    def random_simplex_points(self, n_points=1000):
+        """
+        Generate random points uniformly on the simplex
+        Uses the "break-the-stick" method
+        """
+        # Generate exponential random variables
+        exp_samples = np.random.exponential(1, size=(n_points, self.n_models))
+        
+        # Normalize to get uniform simplex samples
+        return exp_samples / exp_samples.sum(axis=1, keepdims=True)
+
+    def choose(self, model, delta_mu, U):
+        # TODO: define inducing points
+        if self.first_iteration:
+            # initial evaluations at the corners of the simplex
+            for i in range(self.n_models):
+                target_model = self.model_set[i]
+                er_advantage = evaluator.compute_model_er_advantage(target_model, model, U, delta_mu)
+                self.experience_y.append(er_advantage)
+            self.first_iteration = False
+
+        self.iteration += 1
+        if self.iteration % self.nr_iterations_pause == 0:
+
+            # fit GP to expected relative advantages
+            start_time = time()
+            self.gp.fit(self.experience_X, self.experience_y)
+            fit_time = time() - start_time
+            self.fitting_times.append(fit_time)
+
+
+            # candidate points generation
+            candidate_points = self.random_simplex_points(n_points=1000)
+            # predict UCB for candidate points
+            start_time = time()
+            self.gp.predict(candidate_points, return_std=True)
+            means, stds = self.gp.predict(candidate_points, return_std=True)
+            ucb_values = means + self.beta * stds
+            predict_time = time() - start_time
+            self.prediction_times.append(predict_time)
+
+            # candidate/target model sampling via acquisition function (GP-UCB)
+            max_index = np.argmax(ucb_values)
+            target_model_vector = candidate_points[max_index].tolist()
+            self.prev_target_model_vector = target_model_vector
+
+            # build target model from the selected point
+            target_model = model_convex_combination_set(self.original_model, self.model_set, model, target_model_vector)
+
+            self.experience_X.append(target_model_vector)
+            er_advantage = evaluator.compute_model_er_advantage(target_model, model, U, delta_mu)
+            self.experience_y.append(er_advantage)
+        
+        else:
+            # build target model from the selected point
+            target_model = model_convex_combination_set(self.original_model, self.model_set, model, self.prev_target_model_vector)
+            er_advantage = evaluator.compute_model_er_advantage(target_model, model, U, delta_mu)
+
+
+        # POLICY DISTANCE COMPUTATIONS
+        distance_sup = model_sup_tv_distance(target_model, model)
+        distance_mean = model_mean_tv_distance(target_model, model, delta_mu)
+
+        return er_advantage, distance_sup, distance_mean, target_model
+    
+    def save_gp_times(self, filepath_prefix):
+        np.savetxt(f"{filepath_prefix}_gp_fitting_times.csv", np.array(self.fitting_times), delimiter=";")
+        np.savetxt(f"{filepath_prefix}_gp_prediction_times.csv", np.array(self.prediction_times), delimiter=";")
 
 class SetModelChooser(ModelChooser):
     def __init__(self, model_set, nS, nA):

@@ -1,8 +1,11 @@
 
+import numpy as np
+
 from algorithm.model_chooser import *
-from utils.evaluator import *
+import utils.evaluator as default_evaluator
 from utils.tabular import *
 from algorithm.logger import Logger
+from tqdm import tqdm
 
 
 from algorithm.policy_chooser import *
@@ -18,7 +21,9 @@ class SPMI(object):
                  model_chooser=None,
                  max_iter=10000,
                  delta_q=None,
-                 persistent=True):
+                 persistent=True,
+                 evaluator=None,
+                 metrics_evaluator=None):
         '''
         This class allows to instantiate a Safe Policy Model Iterator object, i.e., an object exposing
         the methods to perform policy-model learning on a given Conf-MDP. This class implements the
@@ -31,6 +36,8 @@ class SPMI(object):
         :param max_iter: maximum number of iterations to be performed
         :param delta_q: the value of DeltaQ, if None 1/(1-gamma) is used
         :param persistent: whether to adopt the persistent target selection instead of the simple greedy
+        :param evaluator: object exposing the compute_* API (defaults to utils.evaluator module)
+        :param metrics_evaluator: optional IterationMetricsEvaluator to log extra metrics per iteration
         '''
 
         # --------------------------------------
@@ -58,8 +65,29 @@ class SPMI(object):
         else:
             self.model_chooser = model_chooser
 
+        # evaluator hooks
+        self.evaluator = evaluator or default_evaluator
+        self.metrics_evaluator = metrics_evaluator
+
         # LOGGER INSTANTIATION
         self.logger = Logger(self.mdp, self.model_chooser)
+
+    def _reset_metrics(self):
+        if self.metrics_evaluator is not None and hasattr(self.metrics_evaluator, "reset"):
+            self.metrics_evaluator.reset()
+
+    def _record_metrics(self, reward, policy, model, d_mu=None, delta_mu=None):
+        if self.metrics_evaluator is None:
+            return
+        iteration = getattr(self.logger, "iteration", None)
+        self.metrics_evaluator.evaluate(
+            policy=policy,
+            model=model,
+            reward=reward,
+            d_mu=d_mu,
+            delta_mu=delta_mu,
+            iteration=iteration
+        )
 
     # -------------------------------------
     # ----- ALGORITHMS IMPLEMENTATION -----
@@ -69,6 +97,7 @@ class SPMI(object):
     def spmi(self, initial_policy, initial_model):
 
         # initializations
+        evaluator = self.evaluator
         gamma = self.gamma
         mu = self.mdp.mu
         nS, nA = self.mdp.nS, self.mdp.nA
@@ -79,6 +108,7 @@ class SPMI(object):
         reward = TabularReward(self.mdp.P, self.mdp.nS, self.mdp.nA)
         # reset of the logging attributes
         self.logger.reset()
+        self._reset_metrics()
 
         policy = initial_policy
         model = initial_model
@@ -94,13 +124,16 @@ class SPMI(object):
         delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
         m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
         target_model_old = target_model
+        self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         # convergence threshold
         convergence = eps / (1 - gamma)
         # POLICY-MODEL UPDATE LOOP
         # the policy and the model are continuously updated until the iteration_horizon is reached or
         # the relative advantages fall below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI Progress")
         while (p_er_adv > convergence or m_er_adv > convergence) and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -182,6 +215,7 @@ class SPMI(object):
             # choose the next target policy
             target_policy_old = target_policy_star
             d_mu = evaluator.compute_discounted_s_distribution(mu, policy, model, gamma, horizon, nS, nA)
+            delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
             p_er_adv, p_dist_sup, p_dist_mean, target_policy = self.policy_chooser.choose(policy, d_mu, Q)
 
             # choose the next target model
@@ -189,6 +223,7 @@ class SPMI(object):
             U = evaluator.compute_u_function(policy, model, reward, gamma, horizon=horizon)
             delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
             m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
+            self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         return policy, model
 
@@ -199,6 +234,7 @@ class SPMI(object):
     def spmi_sup(self, initial_policy, initial_model):
 
         # initializations
+        evaluator = self.evaluator
         gamma = self.gamma
         mu = self.mdp.mu
         nS, nA = self.mdp.nS, self.mdp.nA
@@ -209,6 +245,7 @@ class SPMI(object):
         reward = TabularReward(self.mdp.P, self.mdp.nS, self.mdp.nA)
         # reset of the logging attributes
         self.logger.reset()
+        self._reset_metrics()
 
         policy = initial_policy
         model = initial_model
@@ -224,13 +261,16 @@ class SPMI(object):
         delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
         m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
         target_model_old = target_model
+        self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         # convergence threshold
         convergence = eps / (1 - gamma)
         # POLICY-MODEL UPDATE LOOP
         # the policy and the model are continuously updated until the iteration_horizon is reached or
         # the relative advantages fall below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI SUP Progress")
         while ((p_er_adv + m_er_adv) > convergence) and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -319,6 +359,7 @@ class SPMI(object):
             U = evaluator.compute_u_function(policy, model, reward, gamma, horizon=horizon)
             delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
             m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
+            self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         return policy, model
 
@@ -329,6 +370,7 @@ class SPMI(object):
     def spmi_alt(self, initial_policy, initial_model):
 
         # initializations
+        evaluator = self.evaluator
         gamma = self.gamma
         mu = self.mdp.mu
         nS, nA = self.mdp.nS, self.mdp.nA
@@ -339,6 +381,7 @@ class SPMI(object):
         reward = TabularReward(self.mdp.P, self.mdp.nS, self.mdp.nA)
         # reset of the logging attributes
         self.logger.reset()
+        self._reset_metrics()
 
         policy = initial_policy
         model = initial_model
@@ -355,13 +398,16 @@ class SPMI(object):
         m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(
             model, delta_mu, U)
         target_model_old = target_model
+        self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         # convergence threshold
         convergence = eps / (1 - gamma)
         # POLICY-MODEL UPDATE LOOP
         # the policy and the model are continuously updated until the iteration_horizon is reached or
         # the relative advantages fall below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI-ALT Progress")
         while (p_er_adv > convergence or m_er_adv > convergence) and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -447,6 +493,7 @@ class SPMI(object):
             U = evaluator.compute_u_function(policy, model, reward, gamma, horizon=horizon)
             delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
             m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
+            self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         return policy, model
 
@@ -458,6 +505,7 @@ class SPMI(object):
     def spmi_no_full(self, initial_policy, initial_model):
 
         # initializations
+        evaluator = self.evaluator
         gamma = self.gamma
         mu = self.mdp.mu
         nS, nA = self.mdp.nS, self.mdp.nA
@@ -468,6 +516,7 @@ class SPMI(object):
         reward = TabularReward(self.mdp.P, self.mdp.nS, self.mdp.nA)
         # reset of the logging attributes
         self.logger.reset()
+        self._reset_metrics()
 
         policy = initial_policy
         model = initial_model
@@ -484,13 +533,16 @@ class SPMI(object):
         m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(
             model, delta_mu, U)
         target_model_old = target_model
+        self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         # convergence threshold
         convergence = eps / (1 - gamma)
         # POLICY-MODEL UPDATE LOOP
         # the policy and the model are continuously updated until the iteration_horizon is reached or
         # the relative advantages fall below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI-nofull Progress")
         while ((p_er_adv + m_er_adv) > convergence) and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -571,6 +623,7 @@ class SPMI(object):
             U = evaluator.compute_u_function(policy, model, reward, gamma, horizon=horizon)
             delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
             m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
+            self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         return policy, model
 
@@ -581,6 +634,7 @@ class SPMI(object):
     def spi_smi(self, initial_policy, initial_model):
 
         # initializations
+        evaluator = self.evaluator
         gamma = self.gamma
         mu = self.mdp.mu
         nS, nA = self.mdp.nS, self.mdp.nA
@@ -591,6 +645,7 @@ class SPMI(object):
         reward = TabularReward(self.mdp.P, self.mdp.nS, self.mdp.nA)
         # reset of the logging attributes
         self.logger.reset()
+        self._reset_metrics()
 
         policy = initial_policy
         model = initial_model
@@ -608,7 +663,9 @@ class SPMI(object):
         # POLICY UPDATE LOOP
         # the policy is continuously updated until the iteration_horizon is reached or
         # the relative advantage falls below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPI+SMI Progress")
         while p_er_adv > convergence and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
@@ -663,10 +720,12 @@ class SPMI(object):
         # ------ SMI ------
 
         # choose a target model
+        d_mu = evaluator.compute_discounted_s_distribution(mu, policy, model, gamma, horizon, nS, nA)
         U = evaluator.compute_u_function(policy, model, reward, gamma, horizon=horizon)
-        delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA)
+        delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
         m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
         target_model_old = target_model
+        self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         # convergence threshold
         convergence = eps / (1 - gamma)
@@ -722,8 +781,10 @@ class SPMI(object):
             # choose the next target model
             target_model_old = target_model_star
             U = evaluator.compute_u_function(policy, model, reward, gamma, horizon=horizon)
-            delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA)
+            d_mu = evaluator.compute_discounted_s_distribution(mu, policy, model, gamma, horizon, nS, nA)
+            delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
             m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
+            self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         return policy, model
 
@@ -733,6 +794,7 @@ class SPMI(object):
     def smi_spi(self, initial_policy, initial_model):
 
         # initializations
+        evaluator = self.evaluator
         gamma = self.gamma
         mu = self.mdp.mu
         nS, nA = self.mdp.nS, self.mdp.nA
@@ -743,6 +805,7 @@ class SPMI(object):
         reward = TabularReward(self.mdp.P, self.mdp.nS, self.mdp.nA)
         # reset of the logging attributes
         self.logger.reset()
+        self._reset_metrics()
 
         policy = initial_policy
         model = initial_model
@@ -750,17 +813,21 @@ class SPMI(object):
         # ------ SMI ------
 
         # choose a target model
+        d_mu = evaluator.compute_discounted_s_distribution(mu, policy, model, gamma, horizon, nS, nA)
         U = evaluator.compute_u_function(policy, model, reward, gamma, horizon=horizon)
-        delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA)
+        delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
         m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
         target_model_old = target_model
+        self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         # convergence threshold
         convergence = eps / (1 - gamma)
         # MODEL UPDATE LOOP
         # the model is continuously updated until the iteration_horizon is reached or
         # the relative advantage falls below the convergence threshold
+        progress_bar = tqdm(total=iteration_horizon, desc="SPMI smi+spi Progress")
         while m_er_adv > convergence and self.logger.iteration < iteration_horizon:
+            progress_bar.update(1)
 
             target_models = [(target_model, m_er_adv, m_dist_sup, m_dist_mean)]
             if self.persistent:
@@ -810,8 +877,10 @@ class SPMI(object):
             # choose the next target model
             target_model_old = target_model_star
             U = evaluator.compute_u_function(policy, model, reward, gamma, horizon=horizon)
-            delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA)
+            d_mu = evaluator.compute_discounted_s_distribution(mu, policy, model, gamma, horizon, nS, nA)
+            delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
             m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
+            self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         # ------ SPI ------
 
@@ -820,6 +889,8 @@ class SPMI(object):
         d_mu = evaluator.compute_discounted_s_distribution(mu, policy, model, gamma, horizon, nS, nA)
         p_er_adv, p_dist_sup, p_dist_mean, target_policy = self.policy_chooser.choose(policy, d_mu, Q)
         target_policy_old = target_policy
+        delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
+        self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         # convergence threshold
         convergence = eps / (1 - gamma)
@@ -878,6 +949,8 @@ class SPMI(object):
             target_policy_old = target_policy_star
             d_mu = evaluator.compute_discounted_s_distribution(mu, policy, model, gamma, horizon, nS, nA)
             p_er_adv, p_dist_sup, p_dist_mean, target_policy = self.policy_chooser.choose(policy, d_mu, Q)
+            delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
+            self._record_metrics(reward, policy, model, d_mu, delta_mu)
 
         return policy, model
 
