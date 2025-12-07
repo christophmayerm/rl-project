@@ -1,5 +1,6 @@
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import copy
@@ -8,13 +9,15 @@ import os
 from algorithm.model_chooser import *
 from algorithm.spmi import SPMI
 
+from utils.metrics_evaluator import EvaluationOptions, IterationMetricsEvaluator
+
 from algorithm.policy_chooser import *
 from envs.racetrack_simulator import RaceTrackConfigurableEnv
 from utils.uniform_policy import UniformPolicy
 from utils.tabular import *
 
 track = 'T1'
-simulation_name = 'racetrack_gp_' + track
+simulation_name = 'racetrack4_gp_' + track
 dir_path = "./data/" + simulation_name
 
 if not os.path.exists(dir_path):
@@ -24,6 +27,7 @@ init_model_vector = [0.5, 0.5, 0, 0]
 mdp = RaceTrackConfigurableEnv(track_file=track, initial_configuration=init_model_vector, pfail=0.07)
 
 original_model = copy.deepcopy(mdp.P)
+ref_model = TabularModel(original_model, mdp.nS, mdp.nA)
 
 uniform_policy = UniformPolicy(mdp)
 
@@ -35,8 +39,8 @@ model_set = [TabularModel(mdp.P_highspeed_noboost, mdp.nS, mdp.nA),
              TabularModel(mdp.P_highspeed_boost, mdp.nS, mdp.nA),
              TabularModel(mdp.P_lowspeed_boost, mdp.nS, mdp.nA)]
 
-model_set = [TabularModel(mdp.P_highspeed_noboost, mdp.nS, mdp.nA),
-             TabularModel(mdp.P_lowspeed_noboost, mdp.nS, mdp.nA)]
+# model_set = [TabularModel(mdp.P_highspeed_noboost, mdp.nS, mdp.nA),
+#              TabularModel(mdp.P_lowspeed_noboost, mdp.nS, mdp.nA)]
 
 policy_chooser = GreedyPolicyChooser(mdp.nS, mdp.nA)
 beta = 1.0  # beta for GP-UCB
@@ -44,7 +48,28 @@ model_chooser = GPModelChooser(model_set, mdp.nS, mdp.nA, init_model_vector, bet
 
 eps = 0.0
 max_iter = 1000 # default: 10 (taken from ractrack4.py)
-spmi = SPMI(mdp, eps, policy_chooser, model_chooser, max_iter=max_iter, persistent=False, delta_q=1)
+metrics_opts = EvaluationOptions(
+    state_coverage=True,
+    state_entropy=True,
+    reward_diversity=True,
+    model_divergence=True
+)
+metrics_evaluator = IterationMetricsEvaluator(
+    mdp,
+    options=metrics_opts,
+    reference_model=ref_model
+)
+
+spmi = SPMI(
+    mdp,
+    eps,
+    policy_chooser,
+    model_chooser,
+    max_iter=max_iter,
+    persistent=False,
+    delta_q=1,
+    metrics_evaluator=metrics_evaluator
+)
 
 #-------------------------------------------------------------------------------
 #SPMI
@@ -52,7 +77,7 @@ spmi.spmi(initial_policy, initial_model)
 
 spmi.logger.save(dir_path, 'spmi.csv')
 spmi.model_chooser.save_gp_times(dir_path)
-
+metrics_evaluator.save(dir_path, "metrics_spmi.csv")
 
 #-------------------------------------------------------------------------------
 #SPMI-sup

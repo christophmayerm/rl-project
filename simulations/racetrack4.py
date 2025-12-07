@@ -7,6 +7,7 @@ import os
 
 from algorithm.model_chooser import *
 from algorithm.spmi import SPMI
+from utils.metrics_evaluator import EvaluationOptions, IterationMetricsEvaluator
 
 from algorithm.policy_chooser import *
 from envs.racetrack_simulator import RaceTrackConfigurableEnv
@@ -23,6 +24,7 @@ if not os.path.exists(dir_path):
 mdp = RaceTrackConfigurableEnv(track_file=track, initial_configuration=[0.5, 0.5, 0, 0], pfail=0.07)
 
 original_model = copy.deepcopy(mdp.P)
+ref_model = TabularModel(original_model, mdp.nS, mdp.nA)
 
 uniform_policy = UniformPolicy(mdp)
 
@@ -38,13 +40,35 @@ policy_chooser = GreedyPolicyChooser(mdp.nS, mdp.nA)
 model_chooser = SetModelChooser(model_set, mdp.nS, mdp.nA)
 
 eps = 0.0
-spmi = SPMI(mdp, eps, policy_chooser, model_chooser, max_iter=1000, persistent=True, delta_q=1)
+max_iter = 1000 # default: 30000
+metrics_opts = EvaluationOptions(
+    state_coverage=True,
+    state_entropy=True,
+    reward_diversity=True,
+    model_divergence=True
+)
+metrics_evaluator = IterationMetricsEvaluator(
+    mdp,
+    options=metrics_opts,
+    reference_model=ref_model
+)
 
+spmi = SPMI(
+    mdp,
+    eps,
+    policy_chooser,
+    model_chooser,
+    max_iter=max_iter,
+    persistent=True,
+    delta_q=1,
+    metrics_evaluator=metrics_evaluator,
+)
 #-------------------------------------------------------------------------------
 #SPMI
 spmi.spmi(initial_policy, initial_model)
 
 spmi.logger.save(dir_path, 'spmi.csv')
+metrics_evaluator.save(dir_path, "metrics_spmi.csv")
 
 # #-------------------------------------------------------------------------------
 # #SPMI-sup

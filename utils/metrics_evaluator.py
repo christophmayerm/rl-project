@@ -18,9 +18,16 @@ class EvaluationOptions:
     novelty_yield: bool = False
     store_visitations: bool = False
     coverage_threshold: float | None = None;
+    model_divergence: bool = False
 
     def skip_evaluation(self):
-        return not (self.state_coverage or self.state_entropy or self.reward_diversity or self.novelty_yield)
+        return not (
+            self.state_coverage
+            or self.state_entropy
+            or self.reward_diversity
+            or self.novelty_yield
+            or self.model_divergence
+        )
 
 
 class IterationMetricsEvaluator:
@@ -28,7 +35,8 @@ class IterationMetricsEvaluator:
     # Optional: visualization of state visitations over time.
 
     def __init__(self, mdp, options: Optional[EvaluationOptions] = None, evaluator=None,
-                 live_vis_path: Optional[str] = None, live_vis_normalize: bool = True):
+                 live_vis_path: Optional[str] = None, live_vis_normalize: bool = True,
+                 reference_model=None):
         self.mdp = mdp
         self.options = options or EvaluationOptions()
         self.evaluator = evaluator or default_evaluator
@@ -37,6 +45,7 @@ class IterationMetricsEvaluator:
         self.visitation_history: List[np.ndarray] = []
         self.live_vis_path = live_vis_path
         self.live_vis_normalize = live_vis_normalize
+        self.reference_model = reference_model 
 
     def reset(self):
         self.history.clear()
@@ -73,6 +82,8 @@ class IterationMetricsEvaluator:
             metrics.update(self._reward_stats(delta_mu, reward, model))
         if self.options.novelty_yield:
             metrics["novelty_yield"] = self._novelty_yield(d_mu)
+        if self.options.model_divergence:
+            metrics.update(self._model_divergence(delta_mu, model))
 
         self._update_seen_states(d_mu)
         if self.options.store_visitations:
@@ -114,6 +125,23 @@ class IterationMetricsEvaluator:
             return 0.0
         unseen = np.logical_and(~self.visited_states, d_mu > self.options.coverage_threshold)
         return float(np.sum(d_mu[unseen]) / mass)
+    
+    def _model_divergence(self, delta_mu, model):
+        P_ref = self.reference_model.get_matrix()
+        P_cur = model.get_matrix() 
+
+        # TV distance per (s,a): 0.5 * ||P_cur - P_ref||_1
+        tv_sa = 0.5 * np.abs(P_cur - P_ref).sum(axis=1)
+
+        w = np.array(delta_mu, dtype=float)
+        s = w.sum()
+        if s > 0:
+            w /= s
+
+        mean_tv = float(np.dot(w, tv_sa))
+        max_tv = float(tv_sa.max())
+
+        return {"model_tv_mean": mean_tv, "model_tv_max": max_tv}
 
     def _update_seen_states(self, d_mu):
         # mark states as visited if their discounted visitation exceeds the threshold
@@ -124,7 +152,6 @@ class IterationMetricsEvaluator:
         if not self.history:
             raise ValueError("No metrics collected; run evaluate before saving.")
 
-        # determine column order: iteration first if present, then others in insertion order
         keys = []
         if any("iteration" in m for m in self.history):
             keys.append("iteration")

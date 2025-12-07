@@ -24,6 +24,7 @@ if not os.path.exists(dir_path):
 mdp = RaceTrackConfigurableEnv(track_file=track, initial_configuration=[0.5, 0.5, 0, 0], pfail=0.07)
 
 original_model = copy.deepcopy(mdp.P)
+ref_model = TabularModel(original_model, mdp.nS, mdp.nA)
 
 uniform_policy = UniformPolicy(mdp)
 
@@ -42,11 +43,12 @@ metrics_opts = EvaluationOptions(
     state_coverage=True,
     state_entropy=True,
     reward_diversity=True,
-    novelty_yield=True
+    model_divergence=True
 )
 metrics_evaluator = IterationMetricsEvaluator(
     mdp,
-    options=metrics_opts
+    options=metrics_opts,
+    reference_model=ref_model
 )
 
 spmi = SPMI(
@@ -70,32 +72,32 @@ metrics_evaluator.save(dir_path, "metrics_spmi.csv")
 
 #-------------------------------------------------------------------------------
 #SPMI-sup
-mdp.set_initial_configuration(original_model)
-spmi.spmi_sup(initial_policy, initial_model)
+# mdp.set_initial_configuration(original_model)
+# spmi.spmi_sup(initial_policy, initial_model)
 
-spmi.logger.save(dir_path, 'spmi_sup.csv')
-metrics_evaluator.save(dir_path, "metrics_spmi_sup.csv")
+# spmi.logger.save(dir_path, 'spmi_sup.csv')
+# metrics_evaluator.save(dir_path, "metrics_spmi_sup.csv")
 
 # #-------------------------------------------------------------------------------
 # #SPMI-alt
 # mdp.set_initial_configuration(original_model)
 # spmi.spmi_alt(initial_policy, initial_model)
 
-spmi.logger.save(dir_path, 'spmi_alt.csv')
-metrics_evaluator.save(dir_path, "metrics_spmi_alt.csv")
+# spmi.logger.save(dir_path, 'spmi_alt.csv')
+# metrics_evaluator.save(dir_path, "metrics_spmi_alt.csv")
 
 # #-------------------------------------------------------------------------------
 # #SPI+SMI
 # mdp.set_initial_configuration(original_model)
 # spmi.spi_smi(initial_policy, initial_model)
 
-spmi.logger.save(dir_path, 'spi_smi.csv')
-metrics_evaluator.save(dir_path, "metrics_spi_smi.csv")
+# spmi.logger.save(dir_path, 'spi_smi.csv')
+# metrics_evaluator.save(dir_path, "metrics_spi_smi.csv")
 
 # #-------------------------------------------------------------------------------
 # #SMI+SPI
 # mdp.set_initial_configuration(original_model)
 # spmi.smi_spi(initial_policy, initial_model)
 
-spmi.logger.save(dir_path, 'smi_spi.csv')
-metrics_evaluator.save(dir_path, "metrics_smi_spi.csv")
+# spmi.logger.save(dir_path, 'smi_spi.csv')
+# metrics_evaluator.save(dir_path, "metrics_smi_spi.csv")
