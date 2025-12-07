@@ -52,14 +52,14 @@ def run_standard_spmi(mdp, initial_policy, initial_model, original_model, max_it
     elapsed = time.time() - start_time
 
     print(f"Standard SPMI completed in {elapsed:.2f} seconds")
-    print(f"Final performance: {spmi.logger.J_history[-1] if spmi.logger.J_history else 'N/A'}")
+    print(f"Final performance: {spmi.logger.evaluations[-1]:.4f}")
     print(f"Iterations: {spmi.logger.iteration}")
 
     return spmi, final_policy, final_model
 
 
 def run_federated_spmi(mdp, initial_policy, initial_model, original_model,
-                       n_agents=4, episodes_per_round=50, max_rounds=100):
+                       n_agents=4, episodes_per_round=100, max_rounds=200):
     """Run Federated SPMI"""
     print("\n" + "="*60)
     print(f"Running Federated SPMI (N={n_agents} agents, {episodes_per_round} episodes/round)")
@@ -105,15 +105,17 @@ def compare_results(spmi_logger, fspmi_logger):
     print("="*60)
 
     print("\nStandard SPMI:")
-    if spmi_logger.J_history:
-        print(f"  Final Performance: {spmi_logger.J_history[-1]:.4f}")
+    if spmi_logger.evaluations:
+        print(f"  Final Performance: {spmi_logger.evaluations[-1]:.4f}")
         print(f"  Iterations: {spmi_logger.iteration}")
 
     print("\nFederated SPMI:")
+    if getattr(fspmi_logger, "true_performances", None):
+        print(f"  Final Performance (true): {fspmi_logger.true_performances[-1]:.4f}")
     if fspmi_logger.performances:
-        print(f"  Final Performance (est.): {fspmi_logger.performances[-1]:.4f}")
-        print(f"  Rounds: {len(fspmi_logger.iterations)}")
-        print(f"  Total Samples: {sum(fspmi_logger.total_samples)}")
+        print(f"  Final Performance (MC est.): {fspmi_logger.performances[-1]:.4f}")
+    print(f"  Rounds: {len(fspmi_logger.iterations)}")
+    print(f"  Total Samples: {sum(fspmi_logger.total_samples)}")
 
 
 def main():
@@ -157,9 +159,9 @@ def main():
 
     # Run Federated SPMI with different configurations
     configurations = [
-        {'n_agents': 2, 'episodes_per_round': 25, 'max_rounds': 50},
-        {'n_agents': 4, 'episodes_per_round': 25, 'max_rounds': 50},
-        {'n_agents': 8, 'episodes_per_round': 25, 'max_rounds': 50},
+        {'n_agents': 2, 'episodes_per_round': 100, 'max_rounds': 200},
+        {'n_agents': 4, 'episodes_per_round': 100, 'max_rounds': 200},
+        {'n_agents': 8, 'episodes_per_round': 100, 'max_rounds': 200},
     ]
 
     fspmi_results = []
@@ -177,15 +179,16 @@ def main():
 
     print(f"\nStandard SPMI:")
     print(f"  Iterations: {spmi.logger.iteration}")
-    if spmi.logger.J_history:
-        print(f"  Final Performance: {spmi.logger.J_history[-1]:.4f}")
+    print(f"  Final Performance: {spmi.logger.evaluations[-1]:.4f}")
 
     for config, fspmi in fspmi_results:
         print(f"\nF-SPMI (N={config['n_agents']}):")
         print(f"  Rounds: {len(fspmi.logger.iterations)}")
         print(f"  Total Samples: {sum(fspmi.logger.total_samples)}")
+        if getattr(fspmi.logger, "true_performances", None):
+            print(f"  Final Performance (true): {fspmi.logger.true_performances[-1]:.4f}")
         if fspmi.logger.performances:
-            print(f"  Final Performance: {fspmi.logger.performances[-1]:.4f}")
+            print(f"  Final Performance (MC est.): {fspmi.logger.performances[-1]:.4f}")
 
     print("\nResults saved to:", dir_path)
 

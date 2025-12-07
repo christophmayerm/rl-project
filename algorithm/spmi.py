@@ -170,9 +170,9 @@ class SPMI(object):
                                 p_dist_sup * p_dist_mean + 1e-24) - .5 * \
                                 (m_dist_mean / (p_dist_mean + 1e-24) + m_dist_sup / (p_dist_sup + 1e-24))
                     beta0 = ((1 - gamma) * m_er_adv) / (self.delta_q * (gamma ** 2)
-                                * m_dist_sup * m_dist_mean)
+                                * m_dist_sup * m_dist_mean + 1e-24)
                     beta1 = ((1 - gamma) * m_er_adv) / (self.delta_q * (gamma ** 2)
-                                * m_dist_sup * m_dist_mean) - .5 / gamma * \
+                                * m_dist_sup * m_dist_mean + 1e-24) - .5 / gamma * \
                                 (p_dist_mean / (m_dist_mean + 1e-24) + p_dist_sup / (m_dist_sup + 1e-24))
 
                     alpha0 = np.clip(alpha0, 0., 1.)

@@ -53,10 +53,9 @@ class GreedyModelChooser(ModelChooser):
         return greedy_model_rep
 
 class GPModelChooser(ModelChooser):
-    def __init__(self, model_set, nS, nA, init_model_vector, beta, original_model):
+    def __init__(self, model_set, nS, nA, init_model_vector, beta, original_model, max_history=500):
         super(GPModelChooser, self).__init__(nS, nA)
-        # kernel = ConstantKernel(1.0) * RBF(length_scale=1.0)
-        kernel = Matern(nu=2.5, length_scale_bounds=(1e-2, 10)) + WhiteKernel(noise_level=0.1)
+        kernel = Matern(nu=2.5, length_scale_bounds=(1e-2, 10)) + WhiteKernel(noise_level=1e-6, noise_level_bounds="fixed")
 
         self.model_set = model_set
         self.n_models = len(self.model_set)
@@ -69,7 +68,7 @@ class GPModelChooser(ModelChooser):
         self.gp = GaussianProcessRegressor(
             kernel=kernel, 
             normalize_y=True,
-            n_restarts_optimizer=10,
+            optimizer=None,
             alpha=1e-6
         )
         self.beta = beta
@@ -78,6 +77,7 @@ class GPModelChooser(ModelChooser):
         self.experience_y = []
         self.fitting_times = []
         self.prediction_times = []
+        self.max_history = max_history
 
     def random_simplex_points(self, n_points=1000):
         """
@@ -104,6 +104,14 @@ class GPModelChooser(ModelChooser):
         if self.iteration % self.nr_iterations_pause == 0:
 
             # fit GP to expected relative advantages
+            # before fitting, recompute experience_y by re-evaluating each stored simplex point with the current (model, delta_mu, U)
+            # with max_history cap to keep the fit time bounded
+            refreshed_y = []
+            for x in self.experience_X:
+                target_model = model_convex_combination_set(self.original_model, self.model_set, model, x)
+                refreshed_y.append(evaluator.compute_model_er_advantage(target_model, model, U, delta_mu))
+            self.experience_y = refreshed_y
+
             start_time = time()
             self.gp.fit(self.experience_X, self.experience_y)
             fit_time = time() - start_time
@@ -116,7 +124,9 @@ class GPModelChooser(ModelChooser):
             start_time = time()
             self.gp.predict(candidate_points, return_std=True)
             means, stds = self.gp.predict(candidate_points, return_std=True)
-            ucb_values = means + self.beta * stds
+            # time-variant beta (optimism term) for growing exploration
+            beta_t = self.beta * np.sqrt(2 * np.log(self.iteration + 1))
+            ucb_values = means + beta_t * stds
             predict_time = time() - start_time
             self.prediction_times.append(predict_time)
 
@@ -131,11 +141,19 @@ class GPModelChooser(ModelChooser):
             self.experience_X.append(target_model_vector)
             er_advantage = evaluator.compute_model_er_advantage(target_model, model, U, delta_mu)
             self.experience_y.append(er_advantage)
+            if len(self.experience_X) > self.max_history:
+                self.experience_X = self.experience_X[-self.max_history:]
+                self.experience_y = self.experience_y[-self.max_history:]
         
         else:
             # build target model from the selected point
             target_model = model_convex_combination_set(self.original_model, self.model_set, model, self.prev_target_model_vector)
             er_advantage = evaluator.compute_model_er_advantage(target_model, model, U, delta_mu)
+            self.experience_X.append(self.prev_target_model_vector)
+            self.experience_y.append(er_advantage)
+            if len(self.experience_X) > self.max_history:
+                self.experience_X = self.experience_X[-self.max_history:]
+                self.experience_y = self.experience_y[-self.max_history:]
 
 
         # POLICY DISTANCE COMPUTATIONS

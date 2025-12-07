@@ -20,17 +20,20 @@ from typing import List, Optional, Tuple, Dict, Any
 from dataclasses import dataclass, field
 import copy
 
+import utils.evaluator as evaluator
 from .agent import FederatedAgent, LocalStatistics
 from .server import FederatedServer, GlobalStatistics, UpdateResult
 from utils.tabular import TabularPolicy, TabularModel
 from utils.tabular_operations import policy_convex_combination, model_convex_combination
+from utils.tabular import TabularReward
 
 
 @dataclass
 class FSPMILogger:
     """Logger for F-SPMI algorithm metrics"""
     iterations: List[int] = field(default_factory=list)
-    performances: List[float] = field(default_factory=list)
+    true_performances: List[float] = field(default_factory=list)
+    performances: List[float] = field(default_factory=list)  # MC estimate
     alphas: List[float] = field(default_factory=list)
     betas: List[float] = field(default_factory=list)
     bounds: List[float] = field(default_factory=list)
@@ -46,6 +49,7 @@ class FSPMILogger:
         self,
         iteration: int,
         performance: float,
+        true_performance: float,
         alpha: float,
         beta: float,
         bound: float,
@@ -56,6 +60,7 @@ class FSPMILogger:
     ):
         self.iterations.append(iteration)
         self.performances.append(performance)
+        self.true_performances.append(true_performance)
         self.alphas.append(alpha)
         self.betas.append(beta)
         self.bounds.append(bound)
@@ -70,13 +75,14 @@ class FSPMILogger:
         with open(filepath, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow([
-                'iteration', 'performance', 'alpha', 'beta', 'bound',
+                'iteration', 'performance_mc', 'performance_true', 'alpha', 'beta', 'bound',
                 'policy_advantage', 'model_advantage', 'total_samples', 'avg_return'
             ])
             for i in range(len(self.iterations)):
                 writer.writerow([
                     self.iterations[i],
                     self.performances[i],
+                    self.true_performances[i],
                     self.alphas[i],
                     self.betas[i],
                     self.bounds[i],
@@ -206,6 +212,7 @@ class FSPMI:
 
         # Convergence threshold
         convergence = self.eps / (1 - self.gamma)
+        mu = self.mdp.mu
 
         for round_k in range(self.max_rounds):
             if self.verbose and round_k % 10 == 0:
@@ -279,12 +286,17 @@ class FSPMI:
             avg_return = np.mean([s.avg_return for s in local_stats_list])
             total_samples = sum(s.n_samples for s in local_stats_list)
 
-            # Estimate performance from average returns
-            performance = avg_return
+            # Estimate performance from average returns and compute true performance
+            performance_mc = avg_return
+            reward = TabularReward(self.mdp.P, self.nS, self.nA)
+            performance_true = evaluator.compute_performance(
+                mu, reward, policy, model, self.gamma, self.horizon, self.nS, self.nA
+            )
 
             self.logger.log(
                 iteration=round_k,
-                performance=performance,
+                performance=performance_mc,
+                true_performance=performance_true,
                 alpha=alpha_star,
                 beta=beta_star,
                 bound=update_result.bound_value,
@@ -295,7 +307,7 @@ class FSPMI:
             )
 
             if self.verbose and round_k % 10 == 0:
-                print(f"  Performance: {performance:.4f}, α*: {alpha_star:.4f}, β*: {beta_star:.4f}")
+                print(f"  Performance (MC/true): {performance_mc:.4f}/{performance_true:.4f}, α*: {alpha_star:.4f}, β*: {beta_star:.4f}")
 
             # Update old targets for persistent choice
             target_policy_old = best_target_policy
