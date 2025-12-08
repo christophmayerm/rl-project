@@ -6,7 +6,6 @@ Converts continuous/large Gymnasium environments to tabular MDPs
 import numpy as np
 import gymnasium as gym
 from utils.tabular import TabularPolicy
-from utils.matrix_builders import p_sas, p_sa, r_sas, r_sa
 
 
 class TabularizedGymEnv:
@@ -197,7 +196,7 @@ class FrozenLakeEnv:
         :param map_size: '4x4' or '8x8'
         :param is_slippery: If True, agent has probability of moving perpendicular
         """
-        map_name = "FrozenLake-v1"
+        map_name = f"FrozenLake-v1"
         self.env = gym.make(map_name, map_name=map_size, is_slippery=is_slippery)
         
         self.nS = self.env.observation_space.n
@@ -205,28 +204,9 @@ class FrozenLakeEnv:
         self.horizon = horizon
         self.gamma = 0.99
         
-        # Grid dimensions for visualization
-        if '4x4' in map_size:
-            self.nrow = 4
-            self.ncol = 4
-        elif '8x8' in map_size:
-            self.nrow = 8
-            self.ncol = 8
-        
-        # Position function for visualization
-        self.lin = lambda s: (s // self.ncol, s % self.ncol)
-        
         # Build P from environment's P dictionary
         self._build_from_gym_p()
-        self._build_matrices()
     
-    def _build_matrices(self):
-        """Build P_sas and R_sas matrices"""
-        self.P_sas = p_sas(self.P, self.nS, self.nA)
-        self.P_sa = p_sa(self.P_sas, self.nS, self.nA)
-        self.R_sas = r_sas(self.P, self.nS, self.nA)
-        self.R = r_sa(self.R_sas, self.nS, self.nA)
-
     def _build_from_gym_p(self):
         """Convert Gym's P format to our format"""
         self.P = {s: {a: [] for a in range(self.nA)} for s in range(self.nS)}
@@ -249,37 +229,9 @@ class FrozenLakeEnv:
         policy_rep = {s: np.ones(self.nA) / self.nA for s in range(self.nS)}
         return TabularPolicy(policy_rep, self.nS, self.nA)
     
-    def set_model(self, model):
-        """Update transition model and rebuild matrices"""
-        if hasattr(model, 'get_rep'):
-            model_dict = model.get_rep()
-        else:
-            model_dict = model
-        
-        # Rebuild P with new transitions but keep original rewards
-        new_P = {s: {a: [] for a in range(self.nA)} for s in range(self.nS)}
-        
-        for s in range(self.nS):
-            for a in range(self.nA):
-                # Get original rewards
-                original = self.P[s][a]
-                reward_map = {t[1]: t[2] for t in original}
-                
-                # Get new transitions
-                new_trans = model_dict[s][a]
-                
-                for t in new_trans:
-                    if len(t) == 2:
-                        prob, s_next = t
-                        reward = reward_map.get(s_next, 0.0)
-                        done = False
-                    else:
-                        prob, s_next, reward, done = t
-                    
-                    new_P[s][a].append((prob, s_next, reward, done))
-        
-        self.P = new_P
-        self._build_matrices()
+    def set_model(self, P):
+        """Update transition model"""
+        self.P = P
     
     def seed(self, seed=None):
         """Set random seed for reproducibility"""
@@ -304,18 +256,10 @@ class TaxiEnv:
         self.gamma = 0.99
         
         self._build_from_gym_p()
-        self._build_matrices()
     
-    def _build_matrices(self):
-        """Build P_sas and R_sas matrices"""
-        self.P_sas = p_sas(self.P, self.nS, self.nA)
-        self.P_sa = p_sa(self.P_sas, self.nS, self.nA)
-        self.R_sas = r_sas(self.P, self.nS, self.nA)
-        self.R = r_sa(self.R_sas, self.nS, self.nA)
-
     def _build_from_gym_p(self):
         """Convert Gym's P format to our format"""
-        self.P = {s: {a: [] for a in range(self.nA)} for s in range(self.nA)}
+        self.P = {s: {a: [] for a in range(self.nA)} for s in range(self.nS)}
         
         for s in range(self.nS):
             for a in range(self.nA):
@@ -333,37 +277,9 @@ class TaxiEnv:
         policy_rep = {s: np.ones(self.nA) / self.nA for s in range(self.nS)}
         return TabularPolicy(policy_rep, self.nS, self.nA)
     
-    def set_model(self, model):
-        """Update transition model and rebuild matrices"""
-        if hasattr(model, 'get_rep'):
-            model_dict = model.get_rep()
-        else:
-            model_dict = model
-        
-        # Rebuild P with new transitions but keep original rewards
-        new_P = {s: {a: [] for a in range(self.nA)} for s in range(self.nS)}
-        
-        for s in range(self.nS):
-            for a in range(self.nA):
-                # Get original rewards
-                original = self.P[s][a]
-                reward_map = {t[1]: t[2] for t in original}
-                
-                # Get new transitions
-                new_trans = model_dict[s][a]
-                
-                for t in new_trans:
-                    if len(t) == 2:
-                        prob, s_next = t
-                        reward = reward_map.get(s_next, 0.0)
-                        done = False
-                    else:
-                        prob, s_next, reward, done = t
-                    
-                    new_P[s][a].append((prob, s_next, reward, done))
-        
-        self.P = new_P
-        self._build_matrices()
+    def set_model(self, P):
+        """Update transition model"""
+        self.P = P
     
     def seed(self, seed=None):
         """Set random seed for reproducibility"""
@@ -377,8 +293,6 @@ class TaxiEnv:
 
 
 # Factory function
-# Replace the create_gym_env function at the end of gymnasium_envs.py
-
 def create_gym_env(env_name, **kwargs):
     """
     Factory function to create Gymnasium environments
@@ -386,38 +300,17 @@ def create_gym_env(env_name, **kwargs):
     :param env_name: Name of environment
     :param kwargs: Environment-specific parameters
     """
+    env_map = {
+        'frozen_lake_4x4': lambda: FrozenLakeEnv(map_size='4x4', **kwargs),
+        'frozen_lake_8x8': lambda: FrozenLakeEnv(map_size='8x8', **kwargs),
+        'taxi': lambda: TaxiEnv(**kwargs),
+        'cartpole': lambda: CartPoleTabular(**kwargs),
+        'mountain_car': lambda: MountainCarTabular(**kwargs),
+        'acrobot': lambda: AcrobotTabular(**kwargs),
+        'lunar_lander': lambda: LunarLanderTabular(**kwargs),
+    }
     
-    # Remove env_name from kwargs if present (it's already passed)
-    kwargs.pop('env_name', None)
+    if env_name not in env_map:
+        raise ValueError(f"Unknown environment: {env_name}. Available: {list(env_map.keys())}")
     
-    # Create environment based on name
-    if env_name == 'frozen_lake_4x4':
-        # Set default map_size if not provided
-        if 'map_size' not in kwargs:
-            kwargs['map_size'] = '4x4'
-        return FrozenLakeEnv(**kwargs)
-    
-    elif env_name == 'frozen_lake_8x8':
-        if 'map_size' not in kwargs:
-            kwargs['map_size'] = '8x8'
-        return FrozenLakeEnv(**kwargs)
-    
-    elif env_name == 'taxi':
-        return TaxiEnv(**kwargs)
-    
-    elif env_name == 'cartpole':
-        return CartPoleTabular(**kwargs)
-    
-    elif env_name == 'mountain_car':
-        return MountainCarTabular(**kwargs)
-    
-    elif env_name == 'acrobot':
-        return AcrobotTabular(**kwargs)
-    
-    elif env_name == 'lunar_lander':
-        return LunarLanderTabular(**kwargs)
-    
-    else:
-        available = ['frozen_lake_4x4', 'frozen_lake_8x8', 'taxi', 
-                    'cartpole', 'mountain_car', 'acrobot', 'lunar_lander']
-        raise ValueError(f"Unknown environment: {env_name}. Available: {available}")
+    return env_map[env_name]()

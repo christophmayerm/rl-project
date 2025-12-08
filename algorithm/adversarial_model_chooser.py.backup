@@ -65,14 +65,6 @@ class AdversarialModelChooser(object):
             
         elif self.budget_schedule == 'step':
             budget = self.B_max if k >= self.K_warmup else self.B_min
-        elif self.budget_schedule == 'adaptive':
-            # Adaptive curriculum handled externally by AdaptiveCurriculumScheduler
-            # This is a placeholder - actual budget comes from sa_pmi_v2
-            budget = self.B_min
-            
-        elif self.budget_schedule is None:
-            # No adversarial training (baseline SPMI)
-            budget = 0.0
             
         else:
             raise ValueError(f"Unknown budget schedule: {self.budget_schedule}")

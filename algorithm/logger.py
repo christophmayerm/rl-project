@@ -6,11 +6,12 @@ import numpy as np
 
 class Logger(object):
     """
-    Enhanced Logger with multiple progress bar options
+    Enhanced Logger with multiple progress bar options and metrics evaluation
     """
 
     def __init__(self, mdp, model_chooser, verbose=2, log_interval=100, 
-                 use_wandb=False, wandb_config=None, progress_style='standard'):
+                 use_wandb=False, wandb_config=None, progress_style='standard',
+                 metrics_evaluator=None):
         """
         :param progress_style: Style of progress bar
             - 'standard': Default tqdm bar
@@ -18,6 +19,7 @@ class Logger(object):
             - 'dual': Dual bars for inner/outer loops (for SA-PMI)
             - 'minimal': Minimal percentage display
             - 'none': No progress bar
+        :param metrics_evaluator: IterationMetricsEvaluator instance
         """
         self.mdp = mdp
         self.model_chooser = model_chooser
@@ -25,6 +27,7 @@ class Logger(object):
         self.log_interval = log_interval
         self.use_wandb = use_wandb
         self.progress_style = progress_style
+        self.metrics_evaluator = metrics_evaluator
 
         # LOGGING ATTRIBUTES
         self.count = 0
@@ -57,7 +60,7 @@ class Logger(object):
         
         # Wandb initialization
         self.wandb_run = None
-        self.wandb = None  # Initialize wandb module reference
+        self.wandb = None
         if self.use_wandb:
             self._init_wandb(wandb_config)
     
@@ -178,7 +181,7 @@ class Logger(object):
     
     def _init_minimal_progress(self):
         """Initialize minimal progress (just percentage updates)"""
-        self.pbar = None  # Will use print statements
+        self.pbar = None
         self.last_percent = -1
 
     def update(self, J_p_m, alfa_star, beta_star, p_er_adv, m_er_adv,
@@ -188,7 +191,10 @@ class Logger(object):
             adversarial_budget=None,
             adversarial_disadvantage=None,
             adversarial_dist_sup=None,
-            adversarial_dist_mean=None):
+            adversarial_dist_mean=None,
+            # NEW: Pass precomputed distributions for metrics
+            policy=None, model=None, reward=None,
+            d_mu=None, delta_mu=None):
         """Update logger with current iteration metrics"""
         
         # Data collections
@@ -226,25 +232,38 @@ class Logger(object):
             self.adversarial_dist_sups.append(adversarial_dist_sup)
             self.adversarial_dist_means.append(adversarial_dist_mean)
 
+        # NEW: Evaluate auxiliary metrics if evaluator is attached
+        auxiliary_metrics = {}
+        if self.metrics_evaluator is not None and policy is not None and model is not None:
+            try:
+                auxiliary_metrics = self.metrics_evaluator.evaluate(
+                    policy=policy,
+                    model=model,
+                    reward=reward,
+                    d_mu=d_mu,
+                    delta_mu=delta_mu,
+                    iteration=self.iteration
+                )
+            except Exception as e:
+                if self.verbose >= 2:
+                    print(f"⚠️  Metrics evaluation failed at iteration {self.iteration}: {e}")
+
         # Update progress bar based on style
         self._update_progress(J_p_m, alfa_star, beta_star, bound, 
                             adversarial_budget, is_adversarial)
         
         # Verbose output
         if self.verbose == 3:
-            # Detailed: Print everything (original behavior)
             self._print_detailed(J_p_m, alfa_star, beta_star, p_er_adv, m_er_adv,
                                 p_dist_sup, p_dist_mean, m_dist_sup, m_dist_mean,
                                 convergence, bound, adversarial_budget, 
                                 adversarial_disadvantage, adversarial_dist_sup,
-                                adversarial_dist_mean)
+                                adversarial_dist_mean, auxiliary_metrics)
         elif self.verbose == 2 and self.iteration % self.log_interval == 0:
-            # Normal: Print summary every log_interval
             self._print_summary(J_p_m, alfa_star, beta_star, bound, 
-                              adversarial_budget, is_adversarial)
-        # verbose=1 or 0: No per-iteration output (just progress bar)
+                              adversarial_budget, is_adversarial, auxiliary_metrics)
         
-        # Log to wandb - FIXED: Check both use_wandb AND wandb_run exists and is active
+        # Log to wandb
         if self.use_wandb and self.wandb is not None and self.wandb_run is not None:
             try:
                 wandb_metrics = {
@@ -268,12 +287,15 @@ class Logger(object):
                         'adversarial_dist_mean': adversarial_dist_mean,
                     })
                 
+                # Add auxiliary metrics to wandb
+                if auxiliary_metrics:
+                    wandb_metrics.update({f'aux_{k}': v for k, v in auxiliary_metrics.items() 
+                                        if k != 'iteration'})
+                
                 self.wandb.log(wandb_metrics, step=self.iteration)
             except Exception as e:
-                # Silently catch wandb errors to not interrupt training
                 if self.verbose >= 2:
                     print(f"⚠️  W&B logging failed at iteration {self.iteration}: {e}")
-                # Disable further wandb logging to avoid repeated errors
                 self.use_wandb = False
 
         # Model vector coefficients computation
@@ -320,7 +342,7 @@ class Logger(object):
                 postfix['B'] = f'{adv_budget:.3f}'
             
             self.pbar.set_postfix(postfix)
-            self.pbar.update(1)  # THIS IS KEY - updates by 1 each iteration
+            self.pbar.update(1)
             
         elif self.progress_style == 'rich' and self.pbar is not None:
             self.pbar.update(
@@ -348,9 +370,8 @@ class Logger(object):
     def _print_detailed(self, J_p_m, alfa_star, beta_star, p_er_adv, m_er_adv,
                        p_dist_sup, p_dist_mean, m_dist_sup, m_dist_mean,
                        convergence, bound, adv_budget, adv_disadv, 
-                       adv_dist_sup, adv_dist_mean):
-        """Print detailed metrics (verbose=3, original behavior)"""
-        # Temporarily pause progress bar to print cleanly
+                       adv_dist_sup, adv_dist_mean, aux_metrics=None):
+        """Print detailed metrics (verbose=3)"""
         if self.pbar is not None and self.progress_style == 'standard':
             self.pbar.clear()
         
@@ -377,14 +398,18 @@ class Logger(object):
             print('Dist Sup: {0}'.format(adv_dist_sup))
             print('Dist Mean: {0}'.format(adv_dist_mean))
         
-        # Refresh progress bar
+        if aux_metrics:
+            print('\n--- AUXILIARY METRICS ---')
+            for key, val in aux_metrics.items():
+                if key != 'iteration':
+                    print(f'{key}: {val:.4f}')
+        
         if self.pbar is not None and self.progress_style == 'standard':
             self.pbar.refresh()
     
     def _print_summary(self, J_p_m, alfa_star, beta_star, bound, 
-                      adv_budget, is_adversarial):
+                      adv_budget, is_adversarial, aux_metrics=None):
         """Print summary (verbose=2)"""
-        # Temporarily pause progress bar
         if self.pbar is not None and self.progress_style == 'standard':
             self.pbar.clear()
         
@@ -396,14 +421,20 @@ class Logger(object):
         if is_adversarial:
             summary += f" | B={adv_budget:.3f}"
         
+        if aux_metrics:
+            # Add coverage and entropy to summary
+            if 'state_coverage' in aux_metrics:
+                summary += f" | Cov={aux_metrics['state_coverage']:.3f}"
+            if 'model_tv_mean' in aux_metrics:
+                summary += f" | TV={aux_metrics['model_tv_mean']:.3f}"
+        
         print(summary)
         
-        # Refresh progress bar
         if self.pbar is not None and self.progress_style == 'standard':
             self.pbar.refresh()
     
     def print_final_summary(self):
-        """Print final summary at end of training (for verbose >= 1)"""
+        """Print final summary at end of training"""
         if self.verbose >= 1:
             print("\n" + "="*70)
             print("TRAINING COMPLETED")
@@ -415,6 +446,13 @@ class Logger(object):
             
             if len(self.adversarial_budgets) > 0:
                 print(f"\nFinal Adversarial Budget: {self.adversarial_budgets[-1]:.6f}")
+            
+            if self.metrics_evaluator and self.metrics_evaluator.history:
+                final_metrics = self.metrics_evaluator.history[-1]
+                print(f"\nFinal Auxiliary Metrics:")
+                for key, val in final_metrics.items():
+                    if key != 'iteration':
+                        print(f"  {key}: {val:.4f}")
             
             print("="*70)
 
@@ -444,7 +482,11 @@ class Logger(object):
         self.adversarial_dist_sups = list()
         self.adversarial_dist_means = list()
         
-        # Close progress bar but NOT wandb (it may still be needed)
+        # Reset metrics evaluator
+        if self.metrics_evaluator is not None:
+            self.metrics_evaluator.reset()
+        
+        # Close progress bar but NOT wandb
         if self.pbar is not None:
             if self.progress_style == 'rich':
                 self.pbar.stop()
@@ -457,8 +499,7 @@ class Logger(object):
             self.pbar = None
     
     def close(self):
-        """Close progress bar and wandb run - ONLY call at end of experiment"""
-        # Close progress bars
+        """Close progress bar and wandb run"""
         if self.pbar is not None:
             if self.progress_style == 'rich':
                 self.pbar.stop()
@@ -470,7 +511,6 @@ class Logger(object):
                 self.pbar.close()
             self.pbar = None
         
-        # Close wandb run
         if self.use_wandb and self.wandb is not None and self.wandb_run is not None:
             try:
                 self.wandb_run.finish()
@@ -544,6 +584,8 @@ class Logger(object):
             filter_indices = np.linspace(0, len(execution_data)-1, entries, dtype=int)
             execution_data = execution_data[filter_indices]
         
+        import os
+        os.makedirs(dir_path, exist_ok=True)
         np.savetxt(dir_path + '/' + file_name, execution_data,
                 delimiter=';', header=header_string, fmt='%.30e')
         
