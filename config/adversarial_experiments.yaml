@@ -4,163 +4,305 @@
 # =============================================================================
 # ENVIRONMENT CONFIGURATIONS
 # =============================================================================
+# Fixed configuration for TeacherStudentEnv
+# Replace teacher_student_small in your adversarial_experiments.yaml
+
 environments:
-  # Teacher-Student environments
   teacher_student_small:
     type: teacher_student
+    difficulty: easy
     params:
+      # TeacherStudentEnv actual parameters (from __init__)
       n_literals: 2
       max_value: 1
       max_update: 1
-      max_literals_in_examples: 2
-      horizon: 10
+      max_literals_in_examples: 2  # Start with 2 for small
+      horizon: 1000
     training:
       max_iter: 10000
-      eps: 1.0e-7
-      K_warmup_ratio: 0.75
-      log_interval: 250
+      eps: 0.000001
+      K_warmup_ratio: 0.85
+      log_interval: 50
+      progress_style: rich
+      verbose: 1
     adversarial:
-      B_max: 0.05
+      B_max: 0.001
       B_min: 0.0
-    difficulty: easy
-    
+      adaptive:
+        performance_window: 100
+        convergence_trigger: 0.00001
+        tv_safe_threshold: 0.65
+        tv_danger_threshold: 0.75
+        stability_threshold: 0.05
+        warmup_phase_ratio: 0.4
+        gradual_phase_ratio: 0.4
+        robust_phase_ratio: 0.2
+        stability_sensitivity: 5.0
+        progress_sensitivity: 10.0
+        min_iterations_before_adversarial: 500
+        budget_increase_rate: 1.05
+        budget_decrease_rate: 0.8
+        emergency_budget_scale: 0.3
+
   teacher_student_medium:
     type: teacher_student
+    difficulty: medium
     params:
       n_literals: 3
       max_value: 2
       max_update: 1
       max_literals_in_examples: 3
-      horizon: 15
-    training:
-      max_iter: 12000
-      eps: 1.0e-7
-      K_warmup_ratio: 0.75
-      log_interval: 300
-    adversarial:
-      B_max: 0.05
-      B_min: 0.0
-    difficulty: medium
-
-  # Frozen Lake 4x4 - Slippery (default)
-  frozen_lake_4x4:
-    type: gymnasium
-    params:
-      env_name: frozen_lake_4x4
-      is_slippery: true
-      horizon: 100
-    training:
-      max_iter: 15000
-      eps: 1.0e-7
-      K_warmup_ratio: 0.75
-      log_interval: 375
-    adversarial:
-      B_max: 0.04
-      B_min: 0.0
-    difficulty: medium
-    
-  # Frozen Lake 4x4 - Deterministic
-  frozen_lake_4x4_det:
-    type: gymnasium
-    params:
-      env_name: frozen_lake_4x4
-      is_slippery: false
-      horizon: 100
-    training:
-      max_iter: 8000
-      eps: 1.0e-7
-      K_warmup_ratio: 0.70
-      log_interval: 200
-    adversarial:
-      B_max: 0.05
-      B_min: 0.0
-    difficulty: easy
-
-  # Frozen Lake 8x8 - Slippery (HARD!)
-  frozen_lake_8x8:
-    type: gymnasium
-    params:
-      env_name: frozen_lake_8x8
-      is_slippery: true
-      horizon: 200
-    training:
-      max_iter: 40000  # INCREASED for difficulty
-      eps: 1.0e-9      # TIGHTER convergence
-      K_warmup_ratio: 0.85  # LONGER warmup (85%)
-      log_interval: 1000
-    adversarial:
-      B_max: 0.03      # REDUCED budget
-      B_min: 0.0
-    difficulty: very_hard
-    notes: "Extremely sparse rewards. Consider using deterministic version first."
-    
-  # Frozen Lake 8x8 - Deterministic
-  frozen_lake_8x8_det:
-    type: gymnasium
-    params:
-      env_name: frozen_lake_8x8
-      is_slippery: false
-      horizon: 200
+      horizon: 1000
     training:
       max_iter: 20000
-      eps: 1.0e-8
-      K_warmup_ratio: 0.75
-      log_interval: 500
+      eps: 0.000001
+      K_warmup_ratio: 0.85
+      log_interval: 100
+      progress_style: rich
+      verbose: 1
     adversarial:
-      B_max: 0.05
+      B_max: 0.002
       B_min: 0.0
-    difficulty: medium
-    
-  # Frozen Lake 8x8 - Moderate (reduced slip)
-  frozen_lake_8x8_moderate:
-    type: gymnasium
+      adaptive:
+        performance_window: 150
+        convergence_trigger: 0.00001
+        tv_safe_threshold: 0.65
+        tv_danger_threshold: 0.75
+        stability_threshold: 0.08
+        warmup_phase_ratio: 0.5
+        gradual_phase_ratio: 0.35
+        robust_phase_ratio: 0.15
+        min_iterations_before_adversarial: 1000
+
+  teacher_student_large:
+    type: teacher_student
+    difficulty: hard
     params:
-      env_name: frozen_lake_8x8
-      is_slippery: true
-      slip_probability: 0.5  # Custom: 50% slip instead of default
-      horizon: 200
+      n_literals: 4
+      max_value: 2
+      max_update: 2
+      max_literals_in_examples: 3
+      horizon: 1000
     training:
       max_iter: 30000
-      eps: 1.0e-8
-      K_warmup_ratio: 0.80
-      log_interval: 750
+      eps: 0.000001
+      K_warmup_ratio: 0.85
+      log_interval: 200
+      progress_style: rich
+      verbose: 1
     adversarial:
-      B_max: 0.04
+      B_max: 0.003
       B_min: 0.0
-    difficulty: hard
+      adaptive:
+        performance_window: 200
+        convergence_trigger: 0.00001
+        tv_safe_threshold: 0.65
+        tv_danger_threshold: 0.75
+        stability_threshold: 0.1
+        warmup_phase_ratio: 0.5
+        gradual_phase_ratio: 0.35
+        robust_phase_ratio: 0.15
+        min_iterations_before_adversarial: 1500
 
-  # Taxi environment
+# Fixed Gymnasium Environment Configurations
+# Add these to your adversarial_experiments.yaml
+
+environments:
+  # ============================================
+  # TEACHER-STUDENT ENVIRONMENTS
+  # ============================================
+  teacher_student_small:
+    type: teacher_student
+    difficulty: easy
+    params:
+      n_literals: 2
+      max_value: 1
+      max_update: 1
+      max_literals_in_examples: 2
+      horizon: 1000
+    training:
+      max_iter: 10000
+      eps: 0.000001
+      K_warmup_ratio: 0.85
+      log_interval: 50
+      progress_style: rich
+      verbose: 1
+    adversarial:
+      B_max: 0.001
+      B_min: 0.0
+      adaptive:
+        performance_window: 100
+        convergence_trigger: 0.001  # RELAXED from 0.00001
+        tv_safe_threshold: 0.65
+        tv_danger_threshold: 0.75
+        stability_threshold: 0.05
+        warmup_phase_ratio: 0.4
+        gradual_phase_ratio: 0.4
+        robust_phase_ratio: 0.2
+        min_iterations_before_adversarial: 300  # REDUCED from 500
+        stability_sensitivity: 5.0
+        progress_sensitivity: 10.0
+        budget_increase_rate: 1.05
+        budget_decrease_rate: 0.8
+        emergency_budget_scale: 0.3
+
+  # ============================================
+  # GYMNASIUM ENVIRONMENTS
+  # ============================================
+  
+  frozen_lake_4x4:
+    type: gymnasium
+    difficulty: easy
+    params:
+      env_name: frozen_lake_4x4
+      map_size: '4x4'
+      is_slippery: true
+      horizon: 100
+    training:
+      max_iter: 5000
+      eps: 0.000001
+      K_warmup_ratio: 0.85
+      log_interval: 50
+      progress_style: rich
+      verbose: 1
+    adversarial:
+      B_max: 0.005  # Higher budget for stochastic environment
+      B_min: 0.0
+      adaptive:
+        performance_window: 100
+        convergence_trigger: 0.0000001  # More lenient for noisy env
+        tv_safe_threshold: 0.70  # Higher tolerance
+        tv_danger_threshold: 0.85
+        stability_threshold: 0.08  # More tolerance for noise
+        warmup_phase_ratio: 0.6
+        gradual_phase_ratio: 0.3
+        robust_phase_ratio: 0.1
+        min_iterations_before_adversarial: 1000
+        stability_sensitivity: 3.0  # Less sensitive to noise
+        progress_sensitivity: 8.0
+
+  frozen_lake_8x8:
+    type: gymnasium
+    difficulty: medium
+    params:
+      env_name: frozen_lake_8x8
+      map_size: '8x8'
+      is_slippery: false
+      horizon: 200
+    training:
+      max_iter: 15000
+      eps: 0.000001
+      K_warmup_ratio: 0.85
+      log_interval: 100
+      progress_style: rich
+      verbose: 1
+    adversarial:
+      B_max: 0.01
+      B_min: 0.0
+      adaptive:
+        performance_window: 150
+        convergence_trigger: 0.000001
+        tv_safe_threshold: 0.70
+        tv_danger_threshold: 0.85
+        stability_threshold: 0.10
+        warmup_phase_ratio: 0.5
+        gradual_phase_ratio: 0.35
+        robust_phase_ratio: 0.15
+        min_iterations_before_adversarial: 500
+
+  frozen_lake_8x8_deterministic:  # NEW
+    type: gymnasium
+    params:
+      env_name: FrozenLake-v1
+      map_name: "8x8"
+      is_slippery: false  # DETERMINISTIC!
+    difficulty: medium
+    training:
+      max_iter: 15000
+      eps: 1e-06
+      log_interval: 100
+      K_warmup_ratio: 0.5
+    adversarial:
+      B_max: 0.01
+      B_min: 0.0
   taxi:
     type: gymnasium
+    difficulty: medium
     params:
       env_name: taxi
       horizon: 200
     training:
-      max_iter: 25000
-      eps: 1.0e-8
-      K_warmup_ratio: 0.75
-      log_interval: 625
+      max_iter: 20000
+      eps: 0.000001
+      K_warmup_ratio: 0.85
+      log_interval: 100
+      progress_style: rich
+      verbose: 1
     adversarial:
-      B_max: 0.05
+      B_max: 0.002
       B_min: 0.0
-    difficulty: medium
+      adaptive:
+        performance_window: 150
+        convergence_trigger: 0.0005
+        tv_safe_threshold: 0.65
+        tv_danger_threshold: 0.75
+        stability_threshold: 0.08
+        warmup_phase_ratio: 0.5
+        gradual_phase_ratio: 0.35
+        robust_phase_ratio: 0.15
+        min_iterations_before_adversarial: 500
 
-  # Tabularized continuous control
+  # Tabularized continuous environments (experimental)
   cartpole:
     type: gymnasium
+    difficulty: hard
     params:
       env_name: cartpole
       n_bins: 8
       horizon: 200
     training:
-      max_iter: 25000
-      eps: 1.0e-8
-      K_warmup_ratio: 0.75
-      log_interval: 625
+      max_iter: 30000
+      eps: 0.000001
+      K_warmup_ratio: 0.85
+      log_interval: 200
+      progress_style: rich
+      verbose: 1
     adversarial:
-      B_max: 0.05
+      B_max: 0.003
       B_min: 0.0
-    difficulty: medium
+      adaptive:
+        performance_window: 200
+        convergence_trigger: 0.001
+        tv_safe_threshold: 0.65
+        tv_danger_threshold: 0.75
+        stability_threshold: 0.12
+        warmup_phase_ratio: 0.6
+        gradual_phase_ratio: 0.3
+        robust_phase_ratio: 0.1
+        min_iterations_before_adversarial: 1000
+
+# Expected performance baselines
+expected_performance:
+  teacher_student_small:
+    random: 7.2
+    good: 25.0
+    optimal: 30.0
+  frozen_lake_4x4:
+    random: 0.01
+    good: 0.5
+    optimal: 0.74
+  frozen_lake_8x8:
+    random: 0.001
+    good: 0.3
+    optimal: 0.65
+  taxi:
+    random: -200
+    good: 5.0
+    optimal: 9.0
+  cartpole:
+    random: 20
+    good: 100
+    optimal: 200
     
   mountain_car:
     type: gymnasium
@@ -198,6 +340,24 @@ environments:
 # ALGORITHM CONFIGURATIONS
 # =============================================================================
 algorithms:
+  value_iteration:
+    name: "Value Iteration"
+    type: "value_iteration"
+    curriculum_schedule: null
+    tags: ["classical", "model-based", "optimal"]
+  
+  policy_iteration:
+    name: "Policy Iteration"
+    type: "policy_iteration"
+    curriculum_schedule: null
+    tags: ["classical", "model-based", "optimal"]
+  
+  q_learning:
+    name: "Q-Learning"
+    type: "q_learning"
+    curriculum_schedule: null
+    tags: ["classical", "model-free", "sample-based"]
+
   spmi:
     name: SPMI-Baseline
     curriculum_schedule: null
@@ -227,6 +387,12 @@ algorithms:
     name: SA-PMI-Smooth
     curriculum_schedule: smooth_exponential
     tags: [adversarial, sa-pmi, smooth]
+
+  # NEW: Adaptive curriculum algorithm
+  sa_pmi_adaptive:
+    name: "SA-PMI v2 (Adaptive)"
+    curriculum_schedule: adaptive
+    tags: ["adversarial", "curriculum", "adaptive", "v2"]
 
 # =============================================================================
 # SWEEP CONFIGURATIONS
@@ -270,6 +436,105 @@ sweeps:
       curriculum_schedule: [cosine, sqrt]
     environments: [frozen_lake_8x8, frozen_lake_8x8_det]
 
+  # NEW: Focused sweeps for teacher_student_small
+  ts_small_schedule_test:
+    description: "Quick test of all schedules on teacher_student_small"
+    environments: [teacher_student_small]
+    parameters:
+      B_max: [0.005]
+      B_min: [0.0]
+      K_warmup_ratio: [0.85]
+      curriculum_schedule: [null, linear, exponential, sqrt, cosine, smooth_exponential]
+      
+  ts_small_budget_sweep:
+    description: "Budget optimization for teacher_student_small"
+    environments: [teacher_student_small]
+    parameters:
+      B_max: [0.001, 0.002, 0.003, 0.005, 0.008, 0.01, 0.015, 0.02]
+      B_min: [0.0]
+      K_warmup_ratio: [0.85]
+      curriculum_schedule: [exponential, linear]  # ← UPDATE THIS
+      
+  ts_small_warmup_sweep:
+    description: "Warmup timing optimization"
+    environments: [teacher_student_small]
+    parameters:
+      B_max: [0.001]  # Update after budget sweep
+      B_min: [0.0]
+      K_warmup_ratio: [0.60, 0.70, 0.80, 0.85, 0.90, 0.95]
+      curriculum_schedule: [exponential]  # Update after schedule test
+      
+  ts_small_bmin_sweep:
+    description: "Test non-zero minimum budgets"
+    environments: [teacher_student_small]
+    parameters:
+      B_max: [0.001]  # Update after budget sweep
+      B_min: [0.0, 0.0001, 0.0005, 0.001, 0.002]
+      K_warmup_ratio: [0.95]
+      curriculum_schedule: [exponential]  # Update after schedule test
+      
+  ts_small_full_grid:
+    description: "Comprehensive grid search with best candidates"
+    environments: [teacher_student_small]
+    parameters:
+      B_max: [0.001, 0.002, 0.005]  # Top 3 from budget sweep
+      B_min: [0.0, 0.0005]
+      K_warmup_ratio: [0.80, 0.85, 0.90, 0.95]
+      curriculum_schedule: [exponential, linear]  # Top 2 from schedule test
+
+  # NEW: Adaptive curriculum validation sweep
+  adaptive_validation:
+    description: "Validate adaptive curriculum against fixed schedules"
+    environments: [teacher_student_small]
+    parameters:
+      curriculum_schedule: [null, linear, exponential, adaptive]
+  
+  # NEW: Adaptive hyperparameter tuning
+  adaptive_tuning:
+    description: "Tune adaptive curriculum hyperparameters"
+    environments: [teacher_student_small]
+    parameters:
+      curriculum_schedule: [adaptive]
+      convergence_trigger: [0.00001, 0.0001, 0.001]
+      tv_safe_threshold: [0.60, 0.65, 0.70]
+      stability_threshold: [0.03, 0.05, 0.08]
+      performance_window: [50, 100, 200]
+  
+  # NEW: Phase ratio optimization
+  phase_ratio_sweep:
+    description: "Optimize multi-phase curriculum ratios"
+    environments: [teacher_student_small]
+    parameters:
+      curriculum_schedule: [adaptive]
+      warmup_phase_ratio: [0.3, 0.4, 0.5]
+      gradual_phase_ratio: [0.3, 0.4, 0.5]
+      # robust_phase_ratio = 1 - warmup - gradual
+  
+  # NEW: Safety threshold calibration
+  safety_calibration:
+    description: "Calibrate safety thresholds for stable training"
+    environments: [teacher_student_small, teacher_student_medium]
+    parameters:
+      curriculum_schedule: [adaptive]
+      tv_safe_threshold: [0.55, 0.60, 0.65, 0.70]
+      tv_danger_threshold: [0.70, 0.75, 0.80]
+      emergency_budget_scale: [0.2, 0.3, 0.5]
+  
+  # Updated budget sweep for adaptive
+  budget_sweep_adaptive:
+    description: "Test if adaptive curriculum handles wider budget range"
+    environments: [teacher_student_small]
+    parameters:
+      curriculum_schedule: [adaptive, exponential]  # Compare
+      B_max: [0.001, 0.002, 0.003, 0.005, 0.008]  # Should handle higher budgets
+
+  # Comprehensive comparison
+  comprehensive_comparison:
+    description: "Full comparison: baseline vs fixed vs adaptive"
+    environments: [teacher_student_small, teacher_student_medium]
+    parameters:
+      curriculum_schedule: [null, linear, exponential, adaptive]
+      B_max: [0.001, 0.002, 0.005]  # Only for adversarial algorithms
 # =============================================================================
 # DEFAULT SETTINGS
 # =============================================================================
@@ -277,14 +542,19 @@ defaults:
   seeds: [0, 1, 2]
   verbose: 1
   use_wandb: true
-  progress_style: 'rich'  # NEW: 'standard', 'rich', 'dual', 'minimal', 'none'
+  progress_style: 'standard'  # NEW: 'standard', 'rich', 'dual', 'minimal', 'none'
   
 # Performance expectations (for validation)
+# Add performance expectations
 expected_performance:
   teacher_student_small:
-    random: 0.0
-    good: 0.50
-    expert: 0.90
+    random: 5.0
+    good: 8.0
+    optimal: 8.7
+  teacher_student_medium:
+    random: 4.0
+    good: 7.5
+    optimal: 8.5
   frozen_lake_4x4:
     random: 0.01
     good: 0.30
