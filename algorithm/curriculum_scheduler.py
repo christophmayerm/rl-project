@@ -257,3 +257,110 @@ class AdaptiveCurriculumScheduler(CurriculumScheduler):
     def reset(self):
         """Reset adaptive state"""
         self.last_performance = None
+
+
+class SigmoidCurriculumScheduler(CurriculumScheduler):
+    """
+    Smooth sigmoid transition - good for small envs.
+    More gradual than cosine, faster than exponential.
+    
+    λ(t) = max_weight / (1 + exp(-steepness * (t - midpoint)))
+    """
+    def __init__(self, midpoint=150, steepness=0.02, max_weight=0.5):
+        self.midpoint = midpoint
+        self.steepness = steepness
+        self.max_weight = np.clip(max_weight, 0.0, 1.0)
+    
+    def get_adversarial_weight(self, iteration):
+        return self.max_weight / (1.0 + np.exp(-self.steepness * (iteration - self.midpoint)))
+
+
+class PolynomialCurriculumScheduler(CurriculumScheduler):
+    """
+    Polynomial growth - controllable acceleration.
+    
+    λ(t) = max_weight * ((t - start) / (end - start))^power
+    
+    power=1: linear
+    power=2: quadratic (slow start, fast finish)
+    power=0.5: square root (fast start, slow finish)
+    """
+    def __init__(self, start_iter=0, end_iter=300, max_weight=0.5, power=2.0):
+        self.start_iter = start_iter
+        self.end_iter = end_iter
+        self.max_weight = np.clip(max_weight, 0.0, 1.0)
+        self.power = power
+        
+    def get_adversarial_weight(self, iteration):
+        if iteration < self.start_iter:
+            return 0.0
+        elif iteration >= self.end_iter:
+            return self.max_weight
+        else:
+            progress = (iteration - self.start_iter) / (self.end_iter - self.start_iter)
+            return self.max_weight * (progress ** self.power)
+
+
+class WarmRestartCurriculumScheduler(CurriculumScheduler):
+    """
+    Periodic curriculum with warm restarts - for exploration.
+    Cycles between low and high adversarial influence.
+    """
+    def __init__(self, cycle_length=100, min_weight=0.0, max_weight=0.5, 
+                 restart_multiplier=1.5):
+        self.cycle_length = cycle_length
+        self.min_weight = np.clip(min_weight, 0.0, 1.0)
+        self.max_weight = np.clip(max_weight, 0.0, 1.0)
+        self.restart_multiplier = restart_multiplier
+    
+    def get_adversarial_weight(self, iteration):
+        # Cosine annealing within current cycle
+        current_cycle_length = self.cycle_length * (self.restart_multiplier ** (iteration // self.cycle_length))
+        t_cur = iteration % current_cycle_length
+        weight = self.min_weight + 0.5 * (self.max_weight - self.min_weight) * \
+                 (1 + np.cos(np.pi * t_cur / current_cycle_length))
+        return weight
+
+
+class EarlyPeakCurriculumScheduler(CurriculumScheduler):
+    """
+    Peak early then plateau - for environments that need initial robustness.
+    Ramps up quickly, then maintains high adversarial weight.
+    """
+    def __init__(self, peak_iter=100, max_weight=0.5, decay_rate=0.05):
+        self.peak_iter = peak_iter
+        self.max_weight = np.clip(max_weight, 0.0, 1.0)
+        self.decay_rate = decay_rate
+    
+    def get_adversarial_weight(self, iteration):
+        if iteration < self.peak_iter:
+            # Rapid increase
+            return self.max_weight * (1.0 - np.exp(-0.05 * iteration))
+        else:
+            # Slight decay to plateau
+            decay = np.exp(-self.decay_rate * (iteration - self.peak_iter))
+            return self.max_weight * (0.7 + 0.3 * decay)
+
+
+class TwoStageCurriculumScheduler(CurriculumScheduler):
+    """
+    Two-stage training: exploration phase then exploitation phase.
+    Stage 1: Low adversarial (learn basics)
+    Stage 2: High adversarial (robust refinement)
+    """
+    def __init__(self, transition_iter=200, stage1_weight=0.1, stage2_weight=0.6,
+                 transition_length=50):
+        self.transition_iter = transition_iter
+        self.stage1_weight = np.clip(stage1_weight, 0.0, 1.0)
+        self.stage2_weight = np.clip(stage2_weight, 0.0, 1.0)
+        self.transition_length = transition_length
+    
+    def get_adversarial_weight(self, iteration):
+        if iteration < self.transition_iter:
+            return self.stage1_weight
+        elif iteration >= self.transition_iter + self.transition_length:
+            return self.stage2_weight
+        else:
+            # Smooth transition
+            progress = (iteration - self.transition_iter) / self.transition_length
+            return self.stage1_weight + progress * (self.stage2_weight - self.stage1_weight)
