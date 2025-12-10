@@ -143,7 +143,7 @@ def run_federated_spmi(mdp, initial_policy, initial_model, original_model,
         model_chooser=model_chooser,
         aggregation_method='weighted',
         persistent=True,
-        verbose=True
+        verbose=False
     )
 
     start_time = time.time()
@@ -206,7 +206,7 @@ def run_federated_sapmi(
         model_chooser=model_chooser,
         aggregation_method='weighted',
         persistent=True,
-        verbose=True
+        verbose=False
     )
 
     start_time = time.time()
@@ -358,13 +358,13 @@ def main():
     print("\n" + "=" * 80)
     print("PART 4: Federated SA-PMI (Policy Robustness)")
     print("=" * 80)
-    
+
     # Use best performing curricula for federated version
     federated_sapmi_configs = [
         {
             'name': 'constant_medium',
             'scheduler': ConstantCurriculumScheduler(weight=0.4),
-            'description': 'Federated with Constant 40% robustness',
+            'description': 'Constant 40% robustness',
             'temp': 0.3,
             'entropy': 0.1
         },
@@ -374,33 +374,37 @@ def main():
                 growth_rate=0.01,
                 max_weight=0.5
             ),
-            'description': 'Federated with Exponential curriculum',
+            'description': 'Exponential curriculum',
             'temp': 0.3,
             'entropy': 0.1
         },
     ]
-    
+
+    # Run with both N=2 and N=4 agents
+    n_agents_configs = [2, 4]
+
     fsapmi_results = []
-    for config in federated_sapmi_configs:
-        print(f"\n{config['description']}")
-        print("-" * 60)
-        
-        fsapmi, _, _ = run_federated_sapmi(
-            mdp,
-            initial_policy,
-            initial_model,
-            original_model,
-            curriculum_name=config['name'],
-            curriculum_scheduler=config['scheduler'],
-            robustness_temperature=config['temp'],
-            entropy_bonus=config['entropy'],
-            n_agents=4,
-            episodes_per_round=100,
-            max_rounds=500
-        )
-        
-        fsapmi.logger.save(f"{dir_path}/fsapmi_{config['name']}_n4.csv")
-        fsapmi_results.append((config, fsapmi))
+    for n_agents in n_agents_configs:
+        for config in federated_sapmi_configs:
+            print(f"\nFederated SA-PMI with {config['description']} (N={n_agents})")
+            print("-" * 60)
+            
+            fsapmi, _, _ = run_federated_sapmi(
+                mdp,
+                initial_policy,
+                initial_model,
+                original_model,
+                curriculum_name=config['name'],
+                curriculum_scheduler=config['scheduler'],
+                robustness_temperature=config['temp'],
+                entropy_bonus=config['entropy'],
+                n_agents=n_agents,
+                episodes_per_round=100,
+                max_rounds=500
+            )
+            
+            fsapmi.logger.save(f"{dir_path}/fsapmi_{config['name']}_n{n_agents}.csv")
+            fsapmi_results.append((config, n_agents, fsapmi))
 
     # ========================================
     # 5. Summary
@@ -424,9 +428,9 @@ def main():
         print(f"  N={config['n_agents']:2d}: {perf:.4f}")
 
     print(f"\nFederated SA-PMI:")
-    for config, fsapmi in fsapmi_results:
+    for config, n_agents, fsapmi in fsapmi_results:
         perf = fsapmi.logger.true_performances[-1] if hasattr(fsapmi.logger, 'true_performances') and fsapmi.logger.true_performances else fsapmi.logger.avg_returns[-1]
-        print(f"  {config['name']:20s}: {perf:.4f}")
+        print(f"  {config['name']:20s} (N={n_agents}): {perf:.4f}")
 
     print("\nResults saved to:", dir_path)
 
