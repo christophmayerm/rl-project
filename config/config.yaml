@@ -1,0 +1,102 @@
+# Improved Configuration Based on Initial Results
+# ===============================================
+wandb:
+  enabled: false
+  project: "spmi-test"
+  entity: null
+  tags: []
+
+environment:
+  name: "student_teacher"
+  params:
+    n_literals: 2
+    max_value: 1
+    max_update: 1
+    max_literals_in_examples: 2
+    horizon: 10
+
+model_chooser:
+  type: "greedy" # GB 
+  gp:
+    noise_levels: [0.0, 0.05, 0.1, 0.2]
+    beta: 1.0
+    fit_frequency: 10
+  greedy:
+    do_not_create_transitions: true
+
+
+output:
+  dir: "./data/spmi_improved"
+  save_gp_metrics: false
+  save_sapmi_metrics: true
+
+experiments:
+  # Baseline
+  standard_spmi:
+    enabled: true
+    max_iter: 10000
+  
+  # Test multiple SA-PMI configurations
+  sapmi:
+    enabled: true
+    max_iter: 10000
+    curricula:
+      # Lower robustness - should perform better
+      - name: "constant_low"
+        type: "constant"
+        weight: 0.2
+        robustness_temperature: 0.3
+        entropy_bonus: 0.0
+        description: "Low robustness (20%)"
+      
+      - name: "constant_medium"
+        type: "constant"
+        weight: 0.4
+        robustness_temperature: 0.3
+        entropy_bonus: 0.0
+        description: "Medium robustness (40%)"
+      
+      # Dynamic curriculum - starts greedy, adds robustness later
+      - name: "linear"
+        type: "linear"
+        start_iter: 100
+        end_iter: 5000
+        start_weight: 0.0
+        end_weight: 0.3
+        robustness_temperature: 0.3
+        entropy_bonus: 0.0
+        description: "Linear curriculum 0→30%"
+  
+  # Improved federated settings
+  federated_spmi:
+    enabled: true
+    configurations:
+      # More agents for better exploration
+      - n_agents: 4
+        episodes_per_round: 100
+        max_rounds: 10000
+      
+      # Alternative: fewer agents but more episodes
+      - n_agents: 2
+        episodes_per_round: 200
+        max_rounds: 10000
+  
+  federated_sapmi:
+      enabled: true
+      agent_counts: [2,4,8,16,32]
+      episodes_per_round: 100
+      max_rounds: 10000
+      curricula:
+        - name: "constant_low"
+          type: "constant"
+          weight: 0.2
+          robustness_temperature: 0.3
+          entropy_bonus: 0.0
+          description: "Low robustness (20%)"
+        
+        - name: "constant_medium"
+          type: "constant"
+          weight: 0.4
+          robustness_temperature: 0.3
+          entropy_bonus: 0.0
+          description: "Medium robustness (40%)"
