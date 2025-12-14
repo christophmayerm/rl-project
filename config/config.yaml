@@ -17,7 +17,7 @@ model_chooser:
   type: "gp" # GB 
   gp:
     beta: 1.0
-    gp_update_frequency: 100
+    gp_update_frequency: 30
   greedy:
     do_not_create_transitions: true
 

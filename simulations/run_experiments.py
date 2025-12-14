@@ -74,6 +74,11 @@ class ExperimentRunner:
             self.mdp.nS, 
             self.mdp.nA
         )
+
+        self.model_set = [TabularModel(self.mdp.P_highspeed_noboost, self.mdp.nS, self.mdp.nA),
+                    TabularModel(self.mdp.P_lowspeed_noboost, self.mdp.nS, self.mdp.nA),
+                    TabularModel(self.mdp.P_highspeed_boost, self.mdp.nS, self.mdp.nA),
+                    TabularModel(self.mdp.P_lowspeed_boost, self.mdp.nS, self.mdp.nA)]
         
         # Results storage
         self.results = {}
@@ -102,10 +107,6 @@ class ExperimentRunner:
         """Create model chooser based on config"""
         print(f"\nCreating Model Chooser {self.config['model_chooser']['type']}...")
 
-        self.model_set = [TabularModel(self.mdp.P_highspeed_noboost, self.mdp.nS, self.mdp.nA),
-                    TabularModel(self.mdp.P_lowspeed_noboost, self.mdp.nS, self.mdp.nA),
-                    TabularModel(self.mdp.P_highspeed_boost, self.mdp.nS, self.mdp.nA),
-                    TabularModel(self.mdp.P_lowspeed_boost, self.mdp.nS, self.mdp.nA)]
         if self.config['model_chooser']['type'] == 'gp':
             gp_config = self.config['model_chooser']['gp']
             print(gp_config)
@@ -169,9 +170,9 @@ class ExperimentRunner:
         
         exp_config = self.config['experiments']['standard_spmi']
         
-        self.mdp.set_model(copy.deepcopy(self.original_model))
-        if hasattr(self, 'init_model_vector'):
-            self.mdp.model_vector = np.array(self.init_model_vector)
+        # self.mdp.set_model(copy.deepcopy(self.original_model))
+        # if hasattr(self, 'init_model_vector'):
+        #     self.mdp.model_vector = np.array(self.init_model_vector)
         
         policy_chooser = GreedyPolicyChooser(self.mdp.nS, self.mdp.nA)
         model_chooser = self._create_model_chooser()
@@ -182,7 +183,8 @@ class ExperimentRunner:
             policy_chooser=policy_chooser,
             model_chooser=model_chooser,
             max_iter=exp_config['max_iter'],
-            persistent=True,
+            persistent=self.config['model_chooser']['type'] != 'gp',
+            delta_q=1
         )
         
         # WandB logging
@@ -276,7 +278,8 @@ class ExperimentRunner:
                 policy_chooser=policy_chooser,
                 model_chooser=model_chooser,
                 max_iter=exp_config['max_iter'],
-                persistent=True,
+                persistent=self.config['model_chooser']['type'] != 'gp',
+                delta_q=1
             )
             
             # WandB logging
@@ -375,7 +378,8 @@ class ExperimentRunner:
                 policy_chooser=policy_chooser,
                 model_chooser=model_chooser,
                 aggregation_method='weighted',
-                persistent=True,
+                persistent=self.config['model_chooser']['type'] != 'gp',
+                delta_q=1,
                 verbose=True
             )
             
@@ -486,7 +490,8 @@ class ExperimentRunner:
                     policy_chooser=policy_chooser,
                     model_chooser=model_chooser,
                     aggregation_method='weighted',
-                    persistent=True,
+                    persistent=self.config['model_chooser']['type'] != 'gp',
+                    delta_q=1,
                     verbose=True
                 )
                 
