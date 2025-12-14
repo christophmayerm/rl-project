@@ -53,17 +53,17 @@ class GreedyModelChooser(ModelChooser):
         return greedy_model_rep
 
 class GPModelChooser(ModelChooser):
-    def __init__(self, model_set, nS, nA, init_model_vector, beta, original_model, max_history=500):
+    def __init__(self, model_set, nS, nA, init_model_vector, beta, original_model, max_history=500, gp_update_frequency=30):
         super(GPModelChooser, self).__init__(nS, nA)
         kernel = Matern(nu=2.5, length_scale_bounds=(1e-2, 10)) + WhiteKernel(noise_level=1e-6, noise_level_bounds="fixed")
 
         self.model_set = model_set
         self.n_models = len(self.model_set)
         self.prev_target_model_vector = init_model_vector
-        self.first_iteration = True
         self.original_model = original_model
-        self.nr_iterations_pause = 100  # only do fitting every n iterations
+        self.gp_update_frequency = gp_update_frequency  # only do fitting every n iterations
         self.iteration = 0
+        self.max_history = max_history
         # GP
         self.gp = GaussianProcessRegressor(
             kernel=kernel, 
@@ -77,7 +77,6 @@ class GPModelChooser(ModelChooser):
         self.experience_y = []
         self.fitting_times = []
         self.prediction_times = []
-        self.max_history = max_history
 
     def random_simplex_points(self, n_points=1000):
         """
@@ -91,17 +90,15 @@ class GPModelChooser(ModelChooser):
         return exp_samples / exp_samples.sum(axis=1, keepdims=True)
 
     def choose(self, model, delta_mu, U):
-        # TODO: define inducing points
-        if self.first_iteration:
+        if self.iteration == 0:
             # initial evaluations at the corners of the simplex
             for i in range(self.n_models):
                 target_model = self.model_set[i]
                 er_advantage = evaluator.compute_model_er_advantage(target_model, model, U, delta_mu)
                 self.experience_y.append(er_advantage)
-            self.first_iteration = False
 
         self.iteration += 1
-        if self.iteration % self.nr_iterations_pause == 0:
+        if self.iteration % self.gp_update_frequency == 0:
 
             # fit GP to expected relative advantages
             # before fitting, recompute experience_y by re-evaluating each stored simplex point with the current (model, delta_mu, U)
@@ -144,6 +141,8 @@ class GPModelChooser(ModelChooser):
             if len(self.experience_X) > self.max_history:
                 self.experience_X = self.experience_X[-self.max_history:]
                 self.experience_y = self.experience_y[-self.max_history:]
+            
+            print(f"---- GPModelChooser:\tFitted GP at iteration {self.iteration},\tselected target model vector: {target_model_vector},\targmax vector: {np.argmax(target_model_vector)},\tER advantage: {er_advantage:.4f}")
         
         else:
             # build target model from the selected point
@@ -171,6 +170,7 @@ class SetModelChooser(ModelChooser):
         self.model_set = model_set
         self.n_models = len(self.model_set)
         super(SetModelChooser, self).__init__(nS, nA)
+        self.iteration = 0
 
     def choose(self, model, delta_mu, U):
         er_advantages = np.zeros(self.n_models)
@@ -185,6 +185,10 @@ class SetModelChooser(ModelChooser):
         # POLICY DISTANCE COMPUTATIONS
         distance_sup = model_sup_tv_distance(target_model, model)
         distance_mean = model_mean_tv_distance(target_model, model, delta_mu)
+
+        self.iteration += 1
+        if self.iteration % 100 == 0:
+            print(f"---- SetModelChooser:\tIteration {self.iteration},\tselected target model index: {index},\tER advantage: {er_advantage:.4f}")
 
         return er_advantage, distance_sup, distance_mean, target_model
 

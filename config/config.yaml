@@ -7,26 +7,23 @@ wandb:
   tags: []
 
 environment:
-  name: "student_teacher"
+  name: "racetrack"
   params:
-    n_literals: 2
-    max_value: 1
-    max_update: 1
-    max_literals_in_examples: 2
-    horizon: 10
+    initial_configuration: [0.5, 0.5, 0, 0]
+    track_file: T1
+    pfail: 0.07
 
 model_chooser:
-  type: "greedy" # GB 
+  type: "gp" # GB 
   gp:
-    noise_levels: [0.0, 0.05, 0.1, 0.2]
     beta: 1.0
-    fit_frequency: 10
+    gp_update_frequency: 100
   greedy:
     do_not_create_transitions: true
 
 
 output:
-  dir: "./data/spmi_improved"
+  dir: "./data/"
   save_gp_metrics: false
   save_sapmi_metrics: true
 
@@ -34,12 +31,12 @@ experiments:
   # Baseline
   standard_spmi:
     enabled: true
-    max_iter: 10000
+    max_iter: 1000
   
   # Test multiple SA-PMI configurations
   sapmi:
     enabled: true
-    max_iter: 10000
+    max_iter: 1000
     curricula:
       # Lower robustness - should perform better
       - name: "constant_low"
@@ -74,18 +71,18 @@ experiments:
       # More agents for better exploration
       - n_agents: 4
         episodes_per_round: 100
-        max_rounds: 10000
+        max_rounds: 1000
       
       # Alternative: fewer agents but more episodes
       - n_agents: 2
         episodes_per_round: 200
-        max_rounds: 10000
+        max_rounds: 1000
   
   federated_sapmi:
       enabled: true
       agent_counts: [2,4,8,16,32]
       episodes_per_round: 100
-      max_rounds: 10000
+      max_rounds: 1000
       curricula:
         - name: "constant_low"
           type: "constant"

@@ -27,7 +27,7 @@ from algorithm.spmi import SPMI
 from algorithm.policy_chooser import GreedyPolicyChooser, SAPMIPolicyChooser
 from algorithm.model_chooser import (
     GPModelChooser, 
-    DoNotCreateTransitionsGreedyModelChooser
+    SetModelChooser
 )
 from algorithm.curriculum_scheduler import (
     LinearCurriculumScheduler,
@@ -35,10 +35,10 @@ from algorithm.curriculum_scheduler import (
     CosineCurriculumScheduler,
     ConstantCurriculumScheduler
 )
-from utils.tabular_factory import model_from_matrix
 from utils.uniform_policy import UniformPolicy
 from utils.tabular import TabularModel, TabularPolicy
-from envs.student_teacher import TeacherStudentEnv
+# from envs.student_teacher import TeacherStudentEnv
+from envs.racetrack_simulator import RaceTrackConfigurableEnv
 from federated import FSPMI
 
 # Optional WandB import
@@ -59,7 +59,7 @@ class ExperimentRunner:
         self.use_wandb = use_wandb and WANDB_AVAILABLE and self.config['wandb']['enabled']
         
         # Setup output directory
-        self.output_dir = Path(self.config['output']['dir'])
+        self.output_dir = Path(self.config['output']['dir']) / f'racetrack4_{self.config["environment"]["params"]["track_file"]}' / self.config['model_chooser']['type'] / time.strftime("%Y%m%d-%H%M%S")
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize environment
@@ -75,10 +75,6 @@ class ExperimentRunner:
             self.mdp.nA
         )
         
-        # Initialize model chooser components
-        if self.config['model_chooser']['type'] == 'gp':
-            self.model_set, self.init_model_vector = self._build_gp_model_set()
-        
         # Results storage
         self.results = {}
         
@@ -87,12 +83,13 @@ class ExperimentRunner:
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
     
-    def _init_environment(self) -> TeacherStudentEnv:
+    def _init_environment(self) -> RaceTrackConfigurableEnv:
         """Initialize the MDP environment"""
         env_params = self.config['environment']['params']
         print(f"\nInitializing {self.config['environment']['name']} environment...")
         
-        mdp = TeacherStudentEnv(**env_params)
+        # mdp = TeacherStudentEnv(**env_params)
+        mdp = RaceTrackConfigurableEnv(**env_params)
         
         print(f"State space size: {mdp.nS}")
         print(f"Action space size: {mdp.nA}")
@@ -101,40 +98,30 @@ class ExperimentRunner:
         
         return mdp
     
-    def _build_gp_model_set(self) -> Tuple[List, List]:
-        """Create GP model set with noise levels"""
-        noise_levels = self.config['model_chooser']['gp']['noise_levels']
-        base_matrix = TabularModel(self.original_model, self.mdp.nS, self.mdp.nA).get_matrix()
-        uniform_matrix = np.full_like(base_matrix, 1.0 / self.mdp.nS)
-        
-        model_set = []
-        for noise in noise_levels:
-            blended = (1.0 - noise) * base_matrix + noise * uniform_matrix
-            model_set.append(
-                model_from_matrix(blended, self.original_model, nS=self.mdp.nS, nA=self.mdp.nA)
-            )
-        
-        init_vector = np.zeros(len(model_set))
-        init_vector[0] = 1.0
-        return model_set, init_vector.tolist()
-    
     def _create_model_chooser(self):
         """Create model chooser based on config"""
+        print(f"\nCreating Model Chooser {self.config['model_chooser']['type']}...")
+
+        self.model_set = [TabularModel(self.mdp.P_highspeed_noboost, self.mdp.nS, self.mdp.nA),
+                    TabularModel(self.mdp.P_lowspeed_noboost, self.mdp.nS, self.mdp.nA),
+                    TabularModel(self.mdp.P_highspeed_boost, self.mdp.nS, self.mdp.nA),
+                    TabularModel(self.mdp.P_lowspeed_boost, self.mdp.nS, self.mdp.nA)]
         if self.config['model_chooser']['type'] == 'gp':
             gp_config = self.config['model_chooser']['gp']
+            print(gp_config)
             chooser = GPModelChooser(
                 self.model_set,
                 self.mdp.nS,
                 self.mdp.nA,
-                self.init_model_vector,
-                gp_config['beta'],
-                self.original_model
+                init_model_vector=self.config['environment']['params']['initial_configuration'],
+                beta=gp_config['beta'],
+                original_model=self.original_model,
+                gp_update_frequency=gp_config['gp_update_frequency']
             )
-            chooser.nr_iterations_pause = gp_config['fit_frequency']
             return chooser
         else:  # greedy
-            return DoNotCreateTransitionsGreedyModelChooser(
-                self.original_model,
+            return SetModelChooser(
+                self.model_set,
                 self.mdp.nS,
                 self.mdp.nA
             )
@@ -741,12 +728,6 @@ Examples:
             
             print(f"Applying MODEL_CHOOSER override: {mc_type}")
             runner.config['model_chooser']['type'] = mc_type
-            
-            # CRITICAL FIX: If switching to GP, we must manually build the model set
-            # because __init__ skipped it (since the YAML said greedy).
-            if mc_type == 'gp':
-                print("Initializing GP Model Set for override...")
-                runner.model_set, runner.init_model_vector = runner._build_gp_model_set()
 
             # Optional: If switching to greedy, ensure parameters exist
             if mc_type == 'greedy' and 'greedy' not in runner.config['model_chooser']:

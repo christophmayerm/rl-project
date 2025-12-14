@@ -53,7 +53,7 @@ def run_standard_spmi(
     model_set,
     init_model_vector,
     gp_beta=1.0,
-    gp_fit_frequency=10,
+    gp_gp_update_frequency=10,
     max_iter=1000
 ):
     """Run standard SPMI with GP model chooser and metric logging."""
@@ -66,7 +66,7 @@ def run_standard_spmi(
 
     policy_chooser = GreedyPolicyChooser(mdp.nS, mdp.nA)
     model_chooser = GPModelChooser(model_set, mdp.nS, mdp.nA, init_model_vector, gp_beta, original_model)
-    model_chooser.nr_iterations_pause = gp_fit_frequency
+    model_chooser.gp_update_frequency = gp_gp_update_frequency
 
     spmi = SPMI(
         mdp,
@@ -100,7 +100,7 @@ def run_federated_spmi(
     episodes_per_round=100,
     max_rounds=200,
     gp_beta=1.0,
-    gp_fit_frequency=10
+    gp_gp_update_frequency=10
 ):
     """Run Federated SPMI with GP model chooser and metric logging."""
     print("\n" + "=" * 60)
@@ -112,7 +112,7 @@ def run_federated_spmi(
 
     policy_chooser = GreedyPolicyChooser(mdp.nS, mdp.nA)
     model_chooser = GPModelChooser(model_set, mdp.nS, mdp.nA, init_model_vector, gp_beta, original_model)
-    model_chooser.nr_iterations_pause = gp_fit_frequency
+    model_chooser.gp_update_frequency = gp_gp_update_frequency
 
     fspmi = FSPMI(
         conf_mdp=mdp,
@@ -192,7 +192,7 @@ def main():
     gp_noise_levels = (0.0, 0.05, 0.1, 0.2)
     model_set, init_model_vector = build_gp_model_set(original_model, mdp.nS, mdp.nA, gp_noise_levels)
     gp_beta = 1.0
-    gp_fit_frequency = 10
+    gp_gp_update_frequency = 10
 
     # Create output directory
     dir_path = "./data/federated_student_teacher_gp"
@@ -207,7 +207,7 @@ def main():
         model_set,
         init_model_vector,
         gp_beta=gp_beta,
-        gp_fit_frequency=gp_fit_frequency,
+        gp_gp_update_frequency=gp_gp_update_frequency,
         max_iter=500
     )
     spmi.logger.save(dir_path, 'standard_spmi.csv')
@@ -230,7 +230,7 @@ def main():
             model_set,
             init_model_vector,
             gp_beta=gp_beta,
-            gp_fit_frequency=gp_fit_frequency,
+            gp_gp_update_frequency=gp_gp_update_frequency,
             **config
         )
         log_path = f"{dir_path}/fspmi_n{config['n_agents']}.csv"

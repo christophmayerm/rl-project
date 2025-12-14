@@ -57,7 +57,7 @@ def run_standard_spmi(
     model_set,
     init_model_vector,
     gp_beta=1.0,
-    gp_fit_frequency=10,
+    gp_gp_update_frequency=10,
     max_iter=1000
 ):
     """Run standard SPMI with GP model chooser."""
@@ -72,7 +72,7 @@ def run_standard_spmi(
     model_chooser = GPModelChooser(
         model_set, mdp.nS, mdp.nA, init_model_vector, gp_beta, original_model
     )
-    model_chooser.nr_iterations_pause = gp_fit_frequency
+    model_chooser.gp_update_frequency = gp_gp_update_frequency
 
     spmi = SPMI(
         mdp,
@@ -109,7 +109,7 @@ def run_sapmi_policy_robust(
     robustness_temperature=0.3,
     entropy_bonus=0.1,
     gp_beta=1.0,
-    gp_fit_frequency=10,
+    gp_gp_update_frequency=10,
     max_iter=1000
 ):
     """Run SA-PMI with curriculum learning for POLICY robustness."""
@@ -137,7 +137,7 @@ def run_sapmi_policy_robust(
     model_chooser = GPModelChooser(
         model_set, mdp.nS, mdp.nA, init_model_vector, gp_beta, original_model
     )
-    model_chooser.nr_iterations_pause = gp_fit_frequency
+    model_chooser.gp_update_frequency = gp_gp_update_frequency
 
     spmi = SPMI(
         mdp,
@@ -173,7 +173,7 @@ def run_federated_spmi(
     episodes_per_round=100,
     max_rounds=500,
     gp_beta=1.0,
-    gp_fit_frequency=10
+    gp_gp_update_frequency=10
 ):
     """Run Federated SPMI with GP model chooser."""
     print("\n" + "=" * 60)
@@ -187,7 +187,7 @@ def run_federated_spmi(
     model_chooser = GPModelChooser(
         model_set, mdp.nS, mdp.nA, init_model_vector, gp_beta, original_model
     )
-    model_chooser.nr_iterations_pause = gp_fit_frequency
+    model_chooser.gp_update_frequency = gp_gp_update_frequency
 
     fspmi = FSPMI(
         conf_mdp=mdp,
@@ -231,7 +231,7 @@ def run_federated_sapmi(
     episodes_per_round=100,
     max_rounds=500,
     gp_beta=1.0,
-    gp_fit_frequency=10
+    gp_gp_update_frequency=10
 ):
     """Run Federated SPMI with GP model chooser."""
     print("\n" + "=" * 60)
@@ -257,7 +257,7 @@ def run_federated_sapmi(
     model_chooser = GPModelChooser(
         model_set, mdp.nS, mdp.nA, init_model_vector, gp_beta, original_model
     )
-    model_chooser.nr_iterations_pause = gp_fit_frequency
+    model_chooser.gp_update_frequency = gp_gp_update_frequency
 
     fspmi = FSPMI(
         conf_mdp=mdp,
@@ -321,7 +321,7 @@ def main():
         original_model, mdp.nS, mdp.nA, gp_noise_levels
     )
     gp_beta = 1.0
-    gp_fit_frequency = 10
+    gp_gp_update_frequency = 10
     max_iter = 500
 
     # Create output directory
@@ -343,7 +343,7 @@ def main():
         model_set,
         init_model_vector,
         gp_beta=gp_beta,
-        gp_fit_frequency=gp_fit_frequency,
+        gp_gp_update_frequency=gp_gp_update_frequency,
         max_iter=max_iter
     )
     spmi.logger.save(dir_path, 'standard_spmi.csv')
@@ -443,7 +443,7 @@ def main():
             robustness_temperature=config['temp'],
             entropy_bonus=config['entropy'],
             gp_beta=gp_beta,
-            gp_fit_frequency=gp_fit_frequency,
+            gp_gp_update_frequency=gp_gp_update_frequency,
             max_iter=max_iter
         )
         
@@ -474,7 +474,7 @@ def main():
             model_set,
             init_model_vector,
             gp_beta=gp_beta,
-            gp_fit_frequency=gp_fit_frequency,
+            gp_gp_update_frequency=gp_gp_update_frequency,
             **config
         )
         log_path = f"{dir_path}/fspmi_n{config['n_agents']}.csv"
@@ -530,7 +530,7 @@ def main():
             episodes_per_round=100,
             max_rounds=500,
             gp_beta=gp_beta,
-            gp_fit_frequency=gp_fit_frequency
+            gp_gp_update_frequency=gp_gp_update_frequency
         )
         
         log_path = f"{dir_path}/fsapmi_{config['name']}_n4.csv"
