@@ -203,9 +203,9 @@ ensuring \textbf{monotonic performance improvement}.
 
 \begin{column}{0.32\textwidth}
 \begin{block}{Experimental Setup \& Sample Efficiency}
-\textbf{Project core (extension):} Built on the original SPMI repo with a federated coordinator plus an optional GP-UCB model chooser. Agents share $\hat{Q},\hat{\delta},\hat{U}$ while keeping safety bounds intact.\\[0.2cm]
-\textbf{Config focus:} Mirrors \texttt{config/config.yaml}: racetrack T1, $p_{\text{fail}}{=}0.07$, 4-agent F-SPMI, compared against standard SPMI and SA-PMI; current runs use the \textbf{GP model chooser} (latest data available).\\[0.2cm]
-\textbf{Metric:} Ground-truth performance (\texttt{performance\_true}) for federated runs; standard/SA-PMI use their evaluation column (not strictly comparable). MC estimates are optimistic vs true.\\[0.2cm]
+\textbf{Domain:} Racetrack-T1 Conf-MDP, [0.1cm]
+\textbf{Metric:} Discounted performance $J_\mu^{P,\pi} = \mu^\top V^{P,\pi}$ via exact evaluator; MC shown only as a diagnostic.\\[0.2cm]
+\textbf{Observation:} Standard SPMI reaches $J\!\ge\!0.4$ at 534 iters and $0.5$ at 1490; federated runs plateau $\approx\!0.39$ and never hit $0.4$ within 2000 iters.\\[0.2cm]
 \begin{center}
 \includegraphics[width=0.97\linewidth]{sample_efficiency.png}
 \end{center}
@@ -214,8 +214,8 @@ ensuring \textbf{monotonic performance improvement}.
 
 \begin{column}{0.32\textwidth}
 \begin{block}{Convergence \& Safety Guarantees}
-\textbf{Safety signal:} Dotted curves show the bound term; federated SA-PMI keeps a tighter (lower) bound than single-agent SA-PMI while improving return, indicating conservative steps.\\[0.2cm]
-\textbf{Federated lift (modest):} Returns climb faster than single-agent baselines, but asymptotic gains are small—benefit is earlier arrival, not higher ceiling.\\[0.2cm]
+\textbf{Safety signal:} Dotted curves depict the theoretical bound $\hat{B}$; all methods keep it positive and shrinking ($\sim\!10^{-6}$ by the end), indicating conservative updates.\\[0.2cm]
+\textbf{Conclusion:} On this track, federation does not reach the single-agent ceiling and the GP model chooser achieves comparable performance to the greedy case.\\[0.2cm]
 \begin{center}
 \includegraphics[width=0.97\linewidth]{convergence_safety.png}
 \end{center}
@@ -223,10 +223,10 @@ ensuring \textbf{monotonic performance improvement}.
 \end{column}
 
 \begin{column}{0.32\textwidth}
-\begin{block}{Metric Gap: MC vs True}
-\textbf{Gap highlighted:} Bar chart shows iterations to modest thresholds (0.10/0.15/0.20). MC reaches them far sooner than true performance, underscoring optimism in on-policy rollouts; standard uses a different eval metric.\\[0.2cm]
+\begin{block}{MC vs. True Performance}
+\textbf{Alignment:} MC return estimates with mean gap $<10^{-3}$ to exact evaluator, thus MC tracks true with negligible bias.\\[0.2cm]
 \begin{center}
-\includegraphics[width=0.97\linewidth]{gp_vs_greedy.png}
+\includegraphics[width=0.95\linewidth]{mc_vs_true.png}
 \end{center}
 \end{block}
 \end{column}
@@ -246,10 +246,10 @@ ensuring \textbf{monotonic performance improvement}.
 \begin{block}{Summary}
 \textbf{Key Contributions:}
 \begin{itemize}
-    \item F-SPMI enables \textbf{parallel safe RL} in configurable environments
-    \item Maintains \textbf{monotonic improvement} guarantees from SPMI
-    \item \textbf{Robust to noise}: Sample-based estimates converge to optimal
-    \item Optional \textbf{GP-UCB} model selection for principled exploration
+    \item Federated SPMI executes \textbf{policy-model updates in parallel} while preserving safe improvement guarantees
+    \item \textbf{Decoupled bound} yields monotonic policy/model refinement from finite-sample statistics
+    \item Aggregation is \textbf{robust to stochasticity/heterogeneity}; MC returns track exact performance
+    \item Optional \textbf{GP-UCB} target selection exploits structure of the model space
 \end{itemize}
 \end{block}
 \end{column}
@@ -258,10 +258,10 @@ ensuring \textbf{monotonic performance improvement}.
 \begin{block}{Limitations}
 \textbf{Current Constraints:}
 \begin{itemize}
-    \item Requires \textbf{known model space} $\mathcal{P}$
-    \item Communication overhead between agents and server
-    \item Discrete state-action spaces in current implementation
-    \item Synchronous updates across all agents
+    \item Assumes a \textbf{known finite model set} $\mathcal{P}$ and tabular state-action space
+    \item \textbf{Synchronous} rounds; all agents must participate each update
+    \item Communication cost scales with number of agents and statistics exchanged
+    \item Safety guarantees impose limitations on performance an convergence
 \end{itemize}
 \end{block}
 \end{column}
@@ -270,10 +270,10 @@ ensuring \textbf{monotonic performance improvement}.
 \begin{block}{Outlook}
 \textbf{Future Directions:}
 \begin{itemize}
-    \item \textbf{Sample-based} extension without known model space
-    \item \textbf{Continuous} state-action spaces via policy gradient methods
-    \item Asynchronous federated updates
-    \item Application to real-world robotics and autonomous systems
+    \item Learn or approximate $\mathcal{P}$ from data; extend to latent/continuous model parametrizations
+    \item \textbf{Function approximation} and policy-gradient variants for large/continuous spaces with safe steps
+    \item \textbf{Asynchronous} or partial-participation protocols robust to malicious agents
+    \item Deployment on robotic/autonomous platforms under bandwidth and safety constraints
 \end{itemize}
 \end{block}
 \end{column}

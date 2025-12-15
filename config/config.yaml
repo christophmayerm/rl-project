@@ -14,7 +14,7 @@ environment:
     pfail: 0.07
 
 model_chooser:
-  type: "gp" # GB 
+  type: "greedy" # GB 
   gp:
     beta: 1.0
     gp_update_frequency: 30
@@ -31,12 +31,12 @@ experiments:
   # Baseline
   standard_spmi:
     enabled: true
-    max_iter: 1000
+    max_iter: 2000
   
   # Test multiple SA-PMI configurations
   sapmi:
     enabled: true
-    max_iter: 1000
+    max_iter: 2000
     curricula:
       # Lower robustness - should perform better
       - name: "constant_low"
@@ -71,18 +71,18 @@ experiments:
       # More agents for better exploration
       - n_agents: 4
         episodes_per_round: 100
-        max_rounds: 1000
+        max_rounds: 2000
       
       # Alternative: fewer agents but more episodes
       - n_agents: 2
         episodes_per_round: 200
-        max_rounds: 1000
+        max_rounds: 2000
   
   federated_sapmi:
       enabled: true
-      agent_counts: [2,4,8,16,32]
+      agent_counts: [2,4]
       episodes_per_round: 100
-      max_rounds: 1000
+      max_rounds: 2000
       curricula:
         - name: "constant_low"
           type: "constant"

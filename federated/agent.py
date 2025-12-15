@@ -157,11 +157,11 @@ class FederatedAgent:
         next_states = []
 
         # Reset environment and get initial state
-        # Handle different Gymnasium/Gym API versions
-        if hasattr(mdp, '_reset'):
-            state = mdp._reset()
-        else:
+        # Prefer the explicit reset (respects custom init dists), fallback to legacy _reset
+        try:
             state = mdp.reset()
+        except (AttributeError, NotImplementedError):
+            state = mdp._reset()
 
         # Handle tuple returns (new Gymnasium API returns (obs, info))
         if isinstance(state, tuple):

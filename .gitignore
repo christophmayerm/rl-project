@@ -1,4 +1,7 @@
 .env
 .venv
+/poster/poster.*
+!/poster/poster.pdf
+!/poster/poster.tex
 
 */__pycache__/*
