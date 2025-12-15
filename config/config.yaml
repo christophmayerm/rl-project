@@ -14,7 +14,7 @@ environment:
     pfail: 0.07
 
 model_chooser:
-  type: "greedy" # GB 
+  type: "gp" # GB 
   gp:
     beta: 1.0
     gp_update_frequency: 30

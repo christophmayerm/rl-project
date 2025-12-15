@@ -8,7 +8,10 @@ import csv
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple, Optional
 
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Patch
 
 ROOT = Path(__file__).resolve().parents[1]
 PLOT_DIR = Path(__file__).resolve().parent
@@ -26,6 +29,17 @@ COLORS = {
     "fsapmi": "#2ca02c",
     "sapmi": "#8c564b",
 }
+
+TRACK_PATH = ROOT / "envs/tracks/T1.csv"
+TRACK_VALUE_MAP = {"4": 0, "5": 1, "1": 2, "2": 3}
+TRACK_CMAP = ListedColormap(
+    [
+        "#8a8a8a",  # walls / out of bounds
+        "#d8e7fa",  # drivable track
+        COLORS["fspmi_greedy"],  # start cells
+        COLORS["fspmi_gp"],  # goal cells
+    ]
+)
 
 
 def load_csv(path, delimiter = ","):
@@ -95,69 +109,120 @@ def configure_matplotlib():
             "lines.linewidth": 2.5,
             "axes.grid": True,
             "grid.alpha": 0.25,
-            "figure.dpi": 150,
+            "figure.dpi": 1200,
+            "savefig.format": "pdf",
+            "savefig.bbox": "tight",
+            "savefig.dpi": 1200,
+            "pdf.fonttype": 42,
+            "ps.fonttype": 42,
         }
     )
 
 
+def load_track_grid(path: Path) -> List[List[str]]:
+    if not path.exists():
+        raise FileNotFoundError(f"Missing track file: {path}")
+    rows: List[List[str]] = []
+    with path.open() as f:
+        reader = csv.reader(f)
+        for row in reader:
+            cleaned_row = []
+            for cell in row:
+                if cell is None:
+                    cell = ""
+                cleaned = cell.replace("\ufeff", "").strip()
+                cleaned_row.append(cleaned if cleaned else " ")
+            rows.append(cleaned_row)
+    if not rows:
+        return rows
+    max_cols = max(len(r) for r in rows)
+    for r in rows:
+        if len(r) < max_cols:
+            r.extend([" "] * (max_cols - len(r)))
+    return rows
+
+
+def plot_track(ax, path: Path) -> None:
+    grid = load_track_grid(path)
+    if not grid:
+        ax.axis("off")
+        ax.set_title("Racetrack layout unavailable")
+        return
+
+    track_array = np.full((len(grid), len(grid[0])), np.nan)
+    for i, row in enumerate(grid):
+        for j, cell in enumerate(row):
+            mapped_value = TRACK_VALUE_MAP.get(cell)
+            if mapped_value is not None:
+                track_array[i, j] = mapped_value
+
+    masked_track = np.ma.masked_invalid(track_array)
+    ax.imshow(
+        masked_track,
+        cmap=TRACK_CMAP,
+        vmin=-0.5,
+        vmax=3.5,
+        interpolation="none",
+        origin="upper",
+    )
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_aspect("equal")
+    ax.set_title("Racetrack T1 layout")
+
+    for i, row in enumerate(grid):
+        for j, cell in enumerate(row):
+            if cell == "1":
+                ax.text(j, i, "S", ha="center", va="center", color="white", fontsize=12, fontweight="bold")
+            elif cell == "2":
+                ax.text(j, i, "G", ha="center", va="center", color="white", fontsize=12, fontweight="bold")
+
+    legend_handles = [
+        Patch(facecolor=TRACK_CMAP(1), edgecolor="none", label="Track"),
+        Patch(facecolor=TRACK_CMAP(0), edgecolor="none", label="Walls"),
+        Patch(facecolor=TRACK_CMAP(2), edgecolor="none", label="Start"),
+        Patch(facecolor=TRACK_CMAP(3), edgecolor="none", label="Goal"),
+    ]
+    ax.legend(handles=legend_handles, loc="upper left", framealpha=0.9, fontsize=10)
+
+
 def plot_sample_efficiency():
     fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+    track_ax, eff_ax = axes
     thresholds = [0.4, 0.5, 0.6]
     step = 3
 
-    # Left: return vs iterations (greedy chooser)
+    # Left: racetrack layout for the experimental setup
+    plot_track(track_ax, TRACK_PATH)
+
+    # Right: return vs iterations (greedy chooser)
     mode = "greedy"
-    ax = axes[0]
     f_rows = downsample(load_csv(RUNS[mode] / "fspmi_n4.csv"), step)
     s_rows = downsample(load_semicolon_csv(RUNS[mode] / "standard_spmi.csv"), step)
     f_x, f_y = to_arrays(f_rows, "iteration", "performance_true")
     s_x, s_y = to_arrays(s_rows, "iterations", "evaluations")
 
-    ax.plot(s_x, s_y, label="Standard SPMI", color=COLORS["standard"], linestyle="--")
-    ax.plot(f_x, f_y, label="F-SPMI (4 agents, greedy)", color=COLORS["fspmi_greedy"])
-    ax.set_xlabel("Iterations")
-    ax.set_ylabel("Return")
-    ax.set_title("Greedy chooser: F-SPMI vs Standard")
+    eff_ax.plot(s_x, s_y, label="Standard SPMI", color=COLORS["standard"], linestyle="--")
+    eff_ax.plot(f_x, f_y, label="F-SPMI (4 agents, greedy)", color=COLORS["fspmi_greedy"])
+    eff_ax.set_xlabel("Iterations")
+    eff_ax.set_ylabel("Return")
+    eff_ax.set_title("Greedy chooser: F-SPMI vs Standard")
     ymax = max(max(f_y), max(s_y))
-    ax.set_ylim(0.0, ymax + 0.1)
+    eff_ax.set_ylim(0.0, ymax + 0.1)
 
     for t in thresholds:
         f_hit = first_hit(f_x, f_y, t)
         s_hit = first_hit(s_x, s_y, t)
-        ax.axhline(t, color="#bbbbbb", linestyle=":", linewidth=1)
+        eff_ax.axhline(t, color="#bbbbbb", linestyle=":", linewidth=1)
         if f_hit is not None:
-            ax.axvline(f_hit, color=COLORS["fspmi_greedy"], linestyle=":", linewidth=1.5)
+            eff_ax.axvline(f_hit, color=COLORS["fspmi_greedy"], linestyle=":", linewidth=1.5)
         if s_hit is not None:
-            ax.axvline(s_hit, color=COLORS["standard"], linestyle=":", linewidth=1.5)
-        text_y = min(ymax, t + 0.08)
-        if f_hit is not None and s_hit is not None:
-            speedup = s_hit / f_hit
-            ax.text(
-                0.02 * max(f_x),
-                text_y,
-                f"{speedup:.1f}× to {t}",
-                color=COLORS["fspmi_greedy"],
-                fontsize=11,
-                bbox=dict(facecolor="white", alpha=0.8, edgecolor="none"),
-            )
-        elif s_hit is None:
-            ax.text(
-                0.02 * max(f_x),
-                text_y,
-                f"Standard never reaches {t}",
-                color=COLORS["standard"],
-                fontsize=11,
-                bbox=dict(facecolor="white", alpha=0.8, edgecolor="none"),
-            )
-    ax.legend(loc="lower right")
+            eff_ax.axvline(s_hit, color=COLORS["standard"], linestyle=":", linewidth=1.5)
+    eff_ax.legend(loc="lower right")
 
-    # Right: MC optimism vs true performance (federated)
-    ax = axes[1]
-    ax.set_title("MAYBE A PLOT OF THE RACETRACK?")
-
-    fig.suptitle("Sample efficiency & MISSING", y=1.02)
+    fig.suptitle("Experimental setup & sample efficiency", y=1.02)
     fig.tight_layout()
-    fig.savefig(PLOT_DIR / "sample_efficiency.png", dpi=300, bbox_inches="tight")
+    fig.savefig(PLOT_DIR / "sample_efficiency.pdf", dpi=1200, bbox_inches="tight", format="pdf")
     plt.close(fig)
 
 
@@ -201,7 +266,7 @@ def plot_convergence_safety():
 
     fig.suptitle("Convergence & Safety signals", y=1.02)
     fig.tight_layout()
-    fig.savefig(PLOT_DIR / "convergence_safety.png", dpi=300, bbox_inches="tight")
+    fig.savefig(PLOT_DIR / "convergence_safety.pdf", dpi=1200, bbox_inches="tight", format="pdf")
     plt.close(fig)
 
 
@@ -216,8 +281,8 @@ def plot_mc_vs_true():
         gap = [mc - true for mc, true in zip(perf_mc, perf_true)]
 
         color = COLORS["fspmi_greedy"] if mode == "greedy" else COLORS["fspmi_gp"]
-        ax.plot(iters, perf_true, label="True return", color=color)
         ax.plot(iters, perf_mc, label="MC return", color=color, linestyle="--")
+        ax.plot(iters, perf_true, label="True return", color='black')
         ax.plot(iters, gap, label="MC - true gap", color=color, linestyle=":")
         ax.axhline(0, color="#888888", linewidth=1)
         ax.set_title(f"{mode.capitalize()} chooser")
@@ -228,7 +293,7 @@ def plot_mc_vs_true():
 
     fig.suptitle("MC estimator is optimistic vs exact performance", y=1.02)
     fig.tight_layout()
-    fig.savefig(PLOT_DIR / "mc_vs_true.png", dpi=300, bbox_inches="tight")
+    fig.savefig(PLOT_DIR / "mc_vs_true.pdf", dpi=1200, bbox_inches="tight", format="pdf")
     plt.close(fig)
 
 

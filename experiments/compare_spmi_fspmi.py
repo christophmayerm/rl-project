@@ -200,7 +200,7 @@ def run_federated_spmi(mdp, initial_policy, initial_model, original_model,
         max_rounds=max_rounds,
         policy_chooser=policy_chooser,
         model_chooser=model_chooser,
-        aggregation_method='weighted',
+        aggregation_method='uniform',
         persistent=True,
         verbose=False
     )

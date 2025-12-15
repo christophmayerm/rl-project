@@ -50,7 +50,7 @@
 \begin{block}{Situation}
 \textbf{Configurable Environments}\\[0.3cm]
 Most Reinforcement Learning research focuses on \textbf{static MDPs}, where the environment dynamics are fixed.\\[0.3cm]
-However, many real-world environments are \textbf{configurable}---certain parameters can be tuned to improve agent performance.\\[0.3cm]
+However, many real-world environments are \textbf{configurable} - certain parameters can be tuned to improve agent performance.\\[0.3cm]
 \textbf{Configurable MDPs (Conf-MDPs)} extend standard MDPs by allowing the transition model $P$ to be selected from a space $\mathcal{P}$:
 \[
 \mathcal{CM} = (\mathcal{S}, \mathcal{A}, R, \gamma, \mu, \mathcal{P}, \Pi)
@@ -67,7 +67,7 @@ Consider a car with \textbf{sport} and \textbf{comfort} driving modes:
     \item \textbf{Comfort mode:} Smooth driving, better control
 \end{itemize}
 \vspace{0.3cm}
-On a \textbf{slippery road}, the optimal configuration depends on the driving policy---and vice versa.\\[0.3cm]
+On a \textbf{slippery road}, the optimal configuration depends on the driving policy - and vice versa.\\[0.3cm]
 The goal: \textbf{jointly optimize} the policy $\pi$ and environment configuration $P$ to maximize expected return $J_\mu^{P,\pi}$.
 \end{block}
 \end{column}
@@ -207,7 +207,7 @@ ensuring \textbf{monotonic performance improvement}.
 \textbf{Metric:} Discounted performance $J_\mu^{P,\pi} = \mu^\top V^{P,\pi}$ via exact evaluator; MC shown only as a diagnostic.\\[0.2cm]
 \textbf{Observation:} Standard SPMI reaches $J\!\ge\!0.4$ at 534 iters and $0.5$ at 1490; federated runs plateau $\approx\!0.39$ and never hit $0.4$ within 2000 iters.\\[0.2cm]
 \begin{center}
-\includegraphics[width=0.97\linewidth]{sample_efficiency.png}
+\includegraphics[width=0.97\linewidth]{sample_efficiency.pdf}
 \end{center}
 \end{block}
 \end{column}
@@ -217,7 +217,7 @@ ensuring \textbf{monotonic performance improvement}.
 \textbf{Safety signal:} Dotted curves depict the theoretical bound $\hat{B}$; all methods keep it positive and shrinking ($\sim\!10^{-6}$ by the end), indicating conservative updates.\\[0.2cm]
 \textbf{Conclusion:} On this track, federation does not reach the single-agent ceiling and the GP model chooser achieves comparable performance to the greedy case.\\[0.2cm]
 \begin{center}
-\includegraphics[width=0.97\linewidth]{convergence_safety.png}
+\includegraphics[width=0.97\linewidth]{convergence_safety.pdf}
 \end{center}
 \end{block}
 \end{column}
@@ -226,7 +226,7 @@ ensuring \textbf{monotonic performance improvement}.
 \begin{block}{MC vs. True Performance}
 \textbf{Alignment:} MC return estimates with mean gap $<10^{-3}$ to exact evaluator, thus MC tracks true with negligible bias.\\[0.2cm]
 \begin{center}
-\includegraphics[width=0.95\linewidth]{mc_vs_true.png}
+\includegraphics[width=0.95\linewidth]{mc_vs_true.pdf}
 \end{center}
 \end{block}
 \end{column}
