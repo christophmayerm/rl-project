@@ -178,7 +178,7 @@ where $M_j(s,a)$ is the visit count by agent $j$.\\[0.4cm]
 \textbf{Decoupled Bound} (Theorem 3.3, Metelli et al.)\\[0.2cm]
 Performance improvement is lower bounded:
 \begin{equation*}
-J_\mu^{P', \pi'} - J_\mu^{P, \pi} \geq \underbrace{\frac{A_{P,\pi,\mu}^{P',\pi} + A_{P,\pi,\mu}^{P,\pi'}}{1-\gamma}}_{\text{advantage}} - \underbrace{\frac{\gamma \Delta Q^{P,\pi} D}{2(1-\gamma)^2}}_{\text{penalization}}
+J_\mu^{P', \pi'} - J_\mu^{P, \pi} \geq \underbrace{\frac{A_{P,\pi,\mu}^{P',\pi} + A_{P,\pi,\mu}^{P,\pi'}}{1-\gamma}}_{\text{advantage}} - \underbrace{\frac{\gamma \Delta Q^{P,\pi} D}{2(1-\gamma)^2}}_{\text{penalization}} = \hat{B}(P', \pi')
 \end{equation*}
 
 \textbf{Safe Step Sizes}\\[0.2cm]
@@ -203,7 +203,7 @@ ensuring \textbf{monotonic performance improvement}.
 
 \begin{column}{0.32\textwidth}
 \begin{block}{Experimental Setup \& Sample Efficiency}
-\textbf{Domain:} Racetrack-T1 Conf-MDP, [0.1cm]
+\textbf{Domain:} Racetrack-T1 Conf-MDP.\\
 \textbf{Metric:} Discounted performance $J_\mu^{P,\pi} = \mu^\top V^{P,\pi}$ via exact evaluator; MC shown only as a diagnostic.\\[0.2cm]
 \textbf{Observation:} Standard SPMI reaches $J\!\ge\!0.4$ at 534 iters and $0.5$ at 1490; federated runs plateau $\approx\!0.39$ and never hit $0.4$ within 2000 iters.\\[0.2cm]
 \begin{center}
