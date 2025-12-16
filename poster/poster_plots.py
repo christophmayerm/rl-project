@@ -19,15 +19,18 @@ PLOT_DIR = Path(__file__).resolve().parent
 RUNS: Dict[str, Path] = {
     "gp": ROOT / "data/racetrack4_T1/gp/20251215-150302-weighted-aggr",
     "greedy": ROOT / "data/racetrack4_T1/greedy/20251215-154740-weighted-aggr",
+    "convergence_gp": ROOT / "data/racetrack4_T1/gp/20251216-121041",
+    "convergence_greedy": ROOT / "data/racetrack4_T1/greedy/20251216-121129"
 }
 
 # Cohesive palette across figures
 COLORS = {
     "standard": "#3a3a3a",      # charcoal
     "fspmi_greedy": "#2a9d8f",  # teal (CB-safe)
-    "fspmi_gp": "#e76f51",      # coral (CB-safe)
+    "fspmi_gp": "#2a9d8f",      
     "fsapmi": "#f2c14f",        # amber
     "sapmi": "#5b5f97",         # muted indigo
+    "goal": "#e76f51",        # coral
 }
 
 TRACK_PATH = ROOT / "envs/tracks/T1.csv"
@@ -37,7 +40,7 @@ TRACK_CMAP = ListedColormap(
         "#515151",  # walls / out of bounds
         "#f5f7fb",  # drivable track
         COLORS["fspmi_greedy"],  # start cells
-        COLORS["fspmi_gp"],  # goal cells
+        COLORS["goal"],  # goal cells
     ]
 )
 
@@ -178,7 +181,8 @@ def plot_track(ax, path: Path) -> None:
         cmap=TRACK_CMAP,
         vmin=-0.5,
         vmax=3.5,
-        interpolation="none",
+        interpolation="nearest",
+        resample=False,
         origin="upper",
     )
     ax.set_xticks([])
@@ -242,31 +246,26 @@ def plot_sample_efficiency():
 
 
 def plot_convergence_safety():
-    fig, axes = plt.subplots(1, 2, figsize=(15, 6), sharey=False)
+    fig, axes = plt.subplots(1, 2, figsize=(15, 6), sharey=True)
     step = 4
 
     for ax, mode in zip(axes, ["greedy", "gp"]):
-        fspmi_rows = downsample(load_csv(RUNS[mode] / "fspmi_n4.csv"), step)
-        fsapmi_rows = downsample(load_csv(RUNS[mode] / "fsapmi_constant_medium_n4.csv"), step)
-        sapmi_rows = downsample(
-            load_semicolon_csv(RUNS[mode] / "sapmi_policy_constant_medium.csv"), step
+        fspmi_rows = downsample(load_csv(RUNS[f"convergence_{mode}"] / "fspmi_n4.csv"), step)
+        standard_rows = downsample(
+            load_semicolon_csv(RUNS[f"convergence_{mode}"] / "standard_spmi.csv"), step
         )
 
         f_x, f_y = to_arrays(fspmi_rows, "iteration", "performance_true")
         f_bound_x, f_bounds = to_arrays(fspmi_rows, "iteration", "bound")
-        fs_x, fs_y = to_arrays(fsapmi_rows, "iteration", "performance_true")
-        fs_bound_x, fs_bounds = to_arrays(fsapmi_rows, "iteration", "bound")
-        s_x, s_y = to_arrays(sapmi_rows, "iterations", "evaluations")
-        s_bound_x, s_bounds = to_arrays(sapmi_rows, "iterations", "bound")
+        s_x, s_y = to_arrays(standard_rows, "iterations", "evaluations")
+        s_bound_x, s_bounds = to_arrays(standard_rows, "iterations", "bound")
 
         ax.plot(f_x, f_y, label="F-SPMI return", color=COLORS["fspmi_greedy"] if mode == "greedy" else COLORS["fspmi_gp"])
-        ax.plot(fs_x, fs_y, label="F-SA-PMI return", color=COLORS["fsapmi"])
-        ax.plot(s_x, s_y, label="SA-PMI return", color=COLORS["sapmi"], linestyle="--")
+        ax.plot(s_x, s_y, label="SPMI return", color=COLORS["sapmi"], linestyle="--")
 
         ax2 = ax.twinx()
         ax2.plot(f_bound_x, f_bounds, color=COLORS["fspmi_greedy"] if mode == "greedy" else COLORS["fspmi_gp"], linestyle=":", linewidth=1.5, label="F-SPMI bound")
-        ax2.plot(fs_bound_x, fs_bounds, color=COLORS["fsapmi"], linestyle=":", linewidth=1.5, label="F-SA-PMI bound")
-        ax2.plot(s_bound_x, s_bounds, color=COLORS["sapmi"], linestyle=":", linewidth=1.5, label="SA-PMI bound")
+        ax2.plot(s_bound_x, s_bounds, color=COLORS["sapmi"], linestyle=":", linewidth=1.5, label="SPMI bound")
 
         ax.set_title(f"{mode.upper()} chooser")
         ax.set_xlabel("Iterations")
@@ -279,7 +278,7 @@ def plot_convergence_safety():
         ax.legend(lines + lines2, labels + labels2, loc="center right", fontsize=10)
         ax.grid(True, alpha=0.3)
 
-    fig.suptitle("Retruns (solid) & Safety Bounds (dotted)", y=0.98)
+    fig.suptitle("Returns (solid) & Safety Bounds (dotted) - n=4, 400eps/round", y=0.98)
     fig.tight_layout()
     fig.savefig(PLOT_DIR / "convergence_safety.pdf", dpi=1200, bbox_inches="tight", format="pdf")
     plt.close(fig)

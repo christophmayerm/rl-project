@@ -98,7 +98,7 @@ We propose \textbf{F-SPMI} (Federated SPMI):
 \begin{center}
 \setlength{\fboxsep}{12pt}
 \fcolorbox{headerblue}{lightblue!40}{%
-    \parbox{0.9\textwidth}{\centering \Large\textbf{Faster learning through collaboration while maintaining safety!}}%
+    \parbox{0.9\textwidth}{\centering \Large\textbf{Scalable learning with Policy-Configuration coupling through collaboration while maintaining safety guarantees!}}%
 }
 \end{center}
 \vspace{0.4cm}
@@ -173,7 +173,7 @@ We propose \textbf{F-SPMI} (Federated SPMI):
 P_{k+1}=\arg\max_{P\in\mathcal{P}}\left[m_k(P)+\beta_k\,\sigma_k(P)\right]
 \end{equation*}
 \begin{itemize}
-  \item $m_k(P)$ and $\sigma_k(P)$ are the GP posterior mean and uncertainty over a model-score (e.g., predicted advantage).
+  \item $m_k(P)$, $\sigma_k(P)$: GP posterior mean and uncertainty over model-score (e.g., predicted advantage).
   \item Encourages exploration early (high $\sigma_k$) and exploitation later (high $m_k$).
 \end{itemize}
 \end{block}
@@ -189,10 +189,10 @@ The server aggregates local estimates:
 \end{equation*}
 where $M_j(s,a)$ is the visit count by agent $j$.\\[0.4cm]
 
-\textbf{Decoupled Bound} (Theorem 3.3, Metelli et al.)\\[0.2cm]
+\textbf{Decoupled Bound} (Derived from Theorem 3.3, Metelli et al.)\\[0.2cm]
 Performance improvement is lower bounded:
 \begin{equation*}
-J_\mu^{P', \pi'} - J_\mu^{P, \pi} \geq \underbrace{\frac{A_{P,\pi,\mu}^{P',\pi} + A_{P,\pi,\mu}^{P,\pi'}}{1-\gamma}}_{\text{advantage}} - \underbrace{\frac{\gamma \Delta Q^{P,\pi} D}{2(1-\gamma)^2}}_{\text{penalization}} = \hat{B}(P', \pi')
+J_\mu^{P', \pi'} - J_\mu^{P, \pi} \geq \underbrace{\frac{A_{P,\pi,\mu}^{P',\pi} + A_{P,\pi,\mu}^{P,\pi'}}{1-\gamma}}_{\text{advantage}} - \underbrace{\frac{\gamma \Delta \hat{Q}^{P, \pi}(s,a) D}{2(1-\gamma)^2}}_{\text{penalization}} = \hat{B}(P', \pi')
 \end{equation*}
 
 \textbf{Safe Step Sizes}\\[0.2cm]
