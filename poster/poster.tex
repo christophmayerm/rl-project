@@ -7,7 +7,7 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc}
-\usepackage[orientation=portrait,size=a1,scale=1.2]{beamerposter}
+\usepackage[orientation=portrait,size=a1,scale=1.1]{beamerposter}
 
 % Color definitions
 \definecolor{cDarkBlue}{rgb}{0, 0.2, 0.5}
@@ -16,7 +16,7 @@
 \definecolor{lightblue}{rgb}{0.85, 0.9, 0.95}
 
 % Poster metadata
-\newcommand{\postertitle}{Making Safe Reinforcement Learning Faster}
+\newcommand{\postertitle}{Scaling Safe Policy-Model Iteration with Federated Rollouts}
 \newcommand{\posterauthors}{Julius Landes, Christoph Mayer, Elias M\"uller, Laurin van den Bergh}
 
 % Beamer settings
@@ -32,11 +32,11 @@
 %% ============================================
 %% HEADER
 %% ============================================
-\vspace{-1cm}
-\begin{beamercolorbox}[wd=\textwidth,ht=7cm,center]{headline}
 \vspace{1cm}
-{\Huge\textbf{\postertitle}}\\[0.8cm]
-{\Large \posterauthors}
+\begin{beamercolorbox}[wd=\textwidth,ht=7cm,center]{headline}
+\vspace{0.8cm}
+{\Huge\textbf{\postertitle}}\\[0.4cm]
+{\Large \posterauthors}\\[0.8cm]
 \end{beamercolorbox}
 
 \vspace{0.5cm}
@@ -47,34 +47,39 @@
 \begin{columns}[T]
 
 \begin{column}{0.32\textwidth}
-\begin{block}{Situation}
-\textbf{Configurable Environments}\\[0.3cm]
+\begin{block}{Situation - Configurable Environments}
 Most Reinforcement Learning research focuses on \textbf{static MDPs}, where the environment dynamics are fixed.\\[0.3cm]
 However, many real-world environments are \textbf{configurable} - certain parameters can be tuned to improve agent performance.\\[0.3cm]
 \textbf{Configurable MDPs (Conf-MDPs)} extend standard MDPs by allowing the transition model $P$ to be selected from a space $\mathcal{P}$:
 \[
 \mathcal{CM} = (\mathcal{S}, \mathcal{A}, R, \gamma, \mu, \mathcal{P}, \Pi)
 \]
+
+\begin{itemize}
+  \item Objective: find a pair $(P,\pi)\in\mathcal{P}\times\Pi$ maximizing $J_{\mu}^{P,\pi}$.
+\end{itemize}
+
 \end{block}
 \end{column}
 
 \begin{column}{0.32\textwidth}
-\begin{block}{Example}
-\textbf{Car Configuration}\\[0.3cm]
+\begin{block}{Example - Car Configuration}
 Consider a car with \textbf{sport} and \textbf{comfort} driving modes:
 \begin{itemize}
     \item \textbf{Sport mode:} Aggressive acceleration, less stability
     \item \textbf{Comfort mode:} Smooth driving, better control
 \end{itemize}
 \vspace{0.3cm}
-On a \textbf{slippery road}, the optimal configuration depends on the driving policy - and vice versa.\\[0.3cm]
+
+\textbf{Policy-Configuration coupling:} the best environment setting depends on the policy (and vice versa).\\[0.3cm]
+
+
 The goal: \textbf{jointly optimize} the policy $\pi$ and environment configuration $P$ to maximize expected return $J_\mu^{P,\pi}$.
 \end{block}
 \end{column}
 
 \begin{column}{0.32\textwidth}
-\begin{block}{Problem \& Solution}
-\textbf{The Challenge}\\[0.3cm]
+\begin{block}{Challenge \& Solution}
 \textbf{SPMI} (Safe Policy-Model Iteration) provides \textbf{monotonic improvement guarantees} but is computationally expensive.\\[0.3cm]
 \textbf{Our Solution: Federated Learning}\\[0.3cm]
 We propose \textbf{F-SPMI} (Federated SPMI):
@@ -84,14 +89,20 @@ We propose \textbf{F-SPMI} (Federated SPMI):
     \item Central server aggregates knowledge
     \item \textbf{Safety guarantees preserved}
 \end{itemize}
-\vspace{0.3cm}
-\textit{Faster learning through collaboration while maintaining safety!}
 \end{block}
 \end{column}
 
 \end{columns}
 
 \vspace{0.3cm}
+\begin{center}
+\setlength{\fboxsep}{12pt}
+\fcolorbox{headerblue}{lightblue!40}{%
+    \parbox{0.9\textwidth}{\centering \Large\textbf{Faster learning through collaboration while maintaining safety!}}%
+}
+\end{center}
+\vspace{0.4cm}
+
 \textcolor{rowsep}{\rule{\textwidth}{2pt}}
 \vspace{0.3cm}
 
@@ -156,12 +167,15 @@ We propose \textbf{F-SPMI} (Federated SPMI):
 \end{itemize}
 \end{block}
 
-\begin{block}{GP-Enhanced Model Selection}
-Replace greedy model choice with \textbf{Gaussian Process UCB}:
+\begin{block}{Gaussian-Process-Enhanced Model Selection}
+\textbf{Structured model search:} replace a purely greedy target with a Gaussian-Process Upper Confidence Bound (GP-UCB) target selector.
 \begin{equation*}
-P_{k+1} = \arg\max_{P \in \mathcal{P}} \left[ \mu(P) + \beta_k \sigma(P) \right]
+P_{k+1}=\arg\max_{P\in\mathcal{P}}\left[m_k(P)+\beta_k\,\sigma_k(P)\right]
 \end{equation*}
-Balances \textit{exploitation} (high predicted advantage $\mu$) with \textit{exploration} (high uncertainty $\sigma$) for principled model space search.
+\begin{itemize}
+  \item $m_k(P)$ and $\sigma_k(P)$ are the GP posterior mean and uncertainty over a model-score (e.g., predicted advantage).
+  \item Encourages exploration early (high $\sigma_k$) and exploitation later (high $m_k$).
+\end{itemize}
 \end{block}
 \end{column}
 
@@ -186,7 +200,9 @@ Optimal update coefficients:
 \begin{equation*}
 \alpha^*, \beta^* = \arg\max_{\alpha,\beta} \hat{B}(\alpha, \beta)
 \end{equation*}
-ensuring \textbf{monotonic performance improvement}.
+ensuring \textbf{monotonic performance improvement}. I.e, we optimize coefficients that in turn are used for convex mixing updates.\\[0.3cm]
+\textbf{Convex mixing update:} $\pi_{k+1}=\alpha^*\pi_{\text{tgt}}+(1-\alpha^*)\pi_k$, \;
+        $P_{k+1}=\beta^*P_{\text{tgt}}+(1-\beta^*)P_k$.
 \end{block}
 \end{column}
 
@@ -204,8 +220,8 @@ ensuring \textbf{monotonic performance improvement}.
 \begin{column}{0.32\textwidth}
 \begin{block}{Experimental Setup \& Sample Efficiency}
 \textbf{Domain:} Racetrack-T1 Conf-MDP.\\
-\textbf{Metric:} Discounted performance $J_\mu^{P,\pi} = \mu^\top V^{P,\pi}$ via exact evaluator; MC shown only as a diagnostic.\\[0.2cm]
-\textbf{Observation:} Standard SPMI reaches $J\!\ge\!0.4$ at 534 iters and $0.5$ at 1490; federated runs plateau $\approx\!0.39$ and never hit $0.4$ within 2000 iters.\\[0.2cm]
+\textbf{Metric:} Discounted performance $J_\mu^{P,\pi} = \mu^\top V^{P,\pi}$ via exact evaluator.\\[0.2cm]
+\textbf{Observation:} More episodes per round yields a closer match to SPMI; with fewer episodes, higher variance slows improvement.\\[0.2cm]
 \begin{center}
 \includegraphics[width=0.97\linewidth]{sample_efficiency.pdf}
 \end{center}
@@ -214,8 +230,8 @@ ensuring \textbf{monotonic performance improvement}.
 
 \begin{column}{0.32\textwidth}
 \begin{block}{Convergence \& Safety Guarantees}
-\textbf{Safety signal:} Dotted curves depict the theoretical bound $\hat{B}$; all methods keep it positive and shrinking ($\sim\!10^{-6}$ by the end), indicating conservative updates.\\[0.2cm]
-\textbf{Conclusion:} On this track, federation does not reach the single-agent ceiling and the GP model chooser achieves comparable performance to the greedy case.\\[0.2cm]
+\textbf{Safety signal:} the dotted curves show the estimated guaranteed-improvement bound $\hat B$. The bound tightens over time as updates shrink, consistent with convergence of step sizes.\\[0.2cm]
+\textbf{Conclusion:} In this finite, tabular setting, GP-based target selection matches/slightly underperforms greedy; we \emph{hypothesize} a greater impact in larger environments or structured model spaces.\\[0.2cm]
 \begin{center}
 \includegraphics[width=0.97\linewidth]{convergence_safety.pdf}
 \end{center}
@@ -223,11 +239,12 @@ ensuring \textbf{monotonic performance improvement}.
 \end{column}
 
 \begin{column}{0.32\textwidth}
-\begin{block}{MC vs. True Performance}
-\textbf{Alignment:} MC return estimates with mean gap $<10^{-3}$ to exact evaluator, thus MC tracks true with negligible bias.\\[0.2cm]
+\begin{block}{MC Extimate vs. Exact Evaluator}
+\textbf{Agreement:} For the same learned $(P,\pi)$, MC estimates of $J_\mu^{P,\pi}$ closely match the \emph{exact evaluator}; with fewer episodes, variance increases and estimates are noisier.\\[0.2cm]
 \begin{center}
 \includegraphics[width=0.95\linewidth]{mc_vs_true.pdf}
 \end{center}
+\textbf{Implication:} MC estimation enables practical deployment where exact evaluation is computationally prohibitive, scaling to larger state-action spaces without matrix inversions
 \end{block}
 \end{column}
 
@@ -247,8 +264,8 @@ ensuring \textbf{monotonic performance improvement}.
 \textbf{Key Contributions:}
 \begin{itemize}
     \item Federated SPMI executes \textbf{policy-model updates in parallel} while preserving safe improvement guarantees
-    \item \textbf{Decoupled bound} yields monotonic policy/model refinement from finite-sample statistics
-    \item Aggregation is \textbf{robust to stochasticity/heterogeneity}; MC returns track exact performance
+    \item \textbf{Decoupled bound} yields monotonic policy/ model refinement from finite-sample statistics
+    \item Aggregation is \textbf{robust to stochasticity/ heterogeneity}; MC returns track exact performance
     \item Optional \textbf{GP-UCB} target selection exploits structure of the model space
 \end{itemize}
 \end{block}
@@ -258,10 +275,11 @@ ensuring \textbf{monotonic performance improvement}.
 \begin{block}{Limitations}
 \textbf{Current Constraints:}
 \begin{itemize}
+    \item Federation uses MC estimates with finite samples - variance affects the confidence bound
     \item Assumes a \textbf{known finite model set} $\mathcal{P}$ and tabular state-action space
     \item \textbf{Synchronous} rounds; all agents must participate each update
     \item Communication cost scales with number of agents and statistics exchanged
-    \item Safety guarantees impose limitations on performance an convergence
+    \item Safety guarantees impose limitations on performance and convergence
 \end{itemize}
 \end{block}
 \end{column}
@@ -270,8 +288,8 @@ ensuring \textbf{monotonic performance improvement}.
 \begin{block}{Outlook}
 \textbf{Future Directions:}
 \begin{itemize}
-    \item Learn or approximate $\mathcal{P}$ from data; extend to latent/continuous model parametrizations
-    \item \textbf{Function approximation} and policy-gradient variants for large/continuous spaces with safe steps
+    \item Learn or approximate $\mathcal{P}$ from data; extend to latent/ continuous model parametrizations
+    \item \textbf{Function approximation} and policy-gradient variants for large/ continuous spaces with safe steps
     \item \textbf{Asynchronous} or partial-participation protocols robust to malicious agents
     \item Deployment on robotic/autonomous platforms under bandwidth and safety constraints
 \end{itemize}
@@ -279,6 +297,14 @@ ensuring \textbf{monotonic performance improvement}.
 \end{column}
 
 \end{columns}
+
+\\[0.5cm]
+\begin{center}
+\setlength{\fboxsep}{12pt}
+\fcolorbox{headerblue}{lightblue!40}{
+    \parbox{0.9\textwidth}{\centering\Large\textbf{In Short:} Federated rollouts boost sample throughput for safe updates. Monte Carlo evaluation avoids exact value computation and, with moderate episodes per round, closely matches the \emph{exact evaluator} - potentially supporting scalable learning in larger Conf-MDPs.}%
+}
+\end{center}
 
 \vspace{0.5cm}
 \begin{center}

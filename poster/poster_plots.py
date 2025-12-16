@@ -17,29 +17,43 @@ ROOT = Path(__file__).resolve().parents[1]
 PLOT_DIR = Path(__file__).resolve().parent
 
 RUNS: Dict[str, Path] = {
-    "gp": ROOT / "data/racetrack4_T1/gp/20251215-150302",
-    "greedy": ROOT / "data/racetrack4_T1/greedy/20251215-154740",
+    "gp": ROOT / "data/racetrack4_T1/gp/20251215-150302-weighted-aggr",
+    "greedy": ROOT / "data/racetrack4_T1/greedy/20251215-154740-weighted-aggr",
 }
 
 # Cohesive palette across figures
 COLORS = {
-    "standard": "#6c6c6c",
-    "fspmi_greedy": "#1f77b4",
-    "fspmi_gp": "#d62728",
-    "fsapmi": "#2ca02c",
-    "sapmi": "#8c564b",
+    "standard": "#3a3a3a",      # charcoal
+    "fspmi_greedy": "#2a9d8f",  # teal (CB-safe)
+    "fspmi_gp": "#e76f51",      # coral (CB-safe)
+    "fsapmi": "#f2c14f",        # amber
+    "sapmi": "#5b5f97",         # muted indigo
 }
 
 TRACK_PATH = ROOT / "envs/tracks/T1.csv"
 TRACK_VALUE_MAP = {"4": 0, "5": 1, "1": 2, "2": 3}
 TRACK_CMAP = ListedColormap(
     [
-        "#8a8a8a",  # walls / out of bounds
-        "#d8e7fa",  # drivable track
+        "#515151",  # walls / out of bounds
+        "#f5f7fb",  # drivable track
         COLORS["fspmi_greedy"],  # start cells
         COLORS["fspmi_gp"],  # goal cells
     ]
 )
+
+FSPMI_VAR_DIR = PLOT_DIR / "federated_runs_var_epochs"
+FSPMI_VAR_EPOCHS = {
+    "100": FSPMI_VAR_DIR / "fspmi_n4-100.csv",
+    "200": FSPMI_VAR_DIR / "fspmi_n4-200.csv",
+    "400": FSPMI_VAR_DIR / "fspmi_n4-400.csv",
+    "800": FSPMI_VAR_DIR / "fspmi_n4-800.csv",
+}
+FSPMI_VAR_COLORS = {
+    "100": "#c2e7df",  # pale teal
+    "200": "#8fd2c2",  # soft teal
+    "400": "#57b7a5",  # medium teal
+    "800": "#2a9d8f",  # deep teal
+}
 
 
 def load_csv(path, delimiter = ","):
@@ -108,6 +122,8 @@ def configure_matplotlib():
             "legend.fontsize": 12,
             "lines.linewidth": 2.5,
             "axes.grid": True,
+            "axes.facecolor": "#fafbfd",
+            "grid.color": "#e0e0e0",
             "grid.alpha": 0.25,
             "figure.dpi": 1200,
             "savefig.format": "pdf",
@@ -196,31 +212,30 @@ def plot_sample_efficiency():
     plot_track(track_ax, TRACK_PATH)
 
     # Right: return vs iterations (greedy chooser)
-    mode = "greedy"
-    f_rows = downsample(load_csv(RUNS[mode] / "fspmi_n4.csv"), step)
-    s_rows = downsample(load_semicolon_csv(RUNS[mode] / "standard_spmi.csv"), step)
-    f_x, f_y = to_arrays(f_rows, "iteration", "performance_true")
+    s_rows = downsample(load_semicolon_csv(FSPMI_VAR_DIR / "standard_spmi.csv"), step)
     s_x, s_y = to_arrays(s_rows, "iterations", "evaluations")
-
     eff_ax.plot(s_x, s_y, label="Standard SPMI", color=COLORS["standard"], linestyle="--")
-    eff_ax.plot(f_x, f_y, label="F-SPMI (4 agents, greedy)", color=COLORS["fspmi_greedy"])
+
+    ymax = max(s_y) if s_y else 0.0
+    for epochs, path in sorted(FSPMI_VAR_EPOCHS.items(), key=lambda kv: int(kv[0])):
+        rows = downsample(load_csv(path), step)
+        f_x, f_y = to_arrays(rows, "iteration", "performance_true")
+        if f_y:
+            ymax = max(ymax, max(f_y))
+        label = f"F-SPMI (n=4, {epochs} eps/round)"
+        color = FSPMI_VAR_COLORS.get(epochs, COLORS["fspmi_greedy"])
+        eff_ax.plot(f_x, f_y, label=label, color=color)
+
     eff_ax.set_xlabel("Iterations")
     eff_ax.set_ylabel("Return")
-    eff_ax.set_title("Greedy chooser: F-SPMI vs Standard")
-    ymax = max(max(f_y), max(s_y))
-    eff_ax.set_ylim(0.0, ymax + 0.1)
+    eff_ax.set_title("GREEDY chooser: Standard vs F-SPMI")
+    eff_ax.set_ylim(0.0, ymax + 0.1 if ymax else 1.0)
 
     for t in thresholds:
-        f_hit = first_hit(f_x, f_y, t)
-        s_hit = first_hit(s_x, s_y, t)
         eff_ax.axhline(t, color="#bbbbbb", linestyle=":", linewidth=1)
-        if f_hit is not None:
-            eff_ax.axvline(f_hit, color=COLORS["fspmi_greedy"], linestyle=":", linewidth=1.5)
-        if s_hit is not None:
-            eff_ax.axvline(s_hit, color=COLORS["standard"], linestyle=":", linewidth=1.5)
     eff_ax.legend(loc="lower right")
 
-    fig.suptitle("Experimental setup & sample efficiency", y=1.02)
+    fig.suptitle("Experimental setup & sample efficiency (varying episodes per round)", y=0.98)
     fig.tight_layout()
     fig.savefig(PLOT_DIR / "sample_efficiency.pdf", dpi=1200, bbox_inches="tight", format="pdf")
     plt.close(fig)
@@ -253,7 +268,7 @@ def plot_convergence_safety():
         ax2.plot(fs_bound_x, fs_bounds, color=COLORS["fsapmi"], linestyle=":", linewidth=1.5, label="F-SA-PMI bound")
         ax2.plot(s_bound_x, s_bounds, color=COLORS["sapmi"], linestyle=":", linewidth=1.5, label="SA-PMI bound")
 
-        ax.set_title(f"Returns (solid) & safety bounds (dotted) — {mode}")
+        ax.set_title(f"{mode.upper()} chooser")
         ax.set_xlabel("Iterations")
         ax.set_ylabel("Return")
         ax2.set_ylabel("Safety bound value")
@@ -261,39 +276,44 @@ def plot_convergence_safety():
         # Collect legend handles from both axes
         lines, labels = ax.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        ax.legend(lines + lines2, labels + labels2, loc="upper right", fontsize=10)
+        ax.legend(lines + lines2, labels + labels2, loc="center right", fontsize=10)
         ax.grid(True, alpha=0.3)
 
-    fig.suptitle("Convergence & Safety signals", y=1.02)
+    fig.suptitle("Retruns (solid) & Safety Bounds (dotted)", y=0.98)
     fig.tight_layout()
     fig.savefig(PLOT_DIR / "convergence_safety.pdf", dpi=1200, bbox_inches="tight", format="pdf")
     plt.close(fig)
 
-
+ 
 def plot_mc_vs_true():
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
-    step = 3
+    fig = plt.figure(figsize=(14, 6))
 
-    for ax, mode in zip(axes, ["greedy", "gp"]):
-        rows = downsample(load_csv(RUNS[mode] / "fspmi_n4.csv"), step)
+    # Center plot by reserving equal blank space left/right
+    gs = fig.add_gridspec(1, 3, width_ratios=[1, 2, 1], wspace=0.0)
+    ax_left = fig.add_subplot(gs[0, 0]); ax_left.set_axis_off()
+    ax = fig.add_subplot(gs[0, 1])
+    ax_right = fig.add_subplot(gs[0, 2]); ax_right.set_axis_off()
+
+    step = 3
+    for epochs, path in sorted(FSPMI_VAR_EPOCHS.items(), key=lambda kv: int(kv[0])):
+        rows = downsample(load_csv(path), step)
         iters, perf_true = to_arrays(rows, "iteration", "performance_true")
         perf_mc = [r["performance_mc"] for r in rows]
-        gap = [mc - true for mc, true in zip(perf_mc, perf_true)]
+        color = FSPMI_VAR_COLORS.get(epochs, COLORS["fspmi_greedy"])
+        ax.plot(iters, perf_true, label=f"Exact eval ({epochs}/round)", color=color)
+        ax.plot(iters, perf_mc, linestyle="--", color=color, alpha=0.55, label=f"MC ({epochs}/round)")
 
-        color = COLORS["fspmi_greedy"] if mode == "greedy" else COLORS["fspmi_gp"]
-        ax.plot(iters, perf_mc, label="MC return", color=color, linestyle="--")
-        ax.plot(iters, perf_true, label="True return", color='black')
-        ax.plot(iters, gap, label="MC - true gap", color=color, linestyle=":")
-        ax.axhline(0, color="#888888", linewidth=1)
-        ax.set_title(f"{mode.capitalize()} chooser")
-        ax.set_xlabel("Iterations")
-        ax.set_ylabel("Return / gap")
-        ax.legend(loc="upper right")
-        ax.grid(True, alpha=0.3)
+    ax.axhline(0, color="#888888", linewidth=1)
+    ax.set_xlabel("Iterations")
+    ax.set_ylabel("Return")
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="lower right", fontsize=10)
 
-    fig.suptitle("MC estimator is optimistic vs exact performance", y=1.02)
-    fig.tight_layout()
-    fig.savefig(PLOT_DIR / "mc_vs_true.pdf", dpi=1200, bbox_inches="tight", format="pdf")
+    fig.suptitle("MC vs exact evaluator (GREEDY, varying episodes/round)", y=0.95)
+
+    # Keep the full canvas (don't use bbox_inches="tight", it can break the intended footprint)
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(PLOT_DIR / "mc_vs_true.pdf", dpi=1200, format="pdf")
     plt.close(fig)
 
 
