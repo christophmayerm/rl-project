@@ -225,6 +225,7 @@ ensuring \textbf{monotonic performance improvement}.
 \begin{column}{0.32\textwidth}
 \begin{block}{MC vs. True Performance}
 \textbf{Alignment:} MC return estimates with mean gap $<10^{-3}$ to exact evaluator, thus MC tracks true with negligible bias.\\[0.2cm]
+\textbf{Implication:} MC estimation enables practical deployment where exact evaluation is computationally prohibitive, scaling to larger state-action spaces without matrix inversions.\\[1.4cm]
 \begin{center}
 \includegraphics[width=0.95\linewidth]{mc_vs_true.pdf}
 \end{center}
