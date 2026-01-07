@@ -53,11 +53,11 @@ except ImportError:
 class ExperimentRunner:
     """Unified runner for all SPMI experiment variants"""
     
-    def __init__(self, config_path: str, use_wandb: bool = True):
+    def __init__(self, config_path: str, use_wandb: bool = True, n_seeds: int = 1):
         """Initialize experiment runner with configuration"""
         self.config = self._load_config(config_path)
         self.use_wandb = use_wandb and WANDB_AVAILABLE and self.config['wandb']['enabled']
-        
+        self.n_seeds = n_seeds
         # Setup output directory
         self.output_dir = Path(self.config['output']['dir']) / f'racetrack4_{self.config["environment"]["params"]["track_file"]}' / self.config['model_chooser']['type'] / time.strftime("%Y%m%d-%H%M%S")
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -344,105 +344,125 @@ class ExperimentRunner:
         
         return results
     
-    def run_federated_spmi(self) -> Dict[str, Any]:
-        """Run Federated SPMI with all configurations"""
+    def run_federated_spmi(self, n_seeds: int = 1) -> Dict[str, Any]:
+        """Run Federated SPMI with multiple seeds for confidence intervals"""
         if not self.config['experiments']['federated_spmi']['enabled']:
             print("\nSkipping Federated SPMI (disabled in config)")
             return {}
         
         print("\n" + "=" * 80)
-        print("Running Federated SPMI")
+        print(f"Running Federated SPMI ({n_seeds} seed(s))")
         print("=" * 80)
         
         exp_config = self.config['experiments']['federated_spmi']
         results = {}
         
         for agent_config in exp_config['configurations']:
-            print(f"\nN={agent_config['n_agents']} agents, "
-                  f"{agent_config['episodes_per_round']} episodes/round")
+            config_key = f"n{agent_config['n_agents']}_eps{agent_config['episodes_per_round']}"
+            print(f"\n{config_key}")
             print("-" * 60)
             
-            self.mdp.set_model(copy.deepcopy(self.original_model))
-            if hasattr(self, 'init_model_vector'):
-                self.mdp.model_vector = np.array(self.init_model_vector)
+            seed_results = []
             
-            policy_chooser = GreedyPolicyChooser(self.mdp.nS, self.mdp.nA)
-            model_chooser = self._create_model_chooser()
-            
-            fspmi = FSPMI(
-                conf_mdp=self.mdp,
-                n_agents=agent_config['n_agents'],
-                episodes_per_round=agent_config['episodes_per_round'],
-                eps=0.0,
-                max_rounds=agent_config['max_rounds'],
-                policy_chooser=policy_chooser,
-                model_chooser=model_chooser,
-                aggregation_method='weighted',
-                persistent=self.config['model_chooser']['type'] != 'gp',
-                delta_q=1,
-                verbose=True
-            )
-            
-            # WandB logging
-            if self.use_wandb:
-                wandb.init(
-                    project=self.config['wandb']['project'],
-                    entity=self.config['wandb']['entity'],
-                    name=f"fspmi_n{agent_config['n_agents']}",
-                    tags=self.config['wandb']['tags'] + ["federated"],
-                    config={
-                        "algorithm": "F-SPMI",
-                        "variant": "federated",
-                        **agent_config
-                    },
-                    reinit=True
+            for seed in range(n_seeds):
+                if n_seeds > 1:
+                    print(f"  Seed {seed + 1}/{n_seeds}...", end=" ", flush=True)
+                
+                # Reset MDP
+                self.mdp.set_model(copy.deepcopy(self.original_model))
+                
+                policy_chooser = GreedyPolicyChooser(self.mdp.nS, self.mdp.nA)
+                model_chooser = self._create_model_chooser()
+                
+                fspmi = FSPMI(
+                    conf_mdp=self.mdp,
+                    n_agents=agent_config['n_agents'],
+                    episodes_per_round=agent_config['episodes_per_round'],
+                    eps=0.0,
+                    max_rounds=agent_config['max_rounds'],
+                    policy_chooser=policy_chooser,
+                    model_chooser=model_chooser,
+                    aggregation_method='weighted',
+                    persistent=self.config['model_chooser']['type'] != 'gp',
+                    delta_q=1,
+                    verbose=(n_seeds == 1)  # Only verbose for single seed
                 )
-            
-            start_time = time.time()
-            final_policy, final_model = fspmi.run(
-                copy.deepcopy(self.initial_policy),
-                copy.deepcopy(self.initial_model)
-            )
-            elapsed = time.time() - start_time
-            
-            # Log to WandB
-            if self.use_wandb:
-                for i, perf in enumerate(fspmi.logger.true_performances):
-                    wandb.log({
-                        "round": i,
-                        "performance": perf,
-                        "avg_return": fspmi.logger.avg_returns[i] if i < len(fspmi.logger.avg_returns) else None
-                    })
-                wandb.log({
-                    "final_performance": fspmi.logger.true_performances[-1],
-                    "total_rounds": len(fspmi.logger.iterations),
-                    "total_samples": sum(fspmi.logger.total_samples),
-                    "elapsed_time": elapsed
+                
+                # KEY: Set different seed for each agent in each run
+                for i, agent in enumerate(fspmi.agents):
+                    agent.rng = np.random.RandomState(seed * 10000 + i)
+                
+                start_time = time.time()
+                final_policy, final_model = fspmi.run(
+                    copy.deepcopy(self.initial_policy),
+                    copy.deepcopy(self.initial_model)
+                )
+                elapsed = time.time() - start_time
+                
+                if n_seeds > 1:
+                    perf = fspmi.logger.true_performances[-1] if fspmi.logger.true_performances else float('nan')
+                    print(f"Perf: {perf:.4f}, Time: {elapsed:.1f}s")
+                
+                # Save individual seed result
+                filename = f"fspmi_{config_key}_seed{seed}.csv"
+                fspmi.logger.save(str(self.output_dir / filename))
+                
+                seed_results.append({
+                    'fspmi': fspmi,
+                    'final_policy': final_policy,
+                    'final_model': final_model,
+                    'elapsed': elapsed
                 })
-                wandb.finish()
             
-            # Save results
-            filename = f"fspmi_n{agent_config['n_agents']}.csv"
-            fspmi.logger.save(str(self.output_dir / filename))
+            # Save aggregated results if multiple seeds
+            if n_seeds > 1:
+                self._save_aggregated_results(config_key, seed_results)
             
-            if self.config['output']['save_gp_metrics'] and hasattr(model_chooser, 'save_gp_times'):
-                model_chooser.save_gp_times(
-                    str(self.output_dir / f"fspmi_n{agent_config['n_agents']}")
-                )
-            
-            perf = fspmi.logger.true_performances[-1] if fspmi.logger.true_performances else float('nan')
-            print(f"Completed in {elapsed:.2f}s | Rounds: {len(fspmi.logger.iterations)} | "
-                  f"Performance: {perf:.4f}")
-            
-            results[f"n{agent_config['n_agents']}"] = {
-                'fspmi': fspmi,
-                'final_policy': final_policy,
-                'final_model': final_model,
-                'elapsed_time': elapsed,
-                'config': agent_config
-            }
+            results[config_key] = seed_results
         
         return results
+
+
+    def _save_aggregated_results(self, config_key: str, seed_results: List[Dict]):
+        """Save mean ± std across seeds, including alpha and beta"""
+        import pandas as pd
+        
+        # Find minimum length across seeds
+        min_len = min(len(sr['fspmi'].logger.true_performances) for sr in seed_results)
+        
+        # Stack results
+        true_perfs = np.array([sr['fspmi'].logger.true_performances[:min_len] for sr in seed_results])
+        mc_perfs = np.array([sr['fspmi'].logger.performances[:min_len] for sr in seed_results])
+        bounds = np.array([sr['fspmi'].logger.bounds[:min_len] for sr in seed_results])
+        alphas = np.array([sr['fspmi'].logger.alphas[:min_len] for sr in seed_results])
+        betas = np.array([sr['fspmi'].logger.betas[:min_len] for sr in seed_results])
+        
+        # Cumulative samples
+        cum_samples = []
+        for sr in seed_results:
+            cumsum = np.cumsum(sr['fspmi'].logger.total_samples[:min_len])
+            cum_samples.append(cumsum)
+        cum_samples = np.array(cum_samples)
+        
+        # Create dataframe with all metrics
+        df = pd.DataFrame({
+            'iteration': range(min_len),
+            'true_perf_mean': np.mean(true_perfs, axis=0),
+            'true_perf_std': np.std(true_perfs, axis=0),
+            'mc_perf_mean': np.mean(mc_perfs, axis=0),
+            'mc_perf_std': np.std(mc_perfs, axis=0),
+            'bound_mean': np.mean(bounds, axis=0),
+            'bound_std': np.std(bounds, axis=0),
+            'alpha_mean': np.mean(alphas, axis=0),
+            'alpha_std': np.std(alphas, axis=0),
+            'beta_mean': np.mean(betas, axis=0),
+            'beta_std': np.std(betas, axis=0),
+            'cum_samples_mean': np.mean(cum_samples, axis=0),
+        })
+        
+        filename = f"fspmi_{config_key}_aggregated.csv"
+        df.to_csv(self.output_dir / filename, index=False)
+        print(f"  Saved: {filename}")
     
     def run_federated_sapmi(self) -> Dict[str, Any]:
         """Run Federated SA-PMI with all configurations"""
@@ -584,7 +604,7 @@ class ExperimentRunner:
             self.results['sapmi'] = self.run_sapmi()
         
         if 'federated_spmi' in experiments:
-            self.results['federated_spmi'] = self.run_federated_spmi()
+            self.results['federated_spmi'] = self.run_federated_spmi(n_seeds=self.n_seeds)
         
         if 'federated_sapmi' in experiments:
             self.results['federated_sapmi'] = self.run_federated_sapmi()
@@ -709,9 +729,29 @@ Examples:
             help="Override the model chooser type. 'gb' is an alias for 'greedy'."
         )
     
+    # Add to argument parser
+    parser.add_argument(
+        '--n_agents',
+        type=int,
+        help='Override n_agents for all federated configs'
+    )
+
+    parser.add_argument(
+        '--eps_per_round',
+        type=int,
+        help='Override episodes_per_round for all federated configs'
+    )
+    parser.add_argument(
+        '--n_seeds',
+        type=int,
+        default=1,
+        help='Number of random seeds to run (for confidence intervals)'
+    )
     # -------------------------------
     
     args = parser.parse_args()
+
+
     
     # Check if config exists
     if not os.path.exists(args.config):
@@ -722,11 +762,22 @@ Examples:
     # Initialize and run experiments
     runner = ExperimentRunner(
         config_path=args.config,
-        use_wandb=not args.no_wandb
+        use_wandb=not args.no_wandb,
+        n_seeds=args.n_seeds
     )
     
     # --- Apply Overrides to Runner Config ---
-    
+    # Then in the override section:
+    if args.n_agents is not None:
+        print(f"Applying N_AGENTS override: {args.n_agents}")
+        for config in runner.config['experiments']['federated_spmi']['configurations']:
+            config['n_agents'] = args.n_agents
+
+    if args.eps_per_round is not None:
+        print(f"Applying EPS_PER_ROUND override: {args.eps_per_round}")
+        for config in runner.config['experiments']['federated_spmi']['configurations']:
+            config['episodes_per_round'] = args.eps_per_round
+            
     if args.model_chooser is not None:
             # Handle alias: 'gb' -> 'greedy'
             mc_type = 'greedy' if args.model_chooser == 'gb' else args.model_chooser
@@ -773,7 +824,7 @@ Examples:
                     for key in ['start_iter', 'end_iter', 'start_weight', 'end_weight', 'growth_rate', 'max_weight']:
                         curriculum.pop(key, None)
 
-    # ----------------------------------------------
+# ----  ------------------------------------------
     
     runner.run_all(experiments=args.experiment)
 
