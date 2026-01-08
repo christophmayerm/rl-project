@@ -508,8 +508,13 @@ class HeterogeneousFSPMI:
             # ================================================
             # Step 4: Compute safe update
             # ================================================
+            debug_this_iter = verbose and iteration == 0
+            if debug_this_iter:
+                print(f"  [DEBUG] Q range: [{global_stats.Q_global.min():.4f}, {global_stats.Q_global.max():.4f}]")
+                print(f"  [DEBUG] d_mu non-zero entries: {np.sum(global_stats.d_mu_global > 1e-6)}/{self.nS}")
+            
             alpha_star, beta_star, bound_value, p_adv, m_adv = self._compute_safe_update(
-                policy, model, target_policy, target_model, global_stats
+                policy, model, target_policy, target_model, global_stats, debug=debug_this_iter
             )
             
             # ================================================
@@ -554,6 +559,7 @@ class HeterogeneousFSPMI:
                 variant_returns = {s.variant_description: s.avg_return 
                                    for s in local_stats_list}
                 print(f"  True perf: {true_perf:.4f}, α*: {alpha_star:.4f}, β*: {beta_star:.4f}")
+                print(f"  Policy adv: {p_adv:.6f}, Model adv: {m_adv:.6f}")
                 print(f"  Per-variant returns: {variant_returns}")
             
             # Check convergence
@@ -694,7 +700,7 @@ class HeterogeneousFSPMI:
         return TabularModel(greedy_rep, self.nS, self.nA)
     
     def _compute_safe_update(self, policy, model, target_policy, target_model,
-                             global_stats: GlobalStatistics) -> Tuple[float, float, float, float, float]:
+                             global_stats: GlobalStatistics, debug: bool = False) -> Tuple[float, float, float, float, float]:
         """Compute optimal step sizes using decoupled bound."""
         Q = global_stats.Q_global
         U = global_stats.U_global
@@ -726,14 +732,39 @@ class HeterogeneousFSPMI:
         m_dist_mean = np.dot(delta_mu, m_dist_per_sa)
         
         # Compute optimal step sizes (from SPMI paper Table 1)
+        # Full candidate set for decoupled bound optimization
         eps = 1e-24
         gamma = self.gamma
         
-        alpha0 = ((1 - gamma) * p_adv) / (self.delta_q * gamma * p_dist_sup * p_dist_mean + eps)
-        beta0 = ((1 - gamma) * m_adv) / (self.delta_q * (gamma ** 2) * m_dist_sup * m_dist_mean + eps)
+        # α₀: optimal α when β=0
+        alpha0_raw = ((1 - gamma) * p_adv) / (self.delta_q * gamma * p_dist_sup * p_dist_mean + eps)
         
-        alpha0 = np.clip(alpha0, 0.0, 1.0)
-        beta0 = np.clip(beta0, 0.0, 1.0)
+        # β₀: optimal β when α=0  
+        beta0_raw = ((1 - gamma) * m_adv) / (self.delta_q * (gamma ** 2) * m_dist_sup * m_dist_mean + eps)
+        
+        # α₁: optimal α when β=1
+        alpha1_raw = alpha0_raw - 0.5 * (
+            m_dist_mean / (p_dist_mean + eps) + m_dist_sup / (p_dist_sup + eps)
+        )
+        
+        # β₁: optimal β when α=1
+        beta1_raw = beta0_raw - 0.5 / gamma * (
+            p_dist_mean / (m_dist_mean + eps) + p_dist_sup / (m_dist_sup + eps)
+        )
+        
+        if debug:
+            print(f"  [STEP DEBUG] p_adv={p_adv:.6f}, m_adv={m_adv:.6f}")
+            print(f"  [STEP DEBUG] p_dist_sup={p_dist_sup:.4f}, p_dist_mean={p_dist_mean:.6f}")
+            print(f"  [STEP DEBUG] m_dist_sup={m_dist_sup:.4f}, m_dist_mean={m_dist_mean:.6f}")
+            print(f"  [STEP DEBUG] delta_q={self.delta_q:.4f}, gamma={gamma:.2f}")
+            print(f"  [STEP DEBUG] alpha0_raw={alpha0_raw:.6f}, beta0_raw={beta0_raw:.6f}")
+            print(f"  [STEP DEBUG] alpha1_raw={alpha1_raw:.6f}, beta1_raw={beta1_raw:.6f}")
+        
+        # Clip to [0, 1]
+        alpha0 = np.clip(alpha0_raw, 0.0, 1.0)
+        alpha1 = np.clip(alpha1_raw, 0.0, 1.0)
+        beta0 = np.clip(beta0_raw, 0.0, 1.0)
+        beta1 = np.clip(beta1_raw, 0.0, 1.0)
         
         # Evaluate bound at candidates
         def bound(a, b):
@@ -746,15 +777,29 @@ class HeterogeneousFSPMI:
             )
             return advantage - penalty
         
-        candidates = [(alpha0, 0.0), (0.0, beta0), (alpha0, beta0)]
+        # Full candidate set from SPMI paper
+        candidates = [
+            (alpha0, 0.0),      # Only policy update
+            (0.0, beta0),       # Only model update
+            (alpha1, 1.0),      # Policy update with full model update
+            (1.0, beta1),       # Full policy update with model update
+        ]
+        
         best_bound = float('-inf')
         alpha_star, beta_star = 0.0, 0.0
         
+        if debug:
+            print(f"  [BOUND DEBUG] Evaluating candidates:")
+        
         for a, b in candidates:
-            b_val = bound(a, b)
-            if b_val > best_bound:
-                best_bound = b_val
-                alpha_star, beta_star = a, b
+            if a >= 0 and b >= 0:  # Only valid candidates
+                b_val = bound(a, b)
+                if debug:
+                    print(f"    (α={a:.6f}, β={b:.6f}) -> bound={b_val:.8f}")
+                if b_val > best_bound:
+                    best_bound = b_val
+                    alpha_star = a
+                    beta_star = b
         
         return alpha_star, beta_star, best_bound, p_adv, m_adv
     

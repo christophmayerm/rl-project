@@ -48,19 +48,30 @@ def run_dynamics_experiment():
     - Agent 2: k=0.7 (high-speed dynamics favored)
     
     The learned policy should be robust across all dynamics regimes.
+    Uses shaped rewards for better learning signal.
     """
     print("=" * 60)
     print("EXPERIMENT 1: Dynamics Heterogeneity")
     print("=" * 60)
     
-    # Create heterogeneous F-SPMI
-    hfspmi = create_dynamics_heterogeneous_fspmi(
-        track_file="T1",
-        k_values=[0.3, 0.5, 0.7],
-        episodes_per_agent=50,
-        n_iterations=50,
+    # Use shaped rewards: [goal, offroad, zero_speed, low_speed, high_speed]
+    shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
+    
+    # Create heterogeneous F-SPMI with shaped rewards
+    config = HeterogeneousConfig(
+        variants=[
+            EnvironmentVariant(0, "T1", k=0.3, reward_weight=shaped_reward,
+                             description="k=0.3 (low-speed favored)"),
+            EnvironmentVariant(1, "T1", k=0.5, reward_weight=shaped_reward,
+                             description="k=0.5 (balanced)"),
+            EnvironmentVariant(2, "T1", k=0.7, reward_weight=shaped_reward,
+                             description="k=0.7 (high-speed favored)"),
+        ],
+        episodes_per_agent=200,
+        n_iterations=100,
         use_parallel=True
     )
+    hfspmi = HeterogeneousFSPMI(config)
     
     # Initialize policy and model
     initial_policy = create_initial_policy(hfspmi.nS, hfspmi.nA)
@@ -88,18 +99,29 @@ def run_robustness_experiment():
     - Agent 2: pfail=0.1 (10% failure rate)
     
     The learned policy should be conservative enough to handle failures.
+    Uses shaped rewards for better learning signal.
     """
     print("\n" + "=" * 60)
     print("EXPERIMENT 2: Robustness Heterogeneity")
     print("=" * 60)
     
-    hfspmi = create_robustness_heterogeneous_fspmi(
-        track_file="T1",
-        pfail_values=[0.0, 0.05, 0.1],
-        episodes_per_agent=50,
-        n_iterations=50,
+    # Use shaped rewards
+    shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
+    
+    config = HeterogeneousConfig(
+        variants=[
+            EnvironmentVariant(0, "T1", k=0.5, pfail=0.0, reward_weight=shaped_reward,
+                             description="pfail=0.0 (safe)"),
+            EnvironmentVariant(1, "T1", k=0.5, pfail=0.05, reward_weight=shaped_reward,
+                             description="pfail=0.05 (moderate)"),
+            EnvironmentVariant(2, "T1", k=0.5, pfail=0.1, reward_weight=shaped_reward,
+                             description="pfail=0.1 (risky)"),
+        ],
+        episodes_per_agent=200,
+        n_iterations=100,
         use_parallel=True
     )
+    hfspmi = HeterogeneousFSPMI(config)
     
     initial_policy = create_initial_policy(hfspmi.nS, hfspmi.nA)
     initial_model = create_initial_model(hfspmi.ref_env)
@@ -119,15 +141,32 @@ def run_mixed_experiment():
     Experiment 3: Mixed heterogeneity (dynamics + failure).
     
     Most realistic scenario with both types of variation.
+    Uses shaped rewards for better learning signal.
     """
     print("\n" + "=" * 60)
     print("EXPERIMENT 3: Mixed Heterogeneity")
     print("=" * 60)
     
-    config = HeterogeneousConfig.create_mixed_variants(
-        track_file="T1",
-        episodes_per_agent=50,
-        n_iterations=50,
+    # Use shaped rewards
+    shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
+    
+    variants = [
+        EnvironmentVariant(0, "T1", k=0.3, pfail=0.0, reward_weight=shaped_reward,
+                         description="low-speed, safe"),
+        EnvironmentVariant(1, "T1", k=0.5, pfail=0.0, reward_weight=shaped_reward,
+                         description="balanced, safe"),
+        EnvironmentVariant(2, "T1", k=0.7, pfail=0.0, reward_weight=shaped_reward,
+                         description="high-speed, safe"),
+        EnvironmentVariant(3, "T1", k=0.5, pfail=0.05, reward_weight=shaped_reward,
+                         description="balanced, moderate risk"),
+        EnvironmentVariant(4, "T1", k=0.5, pfail=0.1, reward_weight=shaped_reward,
+                         description="balanced, high risk"),
+    ]
+    
+    config = HeterogeneousConfig(
+        variants=variants,
+        episodes_per_agent=200,
+        n_iterations=100,
         use_parallel=True
     )
     
@@ -151,10 +190,14 @@ def run_custom_experiment():
     Experiment 4: Custom variant configuration with hazard zones.
     
     Demonstrates full flexibility of the configuration system.
+    Uses shaped rewards for better learning signal.
     """
     print("\n" + "=" * 60)
     print("EXPERIMENT 4: Custom Variants with Hazard Zones")
     print("=" * 60)
+    
+    # Use shaped rewards
+    shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
     
     # Define custom variants
     variants = [
@@ -163,6 +206,7 @@ def run_custom_experiment():
             track_file="T1",
             k=0.5,
             pfail=0.0,
+            reward_weight=shaped_reward,
             description="baseline"
         ),
         EnvironmentVariant(
@@ -170,6 +214,7 @@ def run_custom_experiment():
             track_file="T1",
             k=0.5,
             pfail=0.0,
+            reward_weight=shaped_reward,
             hazard_positions=[(3, 3), (3, 4), (4, 3)],  # Add hazard zone
             hazard_penalty=-0.5,
             description="hazard_zone_A"
@@ -179,6 +224,7 @@ def run_custom_experiment():
             track_file="T1",
             k=0.5,
             pfail=0.0,
+            reward_weight=shaped_reward,
             hazard_positions=[(5, 5), (5, 6), (6, 5)],  # Different hazard zone
             hazard_penalty=-0.5,
             description="hazard_zone_B"
@@ -187,8 +233,8 @@ def run_custom_experiment():
     
     config = HeterogeneousConfig(
         variants=variants,
-        episodes_per_agent=50,
-        n_iterations=50,
+        episodes_per_agent=200,
+        n_iterations=100,
         use_parallel=True
     )
     
@@ -212,20 +258,26 @@ def compare_homogeneous_vs_heterogeneous():
     Comparison: Standard (homogeneous) vs Heterogeneous F-SPMI.
     
     Shows that heterogeneous training produces more robust policies.
+    Uses shaped rewards to enable meaningful learning.
     """
     print("\n" + "=" * 60)
     print("COMPARISON: Homogeneous vs Heterogeneous")
     print("=" * 60)
     
+    # Use shaped rewards: [goal, offroad, zero_speed, low_speed, high_speed]
+    # This gives the agent more learning signal than sparse goal-only rewards
+    shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
+    
     # Homogeneous: All agents same environment
     print("\n--- Homogeneous (all k=0.5) ---")
     homo_config = HeterogeneousConfig(
         variants=[
-            EnvironmentVariant(i, "T1", k=0.5, description=f"agent_{i}")
+            EnvironmentVariant(i, "T1", k=0.5, reward_weight=shaped_reward,
+                             description=f"agent_{i}")
             for i in range(3)
         ],
-        episodes_per_agent=50,
-        n_iterations=50,
+        episodes_per_agent=200,
+        n_iterations=100,
         use_parallel=True
     )
     homo_fspmi = HeterogeneousFSPMI(homo_config)
@@ -239,13 +291,20 @@ def compare_homogeneous_vs_heterogeneous():
     
     # Heterogeneous: Different environments
     print("\n--- Heterogeneous (k=0.3, 0.5, 0.7) ---")
-    hetero_fspmi = create_dynamics_heterogeneous_fspmi(
-        track_file="T1",
-        k_values=[0.3, 0.5, 0.7],
-        episodes_per_agent=50,
-        n_iterations=50,
+    hetero_config = HeterogeneousConfig(
+        variants=[
+            EnvironmentVariant(0, "T1", k=0.3, reward_weight=shaped_reward,
+                             description="k=0.3"),
+            EnvironmentVariant(1, "T1", k=0.5, reward_weight=shaped_reward,
+                             description="k=0.5"),
+            EnvironmentVariant(2, "T1", k=0.7, reward_weight=shaped_reward,
+                             description="k=0.7"),
+        ],
+        episodes_per_agent=200,
+        n_iterations=100,
         use_parallel=True
     )
+    hetero_fspmi = HeterogeneousFSPMI(hetero_config)
     
     hetero_policy, hetero_model = hetero_fspmi.run(
         initial_policy, initial_model, verbose=False
@@ -265,7 +324,8 @@ def compare_homogeneous_vs_heterogeneous():
     
     for test_k in [0.2, 0.5, 0.8]:
         test_env = RaceTrackConfigurableEnv(
-            "T1", initial_configuration=[test_k, 1-test_k, 0, 0]
+            "T1", initial_configuration=[test_k, 1-test_k, 0, 0],
+            reward_weight=shaped_reward
         )
         reward = TabularReward(test_env.P, test_env.nS, test_env.nA)
         
