@@ -57,6 +57,12 @@ class HeterogeneousConfig:
     use_parallel: bool = True
     n_workers: Optional[int] = None  # None = use all CPUs
     
+    # Learning speed options
+    update_mode: str = 'standard'  # 'standard', 'alternating', 'policy_only', 'model_only'
+    target_policy_type: str = 'greedy'  # 'greedy' or 'softmax'
+    softmax_temperature: float = 1.0  # Temperature for softmax target policy
+    min_step_size: float = 0.0  # Minimum step size (0 = no floor, >0 = force progress)
+    
     @classmethod
     def create_dynamics_variants(cls, track_file: str = "T1", 
                                   k_values: List[float] = [0.3, 0.5, 0.7],
@@ -514,7 +520,8 @@ class HeterogeneousFSPMI:
                 print(f"  [DEBUG] d_mu non-zero entries: {np.sum(global_stats.d_mu_global > 1e-6)}/{self.nS}")
             
             alpha_star, beta_star, bound_value, p_adv, m_adv = self._compute_safe_update(
-                policy, model, target_policy, target_model, global_stats, debug=debug_this_iter
+                policy, model, target_policy, target_model, global_stats, 
+                debug=debug_this_iter, iteration=iteration
             )
             
             # ================================================
@@ -662,21 +669,32 @@ class HeterogeneousFSPMI:
         )
     
     def _choose_target_policy(self, current, d_mu, Q, chooser=None):
-        """Choose target policy (greedy w.r.t. Q)."""
+        """Choose target policy (greedy or softmax w.r.t. Q)."""
         if chooser is not None:
             _, _, _, target = chooser.choose(current, d_mu, Q)
             return target
         
-        # Greedy policy
-        greedy_rep = {s: np.zeros(self.nA) for s in range(self.nS)}
-        for s in range(self.nS):
-            q_array = Q[s * self.nA:(s + 1) * self.nA]
-            max_val = np.max(q_array)
-            greedy_actions = np.where(np.abs(q_array - max_val) < 1e-10)[0]
-            greedy_rep[s][greedy_actions] = 1.0 / len(greedy_actions)
+        if self.config.target_policy_type == 'softmax':
+            # Softmax policy - smoother, smaller distances
+            temp = self.config.softmax_temperature
+            target_rep = {s: np.zeros(self.nA) for s in range(self.nS)}
+            for s in range(self.nS):
+                q_array = Q[s * self.nA:(s + 1) * self.nA]
+                # Subtract max for numerical stability
+                q_shifted = q_array - np.max(q_array)
+                exp_q = np.exp(q_shifted / temp)
+                target_rep[s] = exp_q / (np.sum(exp_q) + 1e-10)
+        else:
+            # Greedy policy
+            target_rep = {s: np.zeros(self.nA) for s in range(self.nS)}
+            for s in range(self.nS):
+                q_array = Q[s * self.nA:(s + 1) * self.nA]
+                max_val = np.max(q_array)
+                greedy_actions = np.where(np.abs(q_array - max_val) < 1e-10)[0]
+                target_rep[s][greedy_actions] = 1.0 / len(greedy_actions)
         
         from utils.tabular import TabularPolicy
-        return TabularPolicy(greedy_rep, self.nS, self.nA)
+        return TabularPolicy(target_rep, self.nS, self.nA)
     
     def _choose_target_model(self, current, delta_mu, U, chooser=None):
         """Choose target model (greedy w.r.t. U)."""
@@ -700,7 +718,8 @@ class HeterogeneousFSPMI:
         return TabularModel(greedy_rep, self.nS, self.nA)
     
     def _compute_safe_update(self, policy, model, target_policy, target_model,
-                             global_stats: GlobalStatistics, debug: bool = False) -> Tuple[float, float, float, float, float]:
+                             global_stats: GlobalStatistics, debug: bool = False,
+                             iteration: int = 0) -> Tuple[float, float, float, float, float]:
         """Compute optimal step sizes using decoupled bound."""
         Q = global_stats.Q_global
         U = global_stats.U_global
@@ -732,7 +751,6 @@ class HeterogeneousFSPMI:
         m_dist_mean = np.dot(delta_mu, m_dist_per_sa)
         
         # Compute optimal step sizes (from SPMI paper Table 1)
-        # Full candidate set for decoupled bound optimization
         eps = 1e-24
         gamma = self.gamma
         
@@ -777,19 +795,33 @@ class HeterogeneousFSPMI:
             )
             return advantage - penalty
         
-        # Full candidate set from SPMI paper
-        candidates = [
-            (alpha0, 0.0),      # Only policy update
-            (0.0, beta0),       # Only model update
-            (alpha1, 1.0),      # Policy update with full model update
-            (1.0, beta1),       # Full policy update with model update
-        ]
+        # Select candidate set based on update mode
+        update_mode = self.config.update_mode
+        
+        if update_mode == 'alternating':
+            # Alternate between policy-only and model-only updates
+            if iteration % 2 == 0:
+                candidates = [(alpha0, 0.0)]  # Policy update only
+            else:
+                candidates = [(0.0, beta0)]   # Model update only
+        elif update_mode == 'policy_only':
+            candidates = [(alpha0, 0.0)]
+        elif update_mode == 'model_only':
+            candidates = [(0.0, beta0)]
+        else:  # standard
+            # Full candidate set from SPMI paper
+            candidates = [
+                (alpha0, 0.0),      # Only policy update
+                (0.0, beta0),       # Only model update
+                (alpha1, 1.0),      # Policy update with full model update
+                (1.0, beta1),       # Full policy update with model update
+            ]
         
         best_bound = float('-inf')
         alpha_star, beta_star = 0.0, 0.0
         
         if debug:
-            print(f"  [BOUND DEBUG] Evaluating candidates:")
+            print(f"  [BOUND DEBUG] Update mode: {update_mode}, Evaluating candidates:")
         
         for a, b in candidates:
             if a >= 0 and b >= 0:  # Only valid candidates
@@ -800,6 +832,20 @@ class HeterogeneousFSPMI:
                     best_bound = b_val
                     alpha_star = a
                     beta_star = b
+        
+        # Apply minimum step size if configured
+        min_step = self.config.min_step_size
+        if min_step > 0:
+            if p_adv > 0 and alpha_star < min_step and alpha_star > 0:
+                alpha_star = min_step
+            if m_adv > 0 and beta_star < min_step and beta_star > 0:
+                beta_star = min_step
+            # For alternating mode, apply min step to the active component
+            if update_mode == 'alternating':
+                if iteration % 2 == 0 and p_adv > 0:
+                    alpha_star = max(alpha_star, min_step)
+                elif iteration % 2 == 1 and m_adv > 0:
+                    beta_star = max(beta_star, min_step)
         
         return alpha_star, beta_star, best_bound, p_adv, m_adv
     

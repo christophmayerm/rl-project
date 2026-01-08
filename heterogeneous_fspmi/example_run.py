@@ -48,7 +48,7 @@ def run_dynamics_experiment():
     - Agent 2: k=0.7 (high-speed dynamics favored)
     
     The learned policy should be robust across all dynamics regimes.
-    Uses shaped rewards for better learning signal.
+    Uses shaped rewards and alternating updates for faster learning.
     """
     print("=" * 60)
     print("EXPERIMENT 1: Dynamics Heterogeneity")
@@ -57,7 +57,7 @@ def run_dynamics_experiment():
     # Use shaped rewards: [goal, offroad, zero_speed, low_speed, high_speed]
     shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
     
-    # Create heterogeneous F-SPMI with shaped rewards
+    # Create heterogeneous F-SPMI with faster learning settings
     config = HeterogeneousConfig(
         variants=[
             EnvironmentVariant(0, "T1", k=0.3, reward_weight=shaped_reward,
@@ -69,7 +69,11 @@ def run_dynamics_experiment():
         ],
         episodes_per_agent=200,
         n_iterations=100,
-        use_parallel=True
+        use_parallel=True,
+        update_mode='alternating',  # Force both policy and model to update
+        target_policy_type='softmax',  # Smoother target for larger step sizes
+        softmax_temperature=0.5,
+        min_step_size=0.01,  # Ensure minimum progress
     )
     hfspmi = HeterogeneousFSPMI(config)
     
@@ -99,7 +103,7 @@ def run_robustness_experiment():
     - Agent 2: pfail=0.1 (10% failure rate)
     
     The learned policy should be conservative enough to handle failures.
-    Uses shaped rewards for better learning signal.
+    Uses shaped rewards and alternating updates for faster learning.
     """
     print("\n" + "=" * 60)
     print("EXPERIMENT 2: Robustness Heterogeneity")
@@ -119,7 +123,11 @@ def run_robustness_experiment():
         ],
         episodes_per_agent=200,
         n_iterations=100,
-        use_parallel=True
+        use_parallel=True,
+        update_mode='alternating',
+        target_policy_type='softmax',
+        softmax_temperature=0.5,
+        min_step_size=0.01,
     )
     hfspmi = HeterogeneousFSPMI(config)
     
@@ -141,7 +149,7 @@ def run_mixed_experiment():
     Experiment 3: Mixed heterogeneity (dynamics + failure).
     
     Most realistic scenario with both types of variation.
-    Uses shaped rewards for better learning signal.
+    Uses shaped rewards and alternating updates for faster learning.
     """
     print("\n" + "=" * 60)
     print("EXPERIMENT 3: Mixed Heterogeneity")
@@ -167,7 +175,11 @@ def run_mixed_experiment():
         variants=variants,
         episodes_per_agent=200,
         n_iterations=100,
-        use_parallel=True
+        use_parallel=True,
+        update_mode='alternating',
+        target_policy_type='softmax',
+        softmax_temperature=0.5,
+        min_step_size=0.01,
     )
     
     hfspmi = HeterogeneousFSPMI(config)
@@ -190,7 +202,7 @@ def run_custom_experiment():
     Experiment 4: Custom variant configuration with hazard zones.
     
     Demonstrates full flexibility of the configuration system.
-    Uses shaped rewards for better learning signal.
+    Uses shaped rewards and alternating updates for faster learning.
     """
     print("\n" + "=" * 60)
     print("EXPERIMENT 4: Custom Variants with Hazard Zones")
@@ -235,7 +247,11 @@ def run_custom_experiment():
         variants=variants,
         episodes_per_agent=200,
         n_iterations=100,
-        use_parallel=True
+        use_parallel=True,
+        update_mode='alternating',
+        target_policy_type='softmax',
+        softmax_temperature=0.5,
+        min_step_size=0.01,
     )
     
     hfspmi = HeterogeneousFSPMI(config)
@@ -258,7 +274,7 @@ def compare_homogeneous_vs_heterogeneous():
     Comparison: Standard (homogeneous) vs Heterogeneous F-SPMI.
     
     Shows that heterogeneous training produces more robust policies.
-    Uses shaped rewards to enable meaningful learning.
+    Uses alternating updates for faster learning.
     """
     print("\n" + "=" * 60)
     print("COMPARISON: Homogeneous vs Heterogeneous")
@@ -278,7 +294,11 @@ def compare_homogeneous_vs_heterogeneous():
         ],
         episodes_per_agent=200,
         n_iterations=100,
-        use_parallel=True
+        use_parallel=True,
+        update_mode='alternating',
+        target_policy_type='softmax',
+        softmax_temperature=0.5,
+        min_step_size=0.01,
     )
     homo_fspmi = HeterogeneousFSPMI(homo_config)
     
@@ -302,7 +322,11 @@ def compare_homogeneous_vs_heterogeneous():
         ],
         episodes_per_agent=200,
         n_iterations=100,
-        use_parallel=True
+        use_parallel=True,
+        update_mode='alternating',
+        target_policy_type='softmax',
+        softmax_temperature=0.5,
+        min_step_size=0.01,
     )
     hetero_fspmi = HeterogeneousFSPMI(hetero_config)
     

@@ -28,72 +28,161 @@ def create_initial_model(env) -> TabularModel:
     return TabularModel(env.P, env.nS, env.nA)
 
 
-def run_debug():
-    """Run a short experiment with detailed debug output."""
+def run_standard_mode():
+    """Test standard mode (original issue: α*=0 always)."""
     print("=" * 70)
-    print("DEBUG: Step Size Calculation Analysis")
+    print("TEST 1: Standard Mode (original)")
     print("=" * 70)
     
-    # Use shaped rewards
     shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
     
-    # Create config with just 2 iterations for debugging
     config = HeterogeneousConfig(
         variants=[
-            EnvironmentVariant(0, "T1", k=0.3, reward_weight=shaped_reward,
-                             description="k=0.3"),
-            EnvironmentVariant(1, "T1", k=0.5, reward_weight=shaped_reward,
-                             description="k=0.5"),
-            EnvironmentVariant(2, "T1", k=0.7, reward_weight=shaped_reward,
-                             description="k=0.7"),
+            EnvironmentVariant(0, "T1", k=0.3, reward_weight=shaped_reward, description="k=0.3"),
+            EnvironmentVariant(1, "T1", k=0.5, reward_weight=shaped_reward, description="k=0.5"),
+            EnvironmentVariant(2, "T1", k=0.7, reward_weight=shaped_reward, description="k=0.7"),
         ],
         episodes_per_agent=200,
-        n_iterations=3,  # Just 3 iterations for debugging
-        use_parallel=True
+        n_iterations=20,
+        use_parallel=True,
+        update_mode='standard',
+        target_policy_type='greedy',
     )
     
     hfspmi = HeterogeneousFSPMI(config)
-    
-    print(f"\nEnvironment info:")
-    print(f"  nS = {hfspmi.nS}")
-    print(f"  nA = {hfspmi.nA}")
-    print(f"  gamma = {hfspmi.gamma}")
-    print(f"  horizon = {hfspmi.horizon}")
-    print(f"  delta_q = {hfspmi.delta_q:.4f}")
-    print()
-    
     initial_policy = create_initial_policy(hfspmi.nS, hfspmi.nA)
     initial_model = create_initial_model(hfspmi.ref_env)
     
-    # Run with verbose
-    final_policy, final_model = hfspmi.run(
-        initial_policy, initial_model, verbose=True
+    final_policy, final_model = hfspmi.run(initial_policy, initial_model, verbose=True)
+    print(f"\nFinal performance: {hfspmi.logger.true_performances[-1]:.4f}")
+    return hfspmi
+
+
+def run_alternating_mode():
+    """Test alternating mode (forces both policy and model updates)."""
+    print("\n" + "=" * 70)
+    print("TEST 2: Alternating Mode (forces progress on both)")
+    print("=" * 70)
+    
+    shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
+    
+    config = HeterogeneousConfig(
+        variants=[
+            # EnvironmentVariant(0, "T4", k=0.3, reward_weight=shaped_reward, description="k=0.3"),
+            # EnvironmentVariant(1, "T4", k=0.5, reward_weight=shaped_reward, description="k=0.5"),
+            # EnvironmentVariant(2, "T4", k=0.7, reward_weight=shaped_reward, description="k=0.7"),
+            EnvironmentVariant(3, "T4", pfail=0.01, reward_weight=shaped_reward, description="pfail=0.01"),
+            EnvironmentVariant(4, "T4", pfail=0.05, reward_weight=shaped_reward, description="pfail=0.05"),
+            EnvironmentVariant(5, "T4", pfail=0.1, reward_weight=shaped_reward, description="pfail=0.1"),
+        ],
+        episodes_per_agent=400,
+        n_iterations=500,
+        use_parallel=True,
+        update_mode='alternating',  # Force alternating updates
+        target_policy_type='greedy',
+        min_step_size=0.01,  # Ensure minimum progress
     )
     
+    hfspmi = HeterogeneousFSPMI(config)
+    initial_policy = create_initial_policy(hfspmi.nS, hfspmi.nA)
+    initial_model = create_initial_model(hfspmi.ref_env)
+    
+    final_policy, final_model = hfspmi.run(initial_policy, initial_model, verbose=True)
+    print(f"\nFinal performance: {hfspmi.logger.true_performances[-1]:.4f}")
+    return hfspmi
+
+
+def run_softmax_mode():
+    """Test softmax target policy (smaller distances → larger step sizes)."""
     print("\n" + "=" * 70)
-    print("Analysis:")
+    print("TEST 3: Softmax Target Policy (smoother updates)")
     print("=" * 70)
-    print("""
-The key issue with α* = 0:
+    
+    shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
+    
+    config = HeterogeneousConfig(
+        variants=[
+            EnvironmentVariant(0, "T1", k=0.3, reward_weight=shaped_reward, description="k=0.3"),
+            EnvironmentVariant(1, "T1", k=0.5, reward_weight=shaped_reward, description="k=0.5"),
+            EnvironmentVariant(2, "T1", k=0.7, reward_weight=shaped_reward, description="k=0.7"),
+        ],
+        episodes_per_agent=200,
+        n_iterations=20,
+        use_parallel=True,
+        update_mode='standard',
+        target_policy_type='softmax',  # Softmax instead of greedy
+        softmax_temperature=0.5,  # Lower = more greedy, higher = more uniform
+    )
+    
+    hfspmi = HeterogeneousFSPMI(config)
+    initial_policy = create_initial_policy(hfspmi.nS, hfspmi.nA)
+    initial_model = create_initial_model(hfspmi.ref_env)
+    
+    final_policy, final_model = hfspmi.run(initial_policy, initial_model, verbose=True)
+    print(f"\nFinal performance: {hfspmi.logger.true_performances[-1]:.4f}")
+    return hfspmi
 
-alpha0 = ((1 - gamma) * p_adv) / (delta_q * gamma * p_dist_sup * p_dist_mean)
 
-If p_dist_mean is VERY SMALL (because d_mu is sparse), then alpha0 becomes VERY LARGE
-and gets clipped to 1.0. But then the bound at (1.0, 0) might be NEGATIVE because
-the penalty term dominates.
-
-Alternatively, if p_adv is small relative to the distances, alpha0 is small.
-
-Check the ratio: p_adv / (p_dist_sup * p_dist_mean)
-- If small: advantage doesn't justify large step
-- If large: step size should be large
-
-The fundamental issue is that MC estimates give:
-1. Noisy Q → noisy greedy policy → potentially wrong direction
-2. Sparse d_mu → p_dist_mean is small but not zero
-3. Overconfident greedy policy → large p_dist_sup
-""")
+def run_aggressive_mode():
+    """Test aggressive mode (alternating + softmax + min step)."""
+    print("\n" + "=" * 70)
+    print("TEST 4: Aggressive Mode (alternating + softmax + min_step)")
+    print("=" * 70)
+    
+    shaped_reward = [1.0, -0.1, -0.05, 0.01, 0.02]
+    
+    config = HeterogeneousConfig(
+        variants=[
+            EnvironmentVariant(0, "T1", k=0.3, reward_weight=shaped_reward, description="k=0.3"),
+            EnvironmentVariant(1, "T1", k=0.5, reward_weight=shaped_reward, description="k=0.5"),
+            EnvironmentVariant(2, "T1", k=0.7, reward_weight=shaped_reward, description="k=0.7"),
+        ],
+        episodes_per_agent=200,
+        n_iterations=50,
+        use_parallel=True,
+        update_mode='alternating',
+        target_policy_type='softmax',
+        softmax_temperature=0.5,
+        min_step_size=0.02,
+    )
+    
+    hfspmi = HeterogeneousFSPMI(config)
+    initial_policy = create_initial_policy(hfspmi.nS, hfspmi.nA)
+    initial_model = create_initial_model(hfspmi.ref_env)
+    
+    final_policy, final_model = hfspmi.run(initial_policy, initial_model, verbose=True)
+    print(f"\nFinal performance: {hfspmi.logger.true_performances[-1]:.4f}")
+    return hfspmi
 
 
 if __name__ == "__main__":
-    run_debug()
+    import argparse
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", type=str, default="all",
+                        choices=["standard", "alternating", "softmax", "aggressive", "all"])
+    args = parser.parse_args()
+    
+    results = {}
+    
+    if args.mode in ["standard", "all"]:
+        results['standard'] = run_standard_mode()
+    
+    if args.mode in ["alternating", "all"]:
+        results['alternating'] = run_alternating_mode()
+    
+    if args.mode in ["softmax", "all"]:
+        results['softmax'] = run_softmax_mode()
+    
+    if args.mode in ["aggressive", "all"]:
+        results['aggressive'] = run_aggressive_mode()
+    
+    if args.mode == "all":
+        print("\n" + "=" * 70)
+        print("SUMMARY")
+        print("=" * 70)
+        for name, hfspmi in results.items():
+            final_perf = hfspmi.logger.true_performances[-1]
+            n_policy_updates = sum(1 for a in hfspmi.logger.alphas if a > 0)
+            n_model_updates = sum(1 for b in hfspmi.logger.betas if b > 0)
+            print(f"  {name:15s}: perf={final_perf:.4f}, policy_updates={n_policy_updates}, model_updates={n_model_updates}")
