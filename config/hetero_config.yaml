@@ -1,0 +1,55 @@
+# Heterogeneous F-SPMI Experiment Configuration
+# =============================================
+#
+# This config controls experiments comparing homogeneous vs heterogeneous
+# federated learning where each agent operates on different MDP variants.
+#
+# Experiment types:
+#   - dynamics: Different k values (speed characteristics)
+#   - robustness: Different pfail values (stochasticity)
+#   - obstacles: Different obstacle configurations
+#   - mixed: Combination of dynamics and robustness
+#
+# Usage:
+#   python simulations/run_heterogeneous_experiments.py --config config/hetero_config.yaml
+#
+# Or with command line overrides:
+#   python simulations/run_heterogeneous_experiments.py --experiment obstacles --n_seeds 5 --step_boost 50
+
+# Environment settings
+track_file: "T1"
+gamma: 0.9
+horizon: 20
+base_pfail: 0.07
+
+# Experiment parameters
+n_iterations: 1000
+episodes_per_agent: 400
+n_seeds: 5
+
+# Heterogeneity options
+dynamics_k_values: [0.3, 0.5, 0.7]      # Speed characteristics
+pfail_values: [0.0, 0.05, 0.1]           # Stochasticity levels
+max_obstacles: 3                          # Maximum obstacles for hardest variant
+n_obstacle_variants: 4                    # Number of obstacle variants (0, 1, 2, 3 obstacles)
+
+# Learning options
+use_parallel: true                        # Enable parallel data collection
+update_mode: "standard"                   # 'standard', 'alternating', 'policy_only'
+target_policy_type: "greedy"              # 'greedy' or 'softmax'
+softmax_temperature: 1.0
+min_step_size: 0.0
+step_size_boost: 1.0                     # Multiply step sizes (helps with slow convergence)
+
+# WandB settings
+wandb_enabled: true
+wandb_project: "heterogeneous-fspmi"
+wandb_entity: null                        # Set to your username/team
+wandb_tags:
+  - "heterogeneous"
+  - "robustness"
+  - "report"
+
+# Output settings
+output_dir: "./data/heterogeneous"
+save_per_seed: true
