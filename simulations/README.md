@@ -1,35 +1,49 @@
 
 # Experiment Set
 
+List of commands to run the experiments from the report with.
 
-## F-SPMI vs SPMI with Greedy as Model chooser with Racetrack T1 (5 seeds)
+## Automatic Bash Runs
+
+### Experiments of Track 1 and 4 (MAIN EXPERIMENTS) 
+
+```bash
+bash simulations/fspmi_vs_spmi_T1_T4.sh
+```
+
+### Experiments of Track 2 and 3 
+```bash
+bash simulations/fspmi_vs_spmi_T2_T3.sh
+```
+
+## Manual Runs
+
+### F-SPMI vs SPMI with Greedy as Model chooser with Racetrack T1 (5 seeds)
 
 ```bash
 # F-SPMI vs SPMI with Greedy as Model Chooser (5 seeds)
 python simulations/run_experiments.py --config config/config_report.yaml --experiment standard_spmi federated_spmi --track T1 --n_seeds 5 --max_iter 1000 --max_rounds 1000 --model_chooser greedy
 ```
 
-## F-SPMI vs SPMI with Gaussian Processes as Model chooser with Racetrack T1 (5 seeds)
+### F-SPMI vs SPMI with Gaussian Processes as Model chooser with Racetrack T1 (5 seeds)
 
 ```bash
 # F-SPMI vs SPMI with GP as Model Chooser (5 seeds)
-python simulations/run_experiments.py --config config/config_report.yaml --experiment standard_spmi federated_spmi --track T1 --n_seeds 5 --max_iter 1000 --max_rounds 1000
---model_chooser gp
+python simulations/run_experiments.py --config config/config_report.yaml --experiment standard_spmi federated_spmi --track T1 --n_seeds 5 --max_iter 1000 --max_rounds 1000 --model_chooser gp
 ```
 
-## F-SPMI vs SPMI with Greedy as Model chooser with Racetrack T4 (5 seeds)
+### F-SPMI vs SPMI with Greedy as Model chooser with Racetrack T4 (5 seeds)
 
 ```bash
 # F-SPMI vs SPMI with Greedy as Model Chooser (5 seeds)
 python simulations/run_experiments.py --config config/config_report.yaml --experiment standard_spmi federated_spmi --track T4 --n_seeds 5 --max_iter 1000 --max_rounds 1000 --model_chooser greedy
 ```
 
-## F-SPMI vs SPMI with Gaussian Processes as Model chooser with Racetrack T4 (5 seeds)
+### F-SPMI vs SPMI with Gaussian Processes as Model chooser with Racetrack T4 (5 seeds)
 
 ```bash
 # F-SPMI vs SPMI with GP as Model Chooser (5 seeds)
-python simulations/run_experiments.py --config config/config_report.yaml --experiment standard_spmi federated_spmi --track T4 --n_seeds 5 --max_iter 1000 --max_rounds 1000
---model_chooser gp
+python simulations/run_experiments.py --config config/config_report.yaml --experiment standard_spmi federated_spmi --track T4 --n_seeds 5 --max_iter 1000 --max_rounds 1000 --model_chooser gp
 ```
 
 
