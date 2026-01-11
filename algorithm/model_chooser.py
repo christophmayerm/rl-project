@@ -148,11 +148,6 @@ class GPModelChooser(ModelChooser):
             # build target model from the selected point
             target_model = model_convex_combination_set(self.original_model, self.model_set, model, self.prev_target_model_vector)
             er_advantage = evaluator.compute_model_er_advantage(target_model, model, U, delta_mu)
-            self.experience_X.append(self.prev_target_model_vector)
-            self.experience_y.append(er_advantage)
-            if len(self.experience_X) > self.max_history:
-                self.experience_X = self.experience_X[-self.max_history:]
-                self.experience_y = self.experience_y[-self.max_history:]
 
 
         # POLICY DISTANCE COMPUTATIONS

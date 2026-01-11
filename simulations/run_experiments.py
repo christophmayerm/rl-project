@@ -32,6 +32,7 @@ from algorithm.model_chooser import (
 from utils.uniform_policy import UniformPolicy
 from utils.tabular import TabularModel, TabularPolicy
 from envs.racetrack_simulator import RaceTrackConfigurableEnv
+from envs.racetrack_simulator_obstacles import RaceTrackWithObstacles
 from federated import FSPMI
 
 # Optional WandB import
@@ -106,8 +107,14 @@ class ExperimentRunner:
         """Initialize the MDP environment"""
         env_params = self.config['environment']['params']
         print(f"\nInitializing {self.config['environment']['name']} environment...")
-        
-        mdp = RaceTrackConfigurableEnv(**env_params)
+
+        # mdp = TeacherStudentEnv(**env_params)
+        use_obstacles = (
+            self.config['environment']['name'] in {"racetrack_obstacles", "racetrack_with_obstacles"}
+            or "obstacle_positions" in env_params
+            or "obstacle_at_iteration" in env_params
+        )
+        mdp = RaceTrackWithObstacles(**env_params) if use_obstacles else RaceTrackConfigurableEnv(**env_params)
         
         print(f"State space size: {mdp.nS}")
         print(f"Action space size: {mdp.nA}")
@@ -139,6 +146,42 @@ class ExperimentRunner:
                 self.mdp.nS,
                 self.mdp.nA
             )
+    
+    def _create_curriculum_scheduler(self, curriculum_config: Dict[str, Any]):
+        """Create curriculum scheduler from config"""
+        curr_type = curriculum_config['type']
+        
+        if curr_type == 'constant':
+            return ConstantCurriculumScheduler(weight=curriculum_config['weight'])
+        
+        elif curr_type == 'linear':
+            return LinearCurriculumScheduler(
+                start_iter=curriculum_config['start_iter'],
+                end_iter=curriculum_config['end_iter'],
+                start_weight=curriculum_config['start_weight'],
+                end_weight=curriculum_config['end_weight']
+            )
+        
+        elif curr_type == 'exponential':
+            return ExponentialCurriculumScheduler(
+                growth_rate=curriculum_config['growth_rate'],
+                max_weight=curriculum_config['max_weight']
+            )
+        
+        elif curr_type == 'cosine':
+            return CosineCurriculumScheduler(
+                start_iter=curriculum_config['start_iter'],
+                end_iter=curriculum_config['end_iter'],
+                max_weight=curriculum_config['max_weight']
+            )
+        
+        else:
+            raise ValueError(f"Unknown curriculum type: {curr_type}")
+
+    def _reset_obstacles(self) -> None:
+        if hasattr(self.mdp, "reset_obstacles"):
+            self.mdp.reset_obstacles()
+    
 
     def run_standard_spmi(self) -> Dict[str, Any]:
         """Run standard SPMI"""
@@ -149,6 +192,8 @@ class ExperimentRunner:
         print("\n" + "=" * 80)
         print("Running Standard SPMI")
         print("=" * 80)
+
+        self._reset_obstacles()
         
         exp_config = self.config['experiments']['standard_spmi']
         track = self.config['environment']['params']['track_file']
@@ -238,6 +283,116 @@ class ExperimentRunner:
             'elapsed_time': elapsed
         }
     
+    def run_sapmi(self) -> Dict[str, Any]:
+        """Run SA-PMI with all configured curricula"""
+        if not self.config['experiments']['sapmi']['enabled']:
+            print("\nSkipping SA-PMI (disabled in config)")
+            return {}
+        
+        print("\n" + "=" * 80)
+        print("Running SA-PMI with Policy Robustness")
+        print("=" * 80)
+        
+        exp_config = self.config['experiments']['sapmi']
+        results = {}
+        
+        for curriculum_config in exp_config['curricula']:
+            print(f"\n{curriculum_config['description']}")
+            print("-" * 60)
+
+            self._reset_obstacles()
+            
+            self.mdp.set_model(copy.deepcopy(self.original_model))
+            if hasattr(self, 'init_model_vector'):
+                self.mdp.model_vector = np.array(self.init_model_vector)
+            
+            # Create policy chooser with curriculum
+            base_policy_chooser = GreedyPolicyChooser(self.mdp.nS, self.mdp.nA)
+            curriculum_scheduler = self._create_curriculum_scheduler(curriculum_config)
+            
+            policy_chooser = SAPMIPolicyChooser(
+                nS=self.mdp.nS,
+                nA=self.mdp.nA,
+                base_chooser=base_policy_chooser,
+                curriculum_scheduler=curriculum_scheduler,
+                robustness_temperature=curriculum_config['robustness_temperature'],
+                entropy_bonus=curriculum_config['entropy_bonus']
+            )
+            
+            model_chooser = self._create_model_chooser()
+            
+            spmi = SPMI(
+                self.mdp,
+                eps=0.0,
+                policy_chooser=policy_chooser,
+                model_chooser=model_chooser,
+                max_iter=exp_config['max_iter'],
+                persistent=self.config['model_chooser']['type'] != 'gp',
+                delta_q=1
+            )
+            
+            # WandB logging
+            if self.use_wandb:
+                wandb.init(
+                    project=self.config['wandb']['project'],
+                    entity=self.config['wandb']['entity'],
+                    name=f"sapmi_{curriculum_config['name']}",
+                    tags=self.config['wandb']['tags'] + ["sapmi", curriculum_config['type']],
+                    config={
+                        "algorithm": "SA-PMI",
+                        "variant": "policy_robust",
+                        "curriculum": curriculum_config['name'],
+                        "curriculum_type": curriculum_config['type'],
+                        **curriculum_config
+                    },
+                    reinit=True
+                )
+            
+            start_time = time.time()
+            final_policy, final_model = spmi.spmi(
+                copy.deepcopy(self.initial_policy),
+                copy.deepcopy(self.initial_model)
+            )
+            elapsed = time.time() - start_time
+            
+            # Log to WandB
+            if self.use_wandb:
+                for i, perf in enumerate(spmi.logger.evaluations):
+                    wandb.log({"iteration": i, "performance": perf})
+                wandb.log({
+                    "final_performance": spmi.logger.evaluations[-1],
+                    "total_iterations": spmi.logger.iteration,
+                    "elapsed_time": elapsed
+                })
+                wandb.finish()
+            
+            # Save results
+            filename = f"sapmi_policy_{curriculum_config['name']}.csv"
+            spmi.logger.save(str(self.output_dir), filename)
+            
+            if self.config['output']['save_sapmi_metrics']:
+                spmi.policy_chooser.save_sapmi_policy_metrics(
+                    str(self.output_dir / f"sapmi_policy_{curriculum_config['name']}")
+                )
+            
+            if self.config['output']['save_gp_metrics'] and hasattr(model_chooser, 'save_gp_times'):
+                model_chooser.save_gp_times(
+                    str(self.output_dir / f"sapmi_policy_{curriculum_config['name']}")
+                )
+            
+            print(f"Completed in {elapsed:.2f}s | Iterations: {spmi.logger.iteration} | "
+                  f"Performance: {spmi.logger.evaluations[-1]:.4f}")
+            
+            results[curriculum_config['name']] = {
+                'spmi': spmi,
+                'final_policy': final_policy,
+                'final_model': final_model,
+                'elapsed_time': elapsed,
+                'config': curriculum_config
+            }
+        
+        return results
+    
     def run_federated_spmi(self, n_seeds: int = 1) -> Dict[str, Any]:
         """Run Federated SPMI with multiple seeds for confidence intervals"""
         if not self.config['experiments']['federated_spmi']['enabled']:
@@ -313,6 +468,7 @@ class ExperimentRunner:
                     print(f"  Seed {seed + 1}/{n_seeds}...", end=" ", flush=True)
                 
                 # Reset MDP
+                self._reset_obstacles()
                 self.mdp.set_model(copy.deepcopy(self.original_model))
                 
                 policy_chooser = GreedyPolicyChooser(self.mdp.nS, self.mdp.nA)
@@ -344,7 +500,7 @@ class ExperimentRunner:
                 elapsed = time.time() - start_time
                 
                 perf = fspmi.logger.true_performances[-1] if fspmi.logger.true_performances else float('nan')
-                
+                                
                 if n_seeds > 1:
                     print(f"Perf: {perf:.4f}, Time: {elapsed:.1f}s")
                 
@@ -471,6 +627,123 @@ class ExperimentRunner:
         # Print summary statistics
         final_perfs = true_perfs[:, -1]
         print(f"  Final Performance: {np.mean(final_perfs):.4f} ± {np.std(final_perfs):.4f}")
+    
+    def run_federated_sapmi(self) -> Dict[str, Any]:
+        """Run Federated SA-PMI with all configurations"""
+        if not self.config['experiments']['federated_sapmi']['enabled']:
+            print("\nSkipping Federated SA-PMI (disabled in config)")
+            return {}
+        
+        print("\n" + "=" * 80)
+        print("Running Federated SA-PMI")
+        print("=" * 80)
+        
+        exp_config = self.config['experiments']['federated_sapmi']
+        results = {}
+        
+        for n_agents in exp_config['agent_counts']:
+            for curriculum_config in exp_config['curricula']:
+                print(f"\nN={n_agents} agents, {curriculum_config['description']}")
+                print("-" * 60)
+
+                self._reset_obstacles()
+                self.mdp.set_model(copy.deepcopy(self.original_model))
+                if hasattr(self, 'init_model_vector'):
+                    self.mdp.model_vector = np.array(self.init_model_vector)
+                
+                # Create policy chooser with curriculum
+                base_policy_chooser = GreedyPolicyChooser(self.mdp.nS, self.mdp.nA)
+                curriculum_scheduler = self._create_curriculum_scheduler(curriculum_config)
+                
+                policy_chooser = SAPMIPolicyChooser(
+                    nS=self.mdp.nS,
+                    nA=self.mdp.nA,
+                    base_chooser=base_policy_chooser,
+                    curriculum_scheduler=curriculum_scheduler,
+                    robustness_temperature=curriculum_config['robustness_temperature'],
+                    entropy_bonus=curriculum_config['entropy_bonus']
+                )
+                
+                model_chooser = self._create_model_chooser()
+                
+                fspmi = FSPMI(
+                    conf_mdp=self.mdp,
+                    n_agents=n_agents,
+                    episodes_per_round=exp_config['episodes_per_round'],
+                    eps=0.0,
+                    max_rounds=exp_config['max_rounds'],
+                    policy_chooser=policy_chooser,
+                    model_chooser=model_chooser,
+                    aggregation_method='weighted',
+                    persistent=self.config['model_chooser']['type'] != 'gp',
+                    delta_q=1,
+                    verbose=True
+                )
+                
+                # WandB logging
+                if self.use_wandb:
+                    wandb.init(
+                        project=self.config['wandb']['project'],
+                        entity=self.config['wandb']['entity'],
+                        name=f"fsapmi_{curriculum_config['name']}_n{n_agents}",
+                        tags=self.config['wandb']['tags'] + ["federated", "sapmi", curriculum_config['type']],
+                        config={
+                            "algorithm": "F-SA-PMI",
+                            "variant": "federated_policy_robust",
+                            "n_agents": n_agents,
+                            "curriculum": curriculum_config['name'],
+                            "curriculum_type": curriculum_config['type'],
+                            **curriculum_config
+                        },
+                        reinit=True
+                    )
+                
+                start_time = time.time()
+                final_policy, final_model = fspmi.run(
+                    copy.deepcopy(self.initial_policy),
+                    copy.deepcopy(self.initial_model)
+                )
+                elapsed = time.time() - start_time
+                
+                # Log to WandB
+                if self.use_wandb:
+                    for i, perf in enumerate(fspmi.logger.true_performances):
+                        wandb.log({
+                            "round": i,
+                            "performance": perf,
+                            "avg_return": fspmi.logger.avg_returns[i] if i < len(fspmi.logger.avg_returns) else None
+                        })
+                    wandb.log({
+                        "final_performance": fspmi.logger.true_performances[-1],
+                        "total_rounds": len(fspmi.logger.iterations),
+                        "total_samples": sum(fspmi.logger.total_samples),
+                        "elapsed_time": elapsed
+                    })
+                    wandb.finish()
+                
+                # Save results
+                filename = f"fsapmi_{curriculum_config['name']}_n{n_agents}.csv"
+                fspmi.logger.save(str(self.output_dir / filename))
+                
+                if self.config['output']['save_gp_metrics'] and hasattr(model_chooser, 'save_gp_times'):
+                    model_chooser.save_gp_times(
+                        str(self.output_dir / filename.replace('.csv', ''))
+                    )
+                
+                perf = fspmi.logger.true_performances[-1] if fspmi.logger.true_performances else float('nan')
+                print(f"Completed in {elapsed:.2f}s | Rounds: {len(fspmi.logger.iterations)} | "
+                      f"Performance: {perf:.4f}")
+                
+                key = f"{curriculum_config['name']}_n{n_agents}"
+                results[key] = {
+                    'fspmi': fspmi,
+                    'final_policy': final_policy,
+                    'final_model': final_model,
+                    'elapsed_time': elapsed,
+                    'config': {**curriculum_config, 'n_agents': n_agents}
+                }
+        
+        return results
     
     def run_all(self, experiments: Optional[List[str]] = None):
         """Run all enabled experiments or specified experiments
