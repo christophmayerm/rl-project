@@ -23,24 +23,24 @@ Usage:
     python plot_results.py --results_dir ... --n_agents 4 --eps_per_round 400
 
 Standard Plots Generated:
-    - fig1_convergence.png: Convergence curves for all configs
-    - fig2_mc_vs_exact.png: MC vs Exact evaluator comparison
-    - fig3_safety_bounds.png: Safety bounds over time (log scale)
-    - fig4_sample_efficiency.png: Performance vs total samples
-    - fig5_returns_bounds.png: Returns & bounds (dual axis, ALL configs)
-    - fig6_step_sizes.png: Alpha & Beta step sizes
-    - fig7_bar_final.png: Final performance bar chart
-    - fig8_bar_grouped.png: Grouped bar chart (N × eps)
-    - fig_summary.png: 2x2 summary figure
+    - fig1_convergence.pdf: Convergence curves for all configs
+    - fig2_mc_vs_exact.pdf: MC vs Exact evaluator comparison
+    - fig3_safety_bounds.pdf: Safety bounds over time (log scale)
+    - fig4_sample_efficiency.pdf: Performance vs total samples
+    - fig5_returns_bounds.pdf: Returns & bounds (dual axis, ALL configs)
+    - fig6_step_sizes.pdf: Alpha & Beta step sizes
+    - fig7_bar_final.pdf: Final performance bar chart
+    - fig8_bar_grouped.pdf: Grouped bar chart (N × eps)
+    - fig_summary.pdf: 2x2 summary figure
     
 Faceted Plots Generated (--faceted):
-    - facet_convergence.png: Convergence curves, one subplot per eps/round
-    - facet_mc_vs_exact.png: MC vs Exact, one subplot per eps/round (with std bands)
-    - facet_safety_bounds.png: Safety bounds, one subplot per eps/round (with std bands)
-    - facet_step_sizes.png: Alpha/Beta, 2 rows × N cols (with std bands)
-    - facet_sample_efficiency.png: Sample efficiency, one subplot per eps/round
-    - facet_returns_bounds.png: Returns & bounds (dual axis), one subplot per eps/round
-    - facet_final_performance.png: Final performance bars, one subplot per eps/round
+    - facet_convergence.pdf: Convergence curves, one subplot per eps/round
+    - facet_mc_vs_exact.pdf: MC vs Exact, one subplot per eps/round (with std bands)
+    - facet_safety_bounds.pdf: Safety bounds, one subplot per eps/round (with std bands)
+    - facet_step_sizes.pdf: Alpha/Beta, 2 rows × N cols (with std bands)
+    - facet_sample_efficiency.pdf: Sample efficiency, one subplot per eps/round
+    - facet_returns_bounds.pdf: Returns & bounds (dual axis), one subplot per eps/round
+    - facet_final_performance.pdf: Final performance bars, one subplot per eps/round
 
 All faceted plots show:
     - Different N agents as different colored lines within each subplot
@@ -252,7 +252,7 @@ def plot_convergence(results: Dict[str, pd.DataFrame], save_path: Path, title: s
     ax.set_xlim(left=0)
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -297,7 +297,7 @@ def plot_mc_vs_exact(results: Dict[str, pd.DataFrame], save_path: Path):
     ax.set_xlim(left=0)
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -341,7 +341,7 @@ def plot_safety_bounds(results: Dict[str, pd.DataFrame], save_path: Path):
     ax.set_xlim(left=0)
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -383,7 +383,7 @@ def plot_sample_efficiency(results: Dict[str, pd.DataFrame], save_path: Path):
     ax.set_xlim(left=0)
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -457,13 +457,13 @@ def plot_returns_and_bounds(results: Dict[str, pd.DataFrame], save_path: Path):
     ax2.tick_params(axis='y', labelcolor='gray')
     
     # Create legend with two columns
-    ax1.legend(lines, labels, loc='center right', fontsize=8, ncol=2)
+    ax1.legend(lines, labels, loc='lower right', fontsize=8, ncol=2)
     
     ax1.set_title('Returns (solid) & Safety Bounds (dotted)')
     ax1.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -540,7 +540,7 @@ def plot_step_sizes(results: Dict[str, pd.DataFrame], save_path: Path):
     ax2.set_xlim(left=0)
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -601,7 +601,7 @@ def plot_bar_chart(results: Dict[str, pd.DataFrame], save_path: Path,
                    ha='center', va='bottom', fontsize=9)
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -667,7 +667,7 @@ def plot_bar_chart_grouped(results: Dict[str, pd.DataFrame], save_path: Path):
     ax.grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -780,7 +780,7 @@ def plot_summary_2x2(results: Dict[str, pd.DataFrame], save_path: Path):
     ax.grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -880,7 +880,7 @@ def plot_convergence_faceted(results: Dict[str, pd.DataFrame], save_path: Path):
     
     plt.suptitle('Convergence by Episodes/Round', fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -946,7 +946,7 @@ def plot_mc_vs_exact_faceted(results: Dict[str, pd.DataFrame], save_path: Path):
     
     plt.suptitle('MC vs Exact Evaluator by Episodes/Round', fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -1007,7 +1007,7 @@ def plot_safety_bounds_faceted(results: Dict[str, pd.DataFrame], save_path: Path
     
     plt.suptitle('Safety Bounds by Episodes/Round', fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -1096,7 +1096,7 @@ def plot_step_sizes_faceted(results: Dict[str, pd.DataFrame], save_path: Path):
     
     plt.suptitle('Step Sizes by Episodes/Round', fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -1159,7 +1159,7 @@ def plot_sample_efficiency_faceted(results: Dict[str, pd.DataFrame], save_path: 
     
     plt.suptitle('Sample Efficiency by Episodes/Round', fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -1232,7 +1232,7 @@ def plot_final_performance_faceted(results: Dict[str, pd.DataFrame], save_path: 
     
     plt.suptitle('Final Performance by Episodes/Round', fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -1317,7 +1317,7 @@ def plot_returns_and_bounds_faceted(results: Dict[str, pd.DataFrame], save_path:
         ax2.tick_params(axis='y', labelcolor='gray')
         
         ax1.set_title(f'eps/round = {eps}')
-        ax1.legend(loc='center right', fontsize=8)
+        ax1.legend(loc='lower right', fontsize=8)
     
     # Hide unused subplots
     for idx in range(len(eps_values), len(axes)):
@@ -1325,7 +1325,7 @@ def plot_returns_and_bounds_faceted(results: Dict[str, pd.DataFrame], save_path:
     
     plt.suptitle('Returns (solid) & Bounds (dotted) by Episodes/Round', fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
 
@@ -1419,26 +1419,26 @@ def main():
     # Generate standard plots (unless --no-standard)
     if not args.no_standard:
         print("\n--- Standard Plots ---")
-        plot_convergence(results, output_dir / "fig1_convergence.png", title_suffix, seed_data)
-        plot_mc_vs_exact(results, output_dir / "fig2_mc_vs_exact.png")
-        plot_safety_bounds(results, output_dir / "fig3_safety_bounds.png")
-        plot_sample_efficiency(results, output_dir / "fig4_sample_efficiency.png")
-        plot_returns_and_bounds(results, output_dir / "fig5_returns_bounds.png")
-        plot_step_sizes(results, output_dir / "fig6_step_sizes.png")
-        plot_bar_chart(results, output_dir / "fig7_bar_final.png")
-        plot_bar_chart_grouped(results, output_dir / "fig8_bar_grouped.png")
-        plot_summary_2x2(results, output_dir / "fig_summary.png")
+        plot_convergence(results, output_dir / "fig1_convergence.pdf", title_suffix, seed_data)
+        plot_mc_vs_exact(results, output_dir / "fig2_mc_vs_exact.pdf")
+        plot_safety_bounds(results, output_dir / "fig3_safety_bounds.pdf")
+        plot_sample_efficiency(results, output_dir / "fig4_sample_efficiency.pdf")
+        plot_returns_and_bounds(results, output_dir / "fig5_returns_bounds.pdf")
+        plot_step_sizes(results, output_dir / "fig6_step_sizes.pdf")
+        plot_bar_chart(results, output_dir / "fig7_bar_final.pdf")
+        plot_bar_chart_grouped(results, output_dir / "fig8_bar_grouped.pdf")
+        plot_summary_2x2(results, output_dir / "fig_summary.pdf")
     
     # Generate faceted plots (if --faceted)
     if args.faceted:
         print("\n--- Faceted Plots (by eps/round) ---")
-        plot_convergence_faceted(results, output_dir / "facet_convergence.png")
-        plot_mc_vs_exact_faceted(results, output_dir / "facet_mc_vs_exact.png")
-        plot_safety_bounds_faceted(results, output_dir / "facet_safety_bounds.png")
-        plot_step_sizes_faceted(results, output_dir / "facet_step_sizes.png")
-        plot_sample_efficiency_faceted(results, output_dir / "facet_sample_efficiency.png")
-        plot_returns_and_bounds_faceted(results, output_dir / "facet_returns_bounds.png")
-        plot_final_performance_faceted(results, output_dir / "facet_final_performance.png")
+        plot_convergence_faceted(results, output_dir / "facet_convergence.pdf")
+        plot_mc_vs_exact_faceted(results, output_dir / "facet_mc_vs_exact.pdf")
+        plot_safety_bounds_faceted(results, output_dir / "facet_safety_bounds.pdf")
+        plot_step_sizes_faceted(results, output_dir / "facet_step_sizes.pdf")
+        plot_sample_efficiency_faceted(results, output_dir / "facet_sample_efficiency.pdf")
+        plot_returns_and_bounds_faceted(results, output_dir / "facet_returns_bounds.pdf")
+        plot_final_performance_faceted(results, output_dir / "facet_final_performance.pdf")
     
     print("\n" + "=" * 60)
     print("✓ All figures generated!")
