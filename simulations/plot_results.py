@@ -21,14 +21,32 @@ Usage:
     
     # Both filters
     python plot_results.py --results_dir ... --n_agents 4 --eps_per_round 400
+
+Standard Plots Generated:
+    - fig1_convergence.png: Convergence curves for all configs
+    - fig2_mc_vs_exact.png: MC vs Exact evaluator comparison
+    - fig3_safety_bounds.png: Safety bounds over time (log scale)
+    - fig4_sample_efficiency.png: Performance vs total samples
+    - fig5_returns_bounds.png: Returns & bounds (dual axis, ALL configs)
+    - fig6_step_sizes.png: Alpha & Beta step sizes
+    - fig7_bar_final.png: Final performance bar chart
+    - fig8_bar_grouped.png: Grouped bar chart (N × eps)
+    - fig_summary.png: 2x2 summary figure
     
 Faceted Plots Generated (--faceted):
     - facet_convergence.png: Convergence curves, one subplot per eps/round
-    - facet_mc_vs_exact.png: MC vs Exact evaluator, one subplot per eps/round
-    - facet_safety_bounds.png: Safety bounds, one subplot per eps/round
-    - facet_step_sizes.png: Alpha/Beta step sizes, 2 rows x N cols (eps values)
+    - facet_mc_vs_exact.png: MC vs Exact, one subplot per eps/round (with std bands)
+    - facet_safety_bounds.png: Safety bounds, one subplot per eps/round (with std bands)
+    - facet_step_sizes.png: Alpha/Beta, 2 rows × N cols (with std bands)
     - facet_sample_efficiency.png: Sample efficiency, one subplot per eps/round
+    - facet_returns_bounds.png: Returns & bounds (dual axis), one subplot per eps/round
     - facet_final_performance.png: Final performance bars, one subplot per eps/round
+
+All faceted plots show:
+    - Different N agents as different colored lines within each subplot
+    - SPMI baseline in black
+    - Standard deviation bands where data is available
+    - Consistent colors across all subplots (same N = same color)
 """
 
 import argparse
@@ -370,16 +388,12 @@ def plot_sample_efficiency(results: Dict[str, pd.DataFrame], save_path: Path):
     print(f"✓ Saved: {save_path}")
 
 
-def plot_returns_and_bounds(results: Dict[str, pd.DataFrame], save_path: Path, 
-                            config_to_show: Optional[str] = None):
-    """Plot 5: Returns (solid) & Bounds (dotted) - dual axis"""
-    fig, ax1 = plt.subplots(figsize=(10, 6))
+def plot_returns_and_bounds(results: Dict[str, pd.DataFrame], save_path: Path):
+    """Plot 5: Returns (solid) & Bounds (dotted) - ALL configs with dual axis"""
+    fig, ax1 = plt.subplots(figsize=(12, 6))
     
-    fspmi_configs = [k for k in results.keys() if k != 'spmi']
-    if config_to_show and config_to_show in fspmi_configs:
-        config_key = config_to_show
-    else:
-        config_key = fspmi_configs[0] if fspmi_configs else None
+    fspmi_keys = sorted([k for k in results.keys() if k != 'spmi'])
+    colors = get_colors(len(fspmi_keys))
     
     ax1.set_xlabel('Iterations')
     ax1.set_ylabel('Return', color='black')
@@ -391,49 +405,61 @@ def plot_returns_and_bounds(results: Dict[str, pd.DataFrame], save_path: Path,
     if 'spmi' in results:
         spmi_df = results['spmi']
         l1, = ax1.plot(spmi_df['iteration'], spmi_df['evaluation'], 
-                       'b-', linewidth=2, label='SPMI return')
+                       'k-', linewidth=2.5, label='SPMI return')
         lines.append(l1)
         labels.append('SPMI return')
     
-    # F-SPMI return with std
-    if config_key:
+    # All F-SPMI returns with std bands
+    for idx, config_key in enumerate(fspmi_keys):
         df = results[config_key]
-        l2, = ax1.plot(df['iteration'], df['true_perf_mean'], 
-                       'r-', linewidth=2, label='F-SPMI return')
+        color = colors[idx]
+        label = format_label(config_key)
+        
+        l, = ax1.plot(df['iteration'], df['true_perf_mean'], 
+                      color=color, linestyle='-', linewidth=2, label=f'{label} return')
+        lines.append(l)
+        labels.append(f'{label} return')
+        
+        # Add std band
         if 'true_perf_std' in df.columns and df['true_perf_std'].sum() > 0:
             ax1.fill_between(df['iteration'],
                             df['true_perf_mean'] - df['true_perf_std'],
                             df['true_perf_mean'] + df['true_perf_std'],
-                            color='r', alpha=0.2)
-        lines.append(l2)
-        labels.append('F-SPMI return')
+                            color=color, alpha=0.15)
     
     ax1.tick_params(axis='y', labelcolor='black')
     ax1.set_xlim(left=0)
     
-    # Right axis: Bounds
+    # Right axis: Bounds (all configs)
     ax2 = ax1.twinx()
-    ax2.set_ylabel('Safety Bound', color='gray')
+    ax2.set_ylabel('Safety Bound (log)', color='gray')
+    ax2.set_yscale('log')
     
     if 'spmi' in results and 'bound' in results['spmi'].columns:
-        l3, = ax2.plot(results['spmi']['iteration'], results['spmi']['bound'], 
-                       'b:', linewidth=1.5, alpha=0.7, label='SPMI bound')
-        lines.append(l3)
+        l, = ax2.plot(results['spmi']['iteration'], 
+                      np.maximum(results['spmi']['bound'], 1e-10), 
+                      'k:', linewidth=1.5, alpha=0.7, label='SPMI bound')
+        lines.append(l)
         labels.append('SPMI bound')
     
-    if config_key:
-        l4, = ax2.plot(df['iteration'], df['bound_mean'], 
-                       'r:', linewidth=1.5, alpha=0.7, label='F-SPMI bound')
-        lines.append(l4)
-        labels.append('F-SPMI bound')
+    for idx, config_key in enumerate(fspmi_keys):
+        df = results[config_key]
+        color = colors[idx]
+        label = format_label(config_key)
+        
+        if 'bound_mean' in df.columns:
+            l, = ax2.plot(df['iteration'], np.maximum(df['bound_mean'], 1e-10), 
+                          color=color, linestyle=':', linewidth=1.5, alpha=0.7, 
+                          label=f'{label} bound')
+            lines.append(l)
+            labels.append(f'{label} bound')
     
     ax2.tick_params(axis='y', labelcolor='gray')
-    ax2.ticklabel_format(style='scientific', axis='y', scilimits=(0,0))
     
-    ax1.legend(lines, labels, loc='center right')
+    # Create legend with two columns
+    ax1.legend(lines, labels, loc='center right', fontsize=8, ncol=2)
     
-    title_suffix = f" ({config_key})" if config_key else ""
-    ax1.set_title(f'Returns (solid) & Safety Bounds (dotted){title_suffix}')
+    ax1.set_title('Returns (solid) & Safety Bounds (dotted)')
     ax1.grid(True, alpha=0.3)
     
     plt.tight_layout()
@@ -467,6 +493,12 @@ def plot_step_sizes(results: Dict[str, pd.DataFrame], save_path: Path):
             ax1.semilogy(df['iteration'], 
                         np.maximum(df['alpha_mean'], 1e-10),
                         color=color, linewidth=2, label=f'F-SPMI ({label})', alpha=0.8)
+            
+            # Std band for alpha
+            if 'alpha_std' in df.columns and df['alpha_std'].sum() > 0:
+                lower = np.maximum(df['alpha_mean'] - df['alpha_std'], 1e-10)
+                upper = df['alpha_mean'] + df['alpha_std']
+                ax1.fill_between(df['iteration'], lower, upper, color=color, alpha=0.15)
     
     ax1.set_xlabel('Iterations')
     ax1.set_ylabel('α (Policy Step Size)')
@@ -493,6 +525,12 @@ def plot_step_sizes(results: Dict[str, pd.DataFrame], save_path: Path):
             ax2.semilogy(df['iteration'], 
                         np.maximum(df['beta_mean'], 1e-10),
                         color=color, linewidth=2, label=f'F-SPMI ({label})', alpha=0.8)
+            
+            # Std band for beta
+            if 'beta_std' in df.columns and df['beta_std'].sum() > 0:
+                lower = np.maximum(df['beta_mean'] - df['beta_std'], 1e-10)
+                upper = df['beta_mean'] + df['beta_std']
+                ax2.fill_between(df['iteration'], lower, upper, color=color, alpha=0.15)
     
     ax2.set_xlabel('Iterations')
     ax2.set_ylabel('β (Model Step Size)')
@@ -876,18 +914,24 @@ def plot_mc_vs_exact_faceted(results: Dict[str, pd.DataFrame], save_path: Path):
             n, _ = parse_config_key(config_key)
             color = color_map.get(n, 'gray')
             
-            # Exact (solid)
+            # Exact (solid) with std band
             ax.plot(df['iteration'], df['true_perf_mean'], 
                     color=color, linestyle='-', linewidth=2, label=f'N={n} (Exact)')
-            
-            # MC (dashed)
-            ax.plot(df['iteration'], df['mc_perf_mean'], 
-                    color=color, linestyle='--', linewidth=1.5, alpha=0.7, label=f'N={n} (MC)')
             
             if 'true_perf_std' in df.columns and df['true_perf_std'].sum() > 0:
                 ax.fill_between(df['iteration'],
                                df['true_perf_mean'] - df['true_perf_std'],
                                df['true_perf_mean'] + df['true_perf_std'],
+                               color=color, alpha=0.15)
+            
+            # MC (dashed) with std band
+            ax.plot(df['iteration'], df['mc_perf_mean'], 
+                    color=color, linestyle='--', linewidth=1.5, alpha=0.7, label=f'N={n} (MC)')
+            
+            if 'mc_perf_std' in df.columns and df['mc_perf_std'].sum() > 0:
+                ax.fill_between(df['iteration'],
+                               df['mc_perf_mean'] - df['mc_perf_std'],
+                               df['mc_perf_mean'] + df['mc_perf_std'],
                                color=color, alpha=0.1)
         
         ax.set_xlabel('Iterations')
@@ -944,6 +988,12 @@ def plot_safety_bounds_faceted(results: Dict[str, pd.DataFrame], save_path: Path
             
             ax.semilogy(df['iteration'], np.maximum(df['bound_mean'], 1e-10),
                        color=color, linewidth=2, label=f'N={n}')
+            
+            # Std band for bound (careful with log scale)
+            if 'bound_std' in df.columns and df['bound_std'].sum() > 0:
+                lower = np.maximum(df['bound_mean'] - df['bound_std'], 1e-10)
+                upper = df['bound_mean'] + df['bound_std']
+                ax.fill_between(df['iteration'], lower, upper, color=color, alpha=0.2)
         
         ax.set_xlabel('Iterations')
         ax.set_ylabel('Bound (log)')
@@ -1000,6 +1050,12 @@ def plot_step_sizes_faceted(results: Dict[str, pd.DataFrame], save_path: Path):
                 ax_alpha.semilogy(df['iteration'], 
                                  np.maximum(df['alpha_mean'], 1e-10),
                                  color=color, linewidth=2, label=f'N={n}', alpha=0.8)
+                
+                # Std band for alpha (log scale)
+                if 'alpha_std' in df.columns and df['alpha_std'].sum() > 0:
+                    lower = np.maximum(df['alpha_mean'] - df['alpha_std'], 1e-10)
+                    upper = df['alpha_mean'] + df['alpha_std']
+                    ax_alpha.fill_between(df['iteration'], lower, upper, color=color, alpha=0.15)
         
         ax_alpha.set_xlabel('Iterations')
         ax_alpha.set_ylabel('α (Policy)')
@@ -1025,6 +1081,12 @@ def plot_step_sizes_faceted(results: Dict[str, pd.DataFrame], save_path: Path):
                 ax_beta.semilogy(df['iteration'], 
                                 np.maximum(df['beta_mean'], 1e-10),
                                 color=color, linewidth=2, label=f'N={n}', alpha=0.8)
+                
+                # Std band for beta (log scale)
+                if 'beta_std' in df.columns and df['beta_std'].sum() > 0:
+                    lower = np.maximum(df['beta_mean'] - df['beta_std'], 1e-10)
+                    upper = df['beta_mean'] + df['beta_std']
+                    ax_beta.fill_between(df['iteration'], lower, upper, color=color, alpha=0.15)
         
         ax_beta.set_xlabel('Iterations')
         ax_beta.set_ylabel('β (Model)')
@@ -1175,6 +1237,98 @@ def plot_final_performance_faceted(results: Dict[str, pd.DataFrame], save_path: 
     print(f"✓ Saved: {save_path}")
 
 
+def plot_returns_and_bounds_faceted(results: Dict[str, pd.DataFrame], save_path: Path):
+    """Faceted returns & bounds plot - one subplot per eps/round with dual axes"""
+    grouped = group_by_eps(results)
+    
+    if not grouped:
+        print("  Skipping faceted returns & bounds (no eps configs found)")
+        return
+    
+    eps_values = sorted(grouped.keys())
+    n_cols = min(len(eps_values), 4)
+    n_rows = (len(eps_values) + n_cols - 1) // n_cols
+    
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(6*n_cols, 5*n_rows), squeeze=False)
+    axes = axes.flatten()
+    
+    # Get consistent colors for N agents
+    all_results = {}
+    for eps_results in grouped.values():
+        all_results.update(eps_results)
+    color_map = get_n_colors(all_results)
+    
+    for idx, eps in enumerate(eps_values):
+        ax1 = axes[idx]
+        eps_results = grouped[eps]
+        
+        # SPMI baseline return
+        if 'spmi' in results:
+            ax1.plot(results['spmi']['iteration'], results['spmi']['evaluation'], 
+                    'k-', linewidth=2.5, label='SPMI')
+        
+        # F-SPMI returns for this eps
+        for config_key in sorted(eps_results.keys()):
+            df = eps_results[config_key]
+            n, _ = parse_config_key(config_key)
+            color = color_map.get(n, 'gray')
+            
+            ax1.plot(df['iteration'], df['true_perf_mean'], 
+                    color=color, linestyle='-', linewidth=2, label=f'N={n}')
+            
+            # Std band for return
+            if 'true_perf_std' in df.columns and df['true_perf_std'].sum() > 0:
+                ax1.fill_between(df['iteration'],
+                               df['true_perf_mean'] - df['true_perf_std'],
+                               df['true_perf_mean'] + df['true_perf_std'],
+                               color=color, alpha=0.2)
+        
+        ax1.set_xlabel('Iterations')
+        ax1.set_ylabel('Return')
+        ax1.set_xlim(left=0)
+        ax1.grid(True, alpha=0.3)
+        
+        # Right axis: Bounds (log scale)
+        ax2 = ax1.twinx()
+        ax2.set_ylabel('Bound (log)', color='gray', fontsize=9)
+        ax2.set_yscale('log')
+        
+        if 'spmi' in results and 'bound' in results['spmi'].columns:
+            ax2.plot(results['spmi']['iteration'], 
+                    np.maximum(results['spmi']['bound'], 1e-10), 
+                    'k:', linewidth=1.5, alpha=0.6)
+        
+        for config_key in sorted(eps_results.keys()):
+            df = eps_results[config_key]
+            n, _ = parse_config_key(config_key)
+            color = color_map.get(n, 'gray')
+            
+            if 'bound_mean' in df.columns:
+                ax2.plot(df['iteration'], np.maximum(df['bound_mean'], 1e-10), 
+                        color=color, linestyle=':', linewidth=1.5, alpha=0.6)
+                
+                # Std band for bound (careful with log scale)
+                if 'bound_std' in df.columns and df['bound_std'].sum() > 0:
+                    lower = np.maximum(df['bound_mean'] - df['bound_std'], 1e-10)
+                    upper = df['bound_mean'] + df['bound_std']
+                    ax2.fill_between(df['iteration'], lower, upper, 
+                                    color=color, alpha=0.1)
+        
+        ax2.tick_params(axis='y', labelcolor='gray')
+        
+        ax1.set_title(f'eps/round = {eps}')
+        ax1.legend(loc='center right', fontsize=8)
+    
+    # Hide unused subplots
+    for idx in range(len(eps_values), len(axes)):
+        axes[idx].set_visible(False)
+    
+    plt.suptitle('Returns (solid) & Bounds (dotted) by Episodes/Round', fontsize=14, y=1.02)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"✓ Saved: {save_path}")
+
 def main():
     parser = argparse.ArgumentParser(description="Plot F-SPMI results")
     parser.add_argument('--results_dir', type=str, required=True,
@@ -1283,6 +1437,7 @@ def main():
         plot_safety_bounds_faceted(results, output_dir / "facet_safety_bounds.png")
         plot_step_sizes_faceted(results, output_dir / "facet_step_sizes.png")
         plot_sample_efficiency_faceted(results, output_dir / "facet_sample_efficiency.png")
+        plot_returns_and_bounds_faceted(results, output_dir / "facet_returns_bounds.png")
         plot_final_performance_faceted(results, output_dir / "facet_final_performance.png")
     
     print("\n" + "=" * 60)
