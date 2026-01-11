@@ -673,13 +673,13 @@ def plot_bar_chart_grouped(results: Dict[str, pd.DataFrame], save_path: Path):
 
 
 def plot_summary_2x2(results: Dict[str, pd.DataFrame], save_path: Path):
-    """Summary 2x2 figure for report"""
+    """Summary 2x2 figure for report with std bands and grouped bar chart"""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     
     fspmi_keys = sorted([k for k in results.keys() if k != 'spmi'])
     colors = get_colors(len(fspmi_keys))
     
-    # (a) Convergence
+    # (a) Convergence with std bands
     ax = axes[0, 0]
     if 'spmi' in results:
         ax.plot(results['spmi']['iteration'], results['spmi']['evaluation'], 
@@ -704,7 +704,7 @@ def plot_summary_2x2(results: Dict[str, pd.DataFrame], save_path: Path):
     ax.grid(True, alpha=0.3)
     ax.set_xlim(left=0)
     
-    # (b) Sample Efficiency
+    # (b) Sample Efficiency with std bands
     ax = axes[0, 1]
     if 'spmi' in results:
         final_perf = results['spmi']['evaluation'].iloc[-1]
@@ -729,7 +729,7 @@ def plot_summary_2x2(results: Dict[str, pd.DataFrame], save_path: Path):
     ax.grid(True, alpha=0.3)
     ax.set_xlim(left=0)
     
-    # (c) Safety Bounds
+    # (c) Safety Bounds with std bands
     ax = axes[1, 0]
     if 'spmi' in results and 'bound' in results['spmi'].columns:
         ax.semilogy(results['spmi']['iteration'], 
@@ -742,6 +742,12 @@ def plot_summary_2x2(results: Dict[str, pd.DataFrame], save_path: Path):
         label = format_label(config_key)
         ax.semilogy(df['iteration'], np.maximum(df['bound_mean'], 1e-10),
                    color=color, linewidth=2, label=f'F-SPMI ({label})')
+        
+        # Std band for bounds (careful with log scale)
+        if 'bound_std' in df.columns and df['bound_std'].sum() > 0:
+            lower = np.maximum(df['bound_mean'] - df['bound_std'], 1e-10)
+            upper = df['bound_mean'] + df['bound_std']
+            ax.fill_between(df['iteration'], lower, upper, color=color, alpha=0.2)
     
     ax.set_xlabel('Iterations')
     ax.set_ylabel('Bound (log)')
@@ -750,39 +756,93 @@ def plot_summary_2x2(results: Dict[str, pd.DataFrame], save_path: Path):
     ax.grid(True, alpha=0.3)
     ax.set_xlim(left=0)
     
-    # (d) Final Performance Bar Chart
+    # (d) Grouped Bar Chart - N agents vs eps/round
     ax = axes[1, 1]
     
-    bar_labels = []
-    bar_means = []
-    bar_stds = []
-    bar_colors = []
+    # Parse all configs to get N and eps values
+    configs = []
+    for key in results.keys():
+        if key == 'spmi':
+            continue
+        n, eps = parse_config_key(key)
+        if n is not None and eps is not None:
+            df = results[key]
+            final_mean = df['true_perf_mean'].iloc[-1]
+            final_std = df['true_perf_std'].iloc[-1] if 'true_perf_std' in df.columns else 0
+            configs.append({'n': n, 'eps': eps, 'mean': final_mean, 'std': final_std, 'key': key})
     
-    if 'spmi' in results:
-        bar_labels.append('SPMI')
-        bar_means.append(results['spmi']['evaluation'].iloc[-1])
-        bar_stds.append(0)
-        bar_colors.append('black')
-    
-    for idx, config_key in enumerate(fspmi_keys):
-        df = results[config_key]
-        bar_labels.append(format_label(config_key))
-        bar_means.append(df['true_perf_mean'].iloc[-1])
-        bar_stds.append(df['true_perf_std'].iloc[-1] if 'true_perf_std' in df.columns else 0)
-        bar_colors.append(colors[idx])
-    
-    x = np.arange(len(bar_labels))
-    ax.bar(x, bar_means, yerr=bar_stds, capsize=4, color=bar_colors, alpha=0.8, edgecolor='black')
-    ax.set_ylabel('Final Return')
-    ax.set_title('(d) Final Performance')
-    ax.set_xticks(x)
-    ax.set_xticklabels(bar_labels, rotation=45, ha='right', fontsize=9)
-    ax.grid(True, alpha=0.3, axis='y')
+    if configs:
+        # Get unique values
+        n_values = sorted(set(c['n'] for c in configs))
+        eps_values = sorted(set(c['eps'] for c in configs))
+        
+        x = np.arange(len(eps_values))
+        width = 0.8 / len(n_values)
+        bar_colors = get_colors(len(n_values))
+        
+        # SPMI baseline
+        if 'spmi' in results:
+            spmi_final = results['spmi']['evaluation'].iloc[-1]
+            ax.axhline(y=spmi_final, color='k', linestyle='--', linewidth=2,
+                       label=f'SPMI ({spmi_final:.4f})')
+        
+        # Grouped bars
+        for i, n in enumerate(n_values):
+            means = []
+            stds = []
+            for eps in eps_values:
+                cfg = next((c for c in configs if c['n'] == n and c['eps'] == eps), None)
+                if cfg:
+                    means.append(cfg['mean'])
+                    stds.append(cfg['std'])
+                else:
+                    means.append(0)
+                    stds.append(0)
+            
+            offset = (i - len(n_values)/2 + 0.5) * width
+            ax.bar(x + offset, means, width, yerr=stds, capsize=3,
+                   label=f'N={n}', color=bar_colors[i], alpha=0.8, edgecolor='black')
+        
+        ax.set_xlabel('Episodes per Round')
+        ax.set_ylabel('Final Return')
+        ax.set_title('(d) Final Performance: N Agents × eps/round')
+        ax.set_xticks(x)
+        ax.set_xticklabels(eps_values)
+        ax.legend(fontsize=8)
+        ax.grid(True, alpha=0.3, axis='y')
+    else:
+        # Fallback to simple bar chart if no N/eps configs found
+        bar_labels = []
+        bar_means = []
+        bar_stds = []
+        bar_colors = []
+        
+        if 'spmi' in results:
+            bar_labels.append('SPMI')
+            bar_means.append(results['spmi']['evaluation'].iloc[-1])
+            bar_stds.append(0)
+            bar_colors.append('black')
+        
+        for idx, config_key in enumerate(fspmi_keys):
+            df = results[config_key]
+            bar_labels.append(format_label(config_key))
+            bar_means.append(df['true_perf_mean'].iloc[-1])
+            bar_stds.append(df['true_perf_std'].iloc[-1] if 'true_perf_std' in df.columns else 0)
+            bar_colors.append(colors[idx])
+        
+        x_pos = np.arange(len(bar_labels))
+        ax.bar(x_pos, bar_means, yerr=bar_stds, capsize=4, color=bar_colors, alpha=0.8, edgecolor='black')
+        ax.set_ylabel('Final Return')
+        ax.set_title('(d) Final Performance')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(bar_labels, rotation=45, ha='right', fontsize=9)
+        ax.grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ Saved: {save_path}")
+
 
 
 # ============================================================================
@@ -908,6 +968,10 @@ def plot_mc_vs_exact_faceted(results: Dict[str, pd.DataFrame], save_path: Path):
     for idx, eps in enumerate(eps_values):
         ax = axes[idx]
         eps_results = grouped[eps]
+
+        if 'spmi' in results:
+            ax.plot(results['spmi']['iteration'], results['spmi']['evaluation'], 
+                    'k-', linewidth=2, label='SPMI')
         
         for config_key in sorted(eps_results.keys()):
             df = eps_results[config_key]
