@@ -1,0 +1,87 @@
+# Full Sweep Obstacle Configuration
+# ========================
+# All experiments in one config - with obstacles
+#
+# Usage:
+#   python #   python simulations/run_experiments.py --config config/<config>.yaml --n_seeds 10
+
+
+wandb:
+  enabled: false
+  project: "fspmi-report"
+  entity: null
+  tags: ["report", "racetrack", "full_sweep_obstacle"]
+
+environment:
+  name: "racetrack_obstacles"
+  params:
+    initial_configuration: [0.5, 0.5, 0, 0]
+    track_file: T1
+    pfail: 0.07
+    obstacle_at_iteration: 500
+    obstacle_positions:
+      #- [2,4]
+      - [3,2]
+
+
+model_chooser:
+  type: "gp"
+  gp:
+    beta: 2.0
+    gp_update_frequency: 10
+  greedy:
+    do_not_create_transitions: true
+
+output:
+  dir: "./data/final"
+  save_gp_metrics: false
+  save_sapmi_metrics: false
+
+experiments:
+  # SPMI Baseline
+  standard_spmi:
+    enabled: true
+    max_iter: 1000
+
+  sapmi:
+    enabled: false
+    max_iter: 50
+    curricula:
+      - name: linear_soft
+        description: "Linear curriculum, mild robustness"
+        type: linear
+        start_iter: 0
+        end_iter: 1000
+        start_weight: 0.0
+        end_weight: 1.0
+        robustness_temperature: 1.5
+        entropy_bonus: 0.01
+
+  # F-SPMI: Full grid of N x eps/round
+  federated_spmi:
+    enabled: true
+    configurations:
+      - n_agents: 2
+        episodes_per_round: 400
+        max_rounds: 1000
+      
+      - n_agents: 4
+        episodes_per_round: 400
+        max_rounds: 1000
+
+      - n_agents: 8
+        episodes_per_round: 400
+        max_rounds: 1000
+
+  federated_sapmi:
+    enabled: false
+    agent_counts: [4, 8]
+    episodes_per_round: 400
+    max_rounds: 50
+    curricula:
+      - name: const_robust
+        description: "Constant robustness"
+        type: constant
+        weight: 0.8
+        robustness_temperature: 0.5
+        entropy_bonus: 0.01

@@ -215,6 +215,10 @@ class FSPMI:
         mu = self.mdp.mu
 
         for round_k in range(self.max_rounds):
+            model, env_changed = self._maybe_sync_environment(round_k, model)
+            if env_changed:
+                target_policy_old = None
+                target_model_old = None
             if self.verbose and round_k % 10 == 0:
                 print(f"Round {round_k}/{self.max_rounds}")
 
@@ -325,6 +329,20 @@ class FSPMI:
                 break
 
         return policy, model
+
+    def _maybe_sync_environment(self, iteration: int, model: TabularModel):
+        if not hasattr(self.mdp, "maybe_apply_obstacles"):
+            return model, False
+        if not self.mdp.maybe_apply_obstacles(iteration):
+            return model, False
+        if hasattr(self.model_chooser, "model_set") and hasattr(self.mdp, "build_model_set"):
+            self.model_chooser.model_set = self.mdp.build_model_set()
+            if hasattr(self.model_chooser, "n_models"):
+                self.model_chooser.n_models = len(self.model_chooser.model_set)
+        if hasattr(self.model_chooser, "original_model"):
+            self.model_chooser.original_model = copy.deepcopy(self.mdp.P)
+        model = TabularModel(self.mdp.P, self.nS, self.nA)
+        return model, True
 
     def _choose_target_policy(
         self,

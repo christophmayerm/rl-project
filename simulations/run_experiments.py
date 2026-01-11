@@ -39,6 +39,7 @@ from utils.uniform_policy import UniformPolicy
 from utils.tabular import TabularModel, TabularPolicy
 # from envs.student_teacher import TeacherStudentEnv
 from envs.racetrack_simulator import RaceTrackConfigurableEnv
+from envs.racetrack_simulator_obstacles import RaceTrackWithObstacles
 from federated import FSPMI
 
 # Optional WandB import
@@ -92,9 +93,14 @@ class ExperimentRunner:
         """Initialize the MDP environment"""
         env_params = self.config['environment']['params']
         print(f"\nInitializing {self.config['environment']['name']} environment...")
-        
+
         # mdp = TeacherStudentEnv(**env_params)
-        mdp = RaceTrackConfigurableEnv(**env_params)
+        use_obstacles = (
+            self.config['environment']['name'] in {"racetrack_obstacles", "racetrack_with_obstacles"}
+            or "obstacle_positions" in env_params
+            or "obstacle_at_iteration" in env_params
+        )
+        mdp = RaceTrackWithObstacles(**env_params) if use_obstacles else RaceTrackConfigurableEnv(**env_params)
         
         print(f"State space size: {mdp.nS}")
         print(f"Action space size: {mdp.nA}")
@@ -157,6 +163,10 @@ class ExperimentRunner:
         
         else:
             raise ValueError(f"Unknown curriculum type: {curr_type}")
+
+    def _reset_obstacles(self) -> None:
+        if hasattr(self.mdp, "reset_obstacles"):
+            self.mdp.reset_obstacles()
     
     def run_standard_spmi(self) -> Dict[str, Any]:
         """Run standard SPMI"""
@@ -167,6 +177,8 @@ class ExperimentRunner:
         print("\n" + "=" * 80)
         print("Running Standard SPMI")
         print("=" * 80)
+
+        self._reset_obstacles()
         
         exp_config = self.config['experiments']['standard_spmi']
         
@@ -252,6 +264,8 @@ class ExperimentRunner:
         for curriculum_config in exp_config['curricula']:
             print(f"\n{curriculum_config['description']}")
             print("-" * 60)
+
+            self._reset_obstacles()
             
             self.mdp.set_model(copy.deepcopy(self.original_model))
             if hasattr(self, 'init_model_vector'):
@@ -369,6 +383,7 @@ class ExperimentRunner:
                     print(f"  Seed {seed + 1}/{n_seeds}...", end=" ", flush=True)
                 
                 # Reset MDP
+                self._reset_obstacles()
                 self.mdp.set_model(copy.deepcopy(self.original_model))
                 
                 policy_chooser = GreedyPolicyChooser(self.mdp.nS, self.mdp.nA)
@@ -481,7 +496,8 @@ class ExperimentRunner:
             for curriculum_config in exp_config['curricula']:
                 print(f"\nN={n_agents} agents, {curriculum_config['description']}")
                 print("-" * 60)
-                
+
+                self._reset_obstacles()
                 self.mdp.set_model(copy.deepcopy(self.original_model))
                 if hasattr(self, 'init_model_vector'):
                     self.mdp.model_vector = np.array(self.init_model_vector)
@@ -638,10 +654,21 @@ class ExperimentRunner:
         # Federated SPMI
         if 'federated_spmi' in self.results and self.results['federated_spmi']:
             for name, result in self.results['federated_spmi'].items():
-                fspmi = result['fspmi']
-                perf = fspmi.logger.true_performances[-1] if fspmi.logger.true_performances else float('nan')
+                seed_results = result if isinstance(result, list) else [result]
+                perfs = []
+                rounds = []
+                for seed_result in seed_results:
+                    if not isinstance(seed_result, dict) or 'fspmi' not in seed_result:
+                        continue
+                    fspmi = seed_result['fspmi']
+                    if fspmi.logger.true_performances:
+                        perfs.append(fspmi.logger.true_performances[-1])
+                    if fspmi.logger.iterations:
+                        rounds.append(len(fspmi.logger.iterations))
+                perf = np.mean(perfs) if perfs else float('nan')
+                rounds_display = int(np.mean(rounds)) if rounds else 0
                 method_name = f"F-SPMI ({name})"
-                print(f"{method_name:<50} {len(fspmi.logger.iterations):<15} {perf:.4f}")
+                print(f"{method_name:<50} {rounds_display:<15} {perf:.4f}")
         
         # Federated SA-PMI
         if 'federated_sapmi' in self.results and self.results['federated_sapmi']:

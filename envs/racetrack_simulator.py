@@ -333,16 +333,15 @@ class RaceTrackConfigurableEnv(discrete.DiscreteEnv):
 
     # path validity checking
     def _check_valid_path(self, x1, y1, x2, y2):
-        valid = True
         step = 0.1
         A = np.array([x1, y1])
         B = np.array([x2, y2])
         for k in np.arange(step, 1., step):
             p = k * B + (1 - k) * A
             p = np.floor(p).astype(int)
-            if self._check_valid_state(p[0], p[1]):
-                valid = False
-        return valid
+            if not self._check_valid_state(p[0], p[1]):
+                return False
+        return True
 
     # method to check if the node to be added refers to a new state,
     # if it refers to a new state then append
@@ -390,13 +389,13 @@ class RaceTrackConfigurableEnv(discrete.DiscreteEnv):
         if not self._check_valid_state(nx, ny):
             return (x, y, 0, 0)
         # check the validity of the path
-        elif self._check_valid_path(x + 0.5, y + 0.5, nx + 0.5, ny):
+        elif not self._check_valid_path(x + 0.5, y + 0.5, nx + 0.5, ny):
             return (x, y, 0, 0)
-        elif self._check_valid_path(x + 0.5, y + 0.5, nx, ny + 0.5):
+        elif not self._check_valid_path(x + 0.5, y + 0.5, nx, ny + 0.5):
             return (x, y, 0, 0)
-        elif self._check_valid_path(x + 0.5, y + 0.5, nx, ny):
+        elif not self._check_valid_path(x + 0.5, y + 0.5, nx, ny):
             return (x, y, 0, 0)
-        elif self._check_valid_path(x + 0.5, y + 0.5, nx + 0.5, ny + 0.5):
+        elif not self._check_valid_path(x + 0.5, y + 0.5, nx + 0.5, ny + 0.5):
             return (x, y, 0, 0)
         # return of the validated next state
         return (nx, ny, nvx, nvy)

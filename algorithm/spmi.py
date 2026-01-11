@@ -1,4 +1,5 @@
 
+import copy
 import numpy as np
 
 from algorithm.model_chooser import *
@@ -89,6 +90,21 @@ class SPMI(object):
             iteration=iteration
         )
 
+    def _maybe_sync_environment(self, iteration, model, reward):
+        if not hasattr(self.mdp, "maybe_apply_obstacles"):
+            return model, reward, False
+        if not self.mdp.maybe_apply_obstacles(iteration):
+            return model, reward, False
+        if hasattr(self.model_chooser, "model_set") and hasattr(self.mdp, "build_model_set"):
+            self.model_chooser.model_set = self.mdp.build_model_set()
+            if hasattr(self.model_chooser, "n_models"):
+                self.model_chooser.n_models = len(self.model_chooser.model_set)
+        if hasattr(self.model_chooser, "original_model"):
+            self.model_chooser.original_model = copy.deepcopy(self.mdp.P)
+        model = TabularModel(self.mdp.P, self.mdp.nS, self.mdp.nA)
+        reward = TabularReward(self.mdp.P, self.mdp.nS, self.mdp.nA)
+        return model, reward, True
+
     # -------------------------------------
     # ----- ALGORITHMS IMPLEMENTATION -----
     # -------------------------------------
@@ -112,6 +128,7 @@ class SPMI(object):
 
         policy = initial_policy
         model = initial_model
+        model, reward, _ = self._maybe_sync_environment(self.logger.iteration, model, reward)
 
         # choose a target policy
         Q = evaluator.compute_q_function(policy, model, reward, gamma, horizon=horizon)
@@ -134,6 +151,16 @@ class SPMI(object):
         progress_bar = tqdm(total=iteration_horizon, desc="SPMI Progress")
         while (p_er_adv > convergence or m_er_adv > convergence) and self.logger.iteration < iteration_horizon:
             progress_bar.update(1)
+            model, reward, env_changed = self._maybe_sync_environment(self.logger.iteration, model, reward)
+            if env_changed:
+                Q = evaluator.compute_q_function(policy, model, reward, gamma, horizon=horizon)
+                d_mu = evaluator.compute_discounted_s_distribution(mu, policy, model, gamma, horizon, nS, nA)
+                p_er_adv, p_dist_sup, p_dist_mean, target_policy = self.policy_chooser.choose(policy, d_mu, Q)
+                target_policy_old = target_policy
+                U = evaluator.compute_u_function(policy, model, reward, gamma, horizon=horizon)
+                delta_mu = evaluator.compute_discounted_sa_distribution(mu, policy, model, gamma, horizon, nS, nA, d_mu)
+                m_er_adv, m_dist_sup, m_dist_mean, target_model = self.model_chooser.choose(model, delta_mu, U)
+                target_model_old = target_model
 
             target_policies = [(target_policy, p_er_adv, p_dist_sup, p_dist_mean)]
             if self.persistent:
