@@ -1,0 +1,2 @@
+iteration,performance_mc,performance_true,alpha,beta,bound,policy_advantage,model_advantage,total_samples,avg_return
+0,0.0,0.002805153531494056,0.0,0.0,0.0,0.0,0.0,3973,0.0
