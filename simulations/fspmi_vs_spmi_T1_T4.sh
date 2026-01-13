@@ -18,7 +18,7 @@ for TRACK in "${TRACKS[@]}"; do
     echo "Running TRACK=${TRACK}, MODEL_CHOOSER=${CHOOSER}"
 
     CMD=(
-      python simulations/run_experiments.py
+      python simulations/run_experiments2.py
       --config "$CONFIG"
       --experiment standard_spmi federated_spmi
       --track "$TRACK"

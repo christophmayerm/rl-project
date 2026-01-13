@@ -36,8 +36,8 @@ Faceted Plots Generated (--faceted):
     - cmp_facet_final_performance.pdf: Bar charts
 
 Color Scheme:
-    - Greedy: Blue (solid lines)
-    - GP: Orange (dashed lines)
+    - Greedy: Viridis colormap shades (perceptually uniform)
+    - GP: Plasma colormap shades (perceptually uniform)
     - SPMI: Black (baseline)
     
 All plots include std bands where data is available. No log scale is used.
@@ -65,6 +65,16 @@ GREEDY_COLOR = '#1f77b4'  # Blue
 GP_COLOR = '#ff7f0e'       # Orange
 SPMI_COLOR = 'black'
 
+def get_shades(cmap_name: str, n_colors: int) -> List:
+    """Returns a list of n shades from a specific colormap."""
+    if n_colors <= 1:
+        # Fallback to middle of colormap if only one line
+        cmap = plt.get_cmap(cmap_name)
+        return [cmap(0.6)]
+    
+    cmap = plt.get_cmap(cmap_name)
+    # We sample from 0.2 to 0.9 to get good contrast while staying readable
+    return [cmap(i) for i in np.linspace(0.2, 0.9, n_colors)]
 
 def parse_config_key(key: str) -> Tuple[Optional[int], Optional[int]]:
     """Extract n_agents and eps_per_round from config key like 'n4_eps100'"""
@@ -182,6 +192,10 @@ def plot_convergence_comparison(greedy: Dict, gp: Dict, save_path: Path):
     
     matching = get_matching_configs(greedy, gp)
     
+    # Get color shades for each strategy
+    greedy_colors = get_shades('viridis', len(matching))
+    gp_colors = get_shades('plasma', len(matching))
+    
     # Greedy subplot
     ax1 = axes[0]
     
@@ -190,18 +204,19 @@ def plot_convergence_comparison(greedy: Dict, gp: Dict, save_path: Path):
         ax1.plot(greedy['spmi']['iteration'], greedy['spmi']['evaluation'], 
                  color=SPMI_COLOR, linestyle='-', linewidth=2.5, label='SPMI')
     
-    # Plot each config for Greedy
-    for config_key in matching:
+    # Plot each config for Greedy with different shades
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         df_g = greedy[config_key]
+        color = greedy_colors[idx]
         ax1.plot(df_g['iteration'], df_g['true_perf_mean'], 
-                 color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                 color=color, linestyle='-', linewidth=1.5,
                  label=label)
         if 'true_perf_std' in df_g.columns and df_g['true_perf_std'].sum() > 0:
             ax1.fill_between(df_g['iteration'],
                              df_g['true_perf_mean'] - df_g['true_perf_std'],
                              df_g['true_perf_mean'] + df_g['true_perf_std'],
-                             color=GREEDY_COLOR, alpha=0.1)
+                             color=color, alpha=0.2)
     
     ax1.set_xlabel('Iterations')
     ax1.set_ylabel('Return')
@@ -209,6 +224,7 @@ def plot_convergence_comparison(greedy: Dict, gp: Dict, save_path: Path):
     ax1.legend(loc='lower right', fontsize=8)
     ax1.grid(True, alpha=0.3)
     ax1.set_xlim(left=0)
+    ax1.set_ylim(0.0, 0.55)
     
     # GP subplot
     ax2 = axes[1]
@@ -218,18 +234,19 @@ def plot_convergence_comparison(greedy: Dict, gp: Dict, save_path: Path):
         ax2.plot(gp['spmi']['iteration'], gp['spmi']['evaluation'], 
                  color=SPMI_COLOR, linestyle='-', linewidth=2.5, label='SPMI')
     
-    # Plot each config for GP
-    for config_key in matching:
+    # Plot each config for GP with different shades
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         df_gp = gp[config_key]
+        color = gp_colors[idx]
         ax2.plot(df_gp['iteration'], df_gp['true_perf_mean'], 
-                 color=GP_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                 color=color, linestyle='-', linewidth=1.5,
                  label=label)
         if 'true_perf_std' in df_gp.columns and df_gp['true_perf_std'].sum() > 0:
             ax2.fill_between(df_gp['iteration'],
                              df_gp['true_perf_mean'] - df_gp['true_perf_std'],
                              df_gp['true_perf_mean'] + df_gp['true_perf_std'],
-                             color=GP_COLOR, alpha=0.1)
+                             color=color, alpha=0.2)
     
     ax2.set_xlabel('Iterations')
     ax2.set_ylabel('Return')
@@ -237,6 +254,7 @@ def plot_convergence_comparison(greedy: Dict, gp: Dict, save_path: Path):
     ax2.legend(loc='lower right', fontsize=8)
     ax2.grid(True, alpha=0.3)
     ax2.set_xlim(left=0)
+    ax2.set_ylim(0.0, 0.55)
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -298,7 +316,7 @@ def plot_convergence_comparison_faceted(greedy: Dict, gp: Dict, save_path: Path)
         ax_greedy.legend(loc='lower right', fontsize=8)
         ax_greedy.grid(True, alpha=0.3)
         ax_greedy.set_xlim(left=0)
-        
+        ax_greedy.set_ylim(0.0, 0.55)
         # Row 1: GP
         ax_gp = axes[1, col_idx]
         
@@ -326,10 +344,10 @@ def plot_convergence_comparison_faceted(greedy: Dict, gp: Dict, save_path: Path)
         ax_gp.set_xlabel('Iterations')
         ax_gp.set_ylabel('Return')
         ax_gp.set_title(f'GP - eps={eps}')
-        ax_gp.legend(loc='lower right', fontsize=8)
+        ax_gp.legend(loc='upper right', fontsize=8)
         ax_gp.grid(True, alpha=0.3)
         ax_gp.set_xlim(left=0)
-    
+        ax_gp.set_ylim(0.0, 0.55)
     plt.suptitle('Convergence Comparison', fontsize=14, y=1.02)
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -343,35 +361,41 @@ def plot_safety_bounds_comparison(greedy: Dict, gp: Dict, save_path: Path):
     
     matching = get_matching_configs(greedy, gp)
     
+    # Get color shades for each strategy
+    greedy_colors = get_shades('viridis', len(matching))
+    gp_colors = get_shades('plasma', len(matching))
+    
     # SPMI baseline
     if 'spmi' in greedy and 'bound' in greedy['spmi'].columns:
         ax.plot(greedy['spmi']['iteration'], greedy['spmi']['bound'],
                color=SPMI_COLOR, linestyle='-', linewidth=2.5, label='SPMI')
     
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         
         # Greedy
         df_g = greedy[config_key]
+        color_g = greedy_colors[idx]
         ax.plot(df_g['iteration'], df_g['bound_mean'],
-               color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+               color=color_g, linestyle='-', linewidth=1.5,
                label=f'Greedy ({label})')
         if 'bound_std' in df_g.columns and df_g['bound_std'].sum() > 0:
             ax.fill_between(df_g['iteration'],
                            df_g['bound_mean'] - df_g['bound_std'],
                            df_g['bound_mean'] + df_g['bound_std'],
-                           color=GREEDY_COLOR, alpha=0.1)
+                           color=color_g, alpha=0.2)
         
         # GP
         df_gp = gp[config_key]
+        color_gp = gp_colors[idx]
         ax.plot(df_gp['iteration'], df_gp['bound_mean'],
-               color=GP_COLOR, linestyle='--', linewidth=1.5, alpha=0.7,
+               color=color_gp, linestyle='--', linewidth=1.5,
                label=f'GP ({label})')
         if 'bound_std' in df_gp.columns and df_gp['bound_std'].sum() > 0:
             ax.fill_between(df_gp['iteration'],
                            df_gp['bound_mean'] - df_gp['bound_std'],
                            df_gp['bound_mean'] + df_gp['bound_std'],
-                           color=GP_COLOR, alpha=0.1)
+                           color=color_gp, alpha=0.2)
     
     ax.set_xlabel('Iterations')
     ax.set_ylabel('Bound')
@@ -484,36 +508,42 @@ def plot_step_sizes_comparison(greedy: Dict, gp: Dict, save_path: Path):
     
     matching = get_matching_configs(greedy, gp)
     
+    # Get color shades for each strategy
+    greedy_colors = get_shades('viridis', len(matching))
+    gp_colors = get_shades('plasma', len(matching))
+    
     # Alpha
     ax1 = axes[0]
     if 'spmi' in greedy and 'alpha' in greedy['spmi'].columns:
         ax1.plot(greedy['spmi']['iteration'], greedy['spmi']['alpha'],
                 color=SPMI_COLOR, linewidth=2, label='SPMI')
     
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         
         df_g = greedy[config_key]
         if 'alpha_mean' in df_g.columns:
+            color_g = greedy_colors[idx]
             ax1.plot(df_g['iteration'], df_g['alpha_mean'],
-                    color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                    color=color_g, linestyle='-', linewidth=1.5,
                     label=f'Greedy ({label})')
             if 'alpha_std' in df_g.columns and df_g['alpha_std'].sum() > 0:
                 ax1.fill_between(df_g['iteration'],
                                 df_g['alpha_mean'] - df_g['alpha_std'],
                                 df_g['alpha_mean'] + df_g['alpha_std'],
-                                color=GREEDY_COLOR, alpha=0.1)
+                                color=color_g, alpha=0.2)
         
         df_gp = gp[config_key]
         if 'alpha_mean' in df_gp.columns:
+            color_gp = gp_colors[idx]
             ax1.plot(df_gp['iteration'], df_gp['alpha_mean'],
-                    color=GP_COLOR, linestyle='--', linewidth=1.5, alpha=0.7,
+                    color=color_gp, linestyle='--', linewidth=1.5,
                     label=f'GP ({label})')
             if 'alpha_std' in df_gp.columns and df_gp['alpha_std'].sum() > 0:
                 ax1.fill_between(df_gp['iteration'],
                                 df_gp['alpha_mean'] - df_gp['alpha_std'],
                                 df_gp['alpha_mean'] + df_gp['alpha_std'],
-                                color=GP_COLOR, alpha=0.1)
+                                color=color_gp, alpha=0.2)
     
     ax1.set_xlabel('Iterations')
     ax1.set_ylabel('α (Policy Step Size)')
@@ -528,30 +558,32 @@ def plot_step_sizes_comparison(greedy: Dict, gp: Dict, save_path: Path):
         ax2.plot(greedy['spmi']['iteration'], greedy['spmi']['beta'],
                 color=SPMI_COLOR, linewidth=2, label='SPMI')
     
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         
         df_g = greedy[config_key]
         if 'beta_mean' in df_g.columns:
+            color_g = greedy_colors[idx]
             ax2.plot(df_g['iteration'], df_g['beta_mean'],
-                    color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                    color=color_g, linestyle='-', linewidth=1.5,
                     label=f'Greedy ({label})')
             if 'beta_std' in df_g.columns and df_g['beta_std'].sum() > 0:
                 ax2.fill_between(df_g['iteration'],
                                 df_g['beta_mean'] - df_g['beta_std'],
                                 df_g['beta_mean'] + df_g['beta_std'],
-                                color=GREEDY_COLOR, alpha=0.1)
+                                color=color_g, alpha=0.2)
         
         df_gp = gp[config_key]
         if 'beta_mean' in df_gp.columns:
+            color_gp = gp_colors[idx]
             ax2.plot(df_gp['iteration'], df_gp['beta_mean'],
-                    color=GP_COLOR, linestyle='--', linewidth=1.5, alpha=0.7,
+                    color=color_gp, linestyle='--', linewidth=1.5,
                     label=f'GP ({label})')
             if 'beta_std' in df_gp.columns and df_gp['beta_std'].sum() > 0:
                 ax2.fill_between(df_gp['iteration'],
                                 df_gp['beta_mean'] - df_gp['beta_std'],
                                 df_gp['beta_mean'] + df_gp['beta_std'],
-                                color=GP_COLOR, alpha=0.1)
+                                color=color_gp, alpha=0.2)
     
     ax2.set_xlabel('Iterations')
     ax2.set_ylabel('β (Model Step Size)')
@@ -623,8 +655,8 @@ def plot_step_sizes_comparison_faceted(greedy: Dict, gp: Dict, save_path: Path):
         
         # Row 1: GP Alpha
         ax = axes[1, col_idx]
-        if 'spmi' in greedy and 'alpha' in greedy['spmi'].columns:
-            ax.plot(greedy['spmi']['iteration'], greedy['spmi']['alpha'],
+        if 'spmi' in gp and 'alpha' in gp['spmi'].columns:
+            ax.plot(gp['spmi']['iteration'], gp['spmi']['alpha'],
                    color=SPMI_COLOR, linewidth=2, label='SPMI')
         
         for config_key in sorted(gp_configs.keys()):
@@ -675,8 +707,8 @@ def plot_step_sizes_comparison_faceted(greedy: Dict, gp: Dict, save_path: Path):
         
         # Row 3: GP Beta
         ax = axes[3, col_idx]
-        if 'spmi' in greedy and 'beta' in greedy['spmi'].columns:
-            ax.plot(greedy['spmi']['iteration'], greedy['spmi']['beta'],
+        if 'spmi' in gp and 'beta' in gp['spmi'].columns:
+            ax.plot(gp['spmi']['iteration'], gp['spmi']['beta'],
                    color=SPMI_COLOR, linewidth=2, label='SPMI')
         
         for config_key in sorted(gp_configs.keys()):
@@ -712,34 +744,40 @@ def plot_sample_efficiency_comparison(greedy: Dict, gp: Dict, save_path: Path):
     
     matching = get_matching_configs(greedy, gp)
     
+    # Get color shades for each strategy
+    greedy_colors = get_shades('viridis', len(matching))
+    gp_colors = get_shades('plasma', len(matching))
+    
     # SPMI final
     if 'spmi' in greedy:
         spmi_final = greedy['spmi']['evaluation'].iloc[-1]
         ax.axhline(y=spmi_final, color=SPMI_COLOR, linestyle='--', linewidth=2,
                    label=f'SPMI final ({spmi_final:.4f})')
     
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         
         df_g = greedy[config_key]
+        color_g = greedy_colors[idx]
         ax.plot(df_g['cum_samples_mean'], df_g['true_perf_mean'], 
-                color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                color=color_g, linestyle='-', linewidth=1.5,
                 label=f'Greedy ({label})')
         if 'true_perf_std' in df_g.columns and df_g['true_perf_std'].sum() > 0:
             ax.fill_between(df_g['cum_samples_mean'],
                            df_g['true_perf_mean'] - df_g['true_perf_std'],
                            df_g['true_perf_mean'] + df_g['true_perf_std'],
-                           color=GREEDY_COLOR, alpha=0.1)
+                           color=color_g, alpha=0.2)
         
         df_gp = gp[config_key]
+        color_gp = gp_colors[idx]
         ax.plot(df_gp['cum_samples_mean'], df_gp['true_perf_mean'], 
-                color=GP_COLOR, linestyle='--', linewidth=1.5, alpha=0.7,
+                color=color_gp, linestyle='--', linewidth=1.5,
                 label=f'GP ({label})')
         if 'true_perf_std' in df_gp.columns and df_gp['true_perf_std'].sum() > 0:
             ax.fill_between(df_gp['cum_samples_mean'],
                            df_gp['true_perf_mean'] - df_gp['true_perf_std'],
                            df_gp['true_perf_mean'] + df_gp['true_perf_std'],
-                           color=GP_COLOR, alpha=0.1)
+                           color=color_gp, alpha=0.2)
     
     ax.set_xlabel('Total Samples')
     ax.set_ylabel('Return')
@@ -747,7 +785,8 @@ def plot_sample_efficiency_comparison(greedy: Dict, gp: Dict, save_path: Path):
     ax.legend(loc='lower right', fontsize=8, ncol=2)
     ax.grid(True, alpha=0.3)
     ax.set_xlim(left=0)
-    
+    ax.set_ylim(0.0, 0.55)
+
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
@@ -816,7 +855,7 @@ def plot_sample_efficiency_comparison_faceted(greedy: Dict, gp: Dict, save_path:
         ax_greedy.legend(loc='lower right', fontsize=8)
         ax_greedy.grid(True, alpha=0.3)
         ax_greedy.set_xlim(left=0)
-        
+        ax_greedy.set_ylim(0.0, 0.55)
         # Row 1: GP
         ax_gp = axes[1, col_idx]
         
@@ -844,7 +883,8 @@ def plot_sample_efficiency_comparison_faceted(greedy: Dict, gp: Dict, save_path:
         ax_gp.legend(loc='lower right', fontsize=8)
         ax_gp.grid(True, alpha=0.3)
         ax_gp.set_xlim(left=0)
-    
+        ax_gp.set_ylim(0.0, 0.55)
+
     plt.suptitle('Sample Efficiency Comparison', fontsize=14, y=1.02)
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -1045,46 +1085,67 @@ def plot_mc_vs_exact_comparison(greedy: Dict, gp: Dict, save_path: Path):
     
     matching = get_matching_configs(greedy, gp)
     
+    # Get color shades for each strategy
+    greedy_colors = get_shades('viridis', len(matching))
+    gp_colors = get_shades('plasma', len(matching))
+
     # Greedy subplot
     ax1 = axes[0]
-    for config_key in matching:
+    if 'spmi' in greedy:
+        ax1.plot(greedy['spmi']['iteration'], greedy['spmi']['evaluation'], 
+                    color=SPMI_COLOR, linestyle='-', linewidth=2.5, label='SPMI (exact)')
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         df = greedy[config_key]
-        
+        color_g = greedy_colors[idx]
+
         ax1.plot(df['iteration'], df['true_perf_mean'], 
-                color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                color=color_g, linestyle='-', linewidth=1.5,
                 label=f'Exact ({label})')
         ax1.plot(df['iteration'], df['mc_perf_mean'], 
-                color=GREEDY_COLOR, linestyle='--', linewidth=1, alpha=0.5,
+                color=color_g, linestyle='--', linewidth=1, alpha=0.6,
                 label=f'MC ({label})')
-    
+        ax1.fill_between(df['iteration'],
+                                df['mc_perf_mean'] - df['mc_perf_std'],
+                                df['mc_perf_mean'] + df['mc_perf_std'],
+                                color=color_g, alpha=0.15)
     ax1.set_xlabel('Iterations')
     ax1.set_ylabel('Return')
     ax1.set_title('Greedy: MC vs Exact')
-    ax1.legend(fontsize=7, ncol=2)
+    ax1.legend(fontsize=7, ncol=2, loc='lower right')
     ax1.grid(True, alpha=0.3)
     ax1.set_xlim(left=0)
+    ax1.set_ylim(0.0,0.55)
     
     # GP subplot
     ax2 = axes[1]
-    for config_key in matching:
+    if 'spmi' in gp:
+        ax2.plot(gp['spmi']['iteration'], gp['spmi']['evaluation'], 
+                    color=SPMI_COLOR, linestyle='-', linewidth=2.5, label='SPMI (exact)') 
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         df = gp[config_key]
-        
+        color_gp = gp_colors[idx]
+
         ax2.plot(df['iteration'], df['true_perf_mean'], 
-                color=GP_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                color=color_gp, linestyle='-', linewidth=1.5,
                 label=f'Exact ({label})')
+        
         ax2.plot(df['iteration'], df['mc_perf_mean'], 
-                color=GP_COLOR, linestyle='--', linewidth=1, alpha=0.5,
+                color=color_gp, linestyle='--', linewidth=1, alpha=0.6,
                 label=f'MC ({label})')
-    
+        ax2.fill_between(df['iteration'],
+                                  df['mc_perf_mean'] - df['mc_perf_std'],
+                                  df['mc_perf_mean'] + df['mc_perf_std'],
+                                  color=color_gp, alpha=0.15)
     ax2.set_xlabel('Iterations')
     ax2.set_ylabel('Return')
     ax2.set_title('GP: MC vs Exact')
-    ax2.legend(fontsize=7, ncol=2)
+    ax2.legend(fontsize=7, ncol=2, loc='lower right')
     ax2.grid(True, alpha=0.3)
     ax2.set_xlim(left=0)
-    
+    ax2.set_ylim(0.0,0.55)
+
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
@@ -1097,6 +1158,10 @@ def plot_returns_and_bounds_comparison(greedy: Dict, gp: Dict, save_path: Path):
     
     matching = get_matching_configs(greedy, gp)
     
+    # Get color shades for each strategy
+    greedy_colors = get_shades('viridis', len(matching))
+    gp_colors = get_shades('plasma', len(matching))
+    
     # Greedy subplot
     ax1_left = axes[0]
     ax1_left.set_xlabel('Iterations')
@@ -1108,20 +1173,22 @@ def plot_returns_and_bounds_comparison(greedy: Dict, gp: Dict, save_path: Path):
                       color=SPMI_COLOR, linestyle='-', linewidth=2.5, label='SPMI return')
     
     # Returns for Greedy configs
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         df_g = greedy[config_key]
+        color_g = greedy_colors[idx]
         ax1_left.plot(df_g['iteration'], df_g['true_perf_mean'], 
-                      color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.8,
+                      color=color_g, linestyle='-', linewidth=1.5,
                       label=label)
         if 'true_perf_std' in df_g.columns and df_g['true_perf_std'].sum() > 0:
             ax1_left.fill_between(df_g['iteration'],
                                   df_g['true_perf_mean'] - df_g['true_perf_std'],
                                   df_g['true_perf_mean'] + df_g['true_perf_std'],
-                                  color=GREEDY_COLOR, alpha=0.1)
+                                  color=color_g, alpha=0.2)
     
     ax1_left.tick_params(axis='y', labelcolor='black')
     ax1_left.set_xlim(left=0)
+    ax1_left.set_ylim(0.0, 0.55)
     ax1_left.grid(True, alpha=0.3)
     
     # Right axis for Greedy: Bounds
@@ -1135,20 +1202,21 @@ def plot_returns_and_bounds_comparison(greedy: Dict, gp: Dict, save_path: Path):
                        label='SPMI bound')
     
     # Bounds for Greedy configs
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         df_g = greedy[config_key]
+        color_g = greedy_colors[idx]
         if 'bound_mean' in df_g.columns:
             ax1_right.plot(df_g['iteration'], df_g['bound_mean'], 
-                           color=GREEDY_COLOR, linestyle=':', linewidth=1.5, alpha=0.6)
+                           color=color_g, linestyle=':', linewidth=1.5, alpha=0.6)
             if 'bound_std' in df_g.columns and df_g['bound_std'].sum() > 0:
                 ax1_right.fill_between(df_g['iteration'],
                                        df_g['bound_mean'] - df_g['bound_std'],
                                        df_g['bound_mean'] + df_g['bound_std'],
-                                       color=GREEDY_COLOR, alpha=0.08)
+                                       color=color_g, alpha=0.1)
     
     ax1_right.tick_params(axis='y', labelcolor='gray')
     ax1_left.set_title('Greedy: Returns (solid) & Safety Bounds (dotted)')
-    ax1_left.legend(loc='center right', fontsize=7)
+    ax1_left.legend(loc='upper left', fontsize=8)
     
     # GP subplot
     ax2_left = axes[1]
@@ -1161,20 +1229,22 @@ def plot_returns_and_bounds_comparison(greedy: Dict, gp: Dict, save_path: Path):
                       color=SPMI_COLOR, linestyle='-', linewidth=2.5, label='SPMI return')
     
     # Returns for GP configs
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         df_gp = gp[config_key]
+        color_gp = gp_colors[idx]
         ax2_left.plot(df_gp['iteration'], df_gp['true_perf_mean'], 
-                      color=GP_COLOR, linestyle='-', linewidth=1.5, alpha=0.8,
+                      color=color_gp, linestyle='-', linewidth=1.5,
                       label=label)
         if 'true_perf_std' in df_gp.columns and df_gp['true_perf_std'].sum() > 0:
             ax2_left.fill_between(df_gp['iteration'],
                                   df_gp['true_perf_mean'] - df_gp['true_perf_std'],
                                   df_gp['true_perf_mean'] + df_gp['true_perf_std'],
-                                  color=GP_COLOR, alpha=0.1)
+                                  color=color_gp, alpha=0.2)
     
     ax2_left.tick_params(axis='y', labelcolor='black')
     ax2_left.set_xlim(left=0)
+    ax2_left.set_ylim(0.0, 0.55)
     ax2_left.grid(True, alpha=0.3)
     
     # Right axis for GP: Bounds
@@ -1188,20 +1258,21 @@ def plot_returns_and_bounds_comparison(greedy: Dict, gp: Dict, save_path: Path):
                        label='SPMI bound')
     
     # Bounds for GP configs
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         df_gp = gp[config_key]
+        color_gp = gp_colors[idx]
         if 'bound_mean' in df_gp.columns:
             ax2_right.plot(df_gp['iteration'], df_gp['bound_mean'], 
-                           color=GP_COLOR, linestyle=':', linewidth=1.5, alpha=0.6)
+                           color=color_gp, linestyle=':', linewidth=1.5, alpha=0.6)
             if 'bound_std' in df_gp.columns and df_gp['bound_std'].sum() > 0:
                 ax2_right.fill_between(df_gp['iteration'],
                                        df_gp['bound_mean'] - df_gp['bound_std'],
                                        df_gp['bound_mean'] + df_gp['bound_std'],
-                                       color=GP_COLOR, alpha=0.08)
+                                       color=color_gp, alpha=0.1)
     
     ax2_right.tick_params(axis='y', labelcolor='gray')
     ax2_left.set_title('GP: Returns (solid) & Safety Bounds (dotted)')
-    ax2_left.legend(loc='center right', fontsize=7)
+    ax2_left.legend(loc='upper left', fontsize=8)
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -1286,7 +1357,7 @@ def plot_returns_and_bounds_comparison_faceted(greedy: Dict, gp: Dict, save_path
         
         ax2.tick_params(axis='y', labelcolor='gray')
         ax1.set_title(f'Greedy - eps={eps}')
-        ax1.legend(loc='center right', fontsize=7)
+        ax1.legend(loc='upper left', fontsize=7)
         
         # Row 1: GP
         ax1 = axes[1, col_idx]
@@ -1319,8 +1390,8 @@ def plot_returns_and_bounds_comparison_faceted(greedy: Dict, gp: Dict, save_path
         ax2 = ax1.twinx()
         ax2.set_ylabel('Bound', color='gray', fontsize=9)
         
-        if 'spmi' in greedy and 'bound' in greedy['spmi'].columns:
-            ax2.plot(greedy['spmi']['iteration'], greedy['spmi']['bound'], 
+        if 'spmi' in gp and 'bound' in gp['spmi'].columns:
+            ax2.plot(gp['spmi']['iteration'], gp['spmi']['bound'], 
                     color=SPMI_COLOR, linestyle=':', linewidth=1.5, alpha=0.6)
         
         for config_key in sorted(gp_configs.keys()):
@@ -1339,7 +1410,7 @@ def plot_returns_and_bounds_comparison_faceted(greedy: Dict, gp: Dict, save_path
         
         ax2.tick_params(axis='y', labelcolor='gray')
         ax1.set_title(f'GP - eps={eps}')
-        ax1.legend(loc='center right', fontsize=7)
+        ax1.legend(loc='upper left', fontsize=7)
     
     plt.suptitle('Returns (solid) & Bounds (dotted) Comparison', fontsize=14, y=1.02)
     plt.tight_layout()
@@ -1352,34 +1423,40 @@ def plot_summary_comparison(greedy: Dict, gp: Dict, save_path: Path):
     
     matching = get_matching_configs(greedy, gp)
     
+    # Get color shades for each strategy
+    greedy_colors = get_shades('viridis', len(matching))
+    gp_colors = get_shades('plasma', len(matching))
+    
     # (a) Convergence
     ax = axes[0, 0]
     if 'spmi' in greedy:
         ax.plot(greedy['spmi']['iteration'], greedy['spmi']['evaluation'], 
                 color=SPMI_COLOR, linestyle='-', linewidth=2.5, label='SPMI')
     
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         
         df_g = greedy[config_key]
+        color_g = greedy_colors[idx]
         ax.plot(df_g['iteration'], df_g['true_perf_mean'], 
-                color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                color=color_g, linestyle='-', linewidth=1.5,
                 label=f'Greedy ({label})')
         if 'true_perf_std' in df_g.columns and df_g['true_perf_std'].sum() > 0:
             ax.fill_between(df_g['iteration'],
                            df_g['true_perf_mean'] - df_g['true_perf_std'],
                            df_g['true_perf_mean'] + df_g['true_perf_std'],
-                           color=GREEDY_COLOR, alpha=0.1)
+                           color=color_g, alpha=0.2)
         
         df_gp = gp[config_key]
+        color_gp = gp_colors[idx]
         ax.plot(df_gp['iteration'], df_gp['true_perf_mean'], 
-                color=GP_COLOR, linestyle='--', linewidth=1.5, alpha=0.7,
+                color=color_gp, linestyle='--', linewidth=1.5,
                 label=f'GP ({label})')
         if 'true_perf_std' in df_gp.columns and df_gp['true_perf_std'].sum() > 0:
             ax.fill_between(df_gp['iteration'],
                            df_gp['true_perf_mean'] - df_gp['true_perf_std'],
                            df_gp['true_perf_mean'] + df_gp['true_perf_std'],
-                           color=GP_COLOR, alpha=0.1)
+                           color=color_gp, alpha=0.2)
     
     ax.set_xlabel('Iterations')
     ax.set_ylabel('Return')
@@ -1394,28 +1471,30 @@ def plot_summary_comparison(greedy: Dict, gp: Dict, save_path: Path):
         spmi_final = greedy['spmi']['evaluation'].iloc[-1]
         ax.axhline(y=spmi_final, color=SPMI_COLOR, linestyle='--', linewidth=2, label='SPMI final')
     
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         
         df_g = greedy[config_key]
+        color_g = greedy_colors[idx]
         ax.plot(df_g['cum_samples_mean'], df_g['true_perf_mean'], 
-                color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                color=color_g, linestyle='-', linewidth=1.5,
                 label=f'Greedy ({label})')
         if 'true_perf_std' in df_g.columns and df_g['true_perf_std'].sum() > 0:
             ax.fill_between(df_g['cum_samples_mean'],
                            df_g['true_perf_mean'] - df_g['true_perf_std'],
                            df_g['true_perf_mean'] + df_g['true_perf_std'],
-                           color=GREEDY_COLOR, alpha=0.1)
+                           color=color_g, alpha=0.2)
         
         df_gp = gp[config_key]
+        color_gp = gp_colors[idx]
         ax.plot(df_gp['cum_samples_mean'], df_gp['true_perf_mean'], 
-                color=GP_COLOR, linestyle='--', linewidth=1.5, alpha=0.7,
+                color=color_gp, linestyle='--', linewidth=1.5,
                 label=f'GP ({label})')
         if 'true_perf_std' in df_gp.columns and df_gp['true_perf_std'].sum() > 0:
             ax.fill_between(df_gp['cum_samples_mean'],
                            df_gp['true_perf_mean'] - df_gp['true_perf_std'],
                            df_gp['true_perf_mean'] + df_gp['true_perf_std'],
-                           color=GP_COLOR, alpha=0.1)
+                           color=color_gp, alpha=0.2)
     
     ax.set_xlabel('Total Samples')
     ax.set_ylabel('Return')
@@ -1431,26 +1510,28 @@ def plot_summary_comparison(greedy: Dict, gp: Dict, save_path: Path):
                    np.maximum(greedy['spmi']['bound'], 1e-10),
                    color=SPMI_COLOR, linestyle='-', linewidth=2, label='SPMI')
     
-    for config_key in matching:
+    for idx, config_key in enumerate(matching):
         label = format_label(config_key)
         
         df_g = greedy[config_key]
+        color_g = greedy_colors[idx]
         ax.semilogy(df_g['iteration'], np.maximum(df_g['bound_mean'], 1e-10),
-                   color=GREEDY_COLOR, linestyle='-', linewidth=1.5, alpha=0.7,
+                   color=color_g, linestyle='-', linewidth=1.5,
                    label=f'Greedy ({label})')
         if 'bound_std' in df_g.columns and df_g['bound_std'].sum() > 0:
             lower = np.maximum(df_g['bound_mean'] - df_g['bound_std'], 1e-10)
             upper = df_g['bound_mean'] + df_g['bound_std']
-            ax.fill_between(df_g['iteration'], lower, upper, color=GREEDY_COLOR, alpha=0.1)
+            ax.fill_between(df_g['iteration'], lower, upper, color=color_g, alpha=0.2)
         
         df_gp = gp[config_key]
+        color_gp = gp_colors[idx]
         ax.semilogy(df_gp['iteration'], np.maximum(df_gp['bound_mean'], 1e-10),
-                   color=GP_COLOR, linestyle='--', linewidth=1.5, alpha=0.7,
+                   color=color_gp, linestyle='--', linewidth=1.5,
                    label=f'GP ({label})')
         if 'bound_std' in df_gp.columns and df_gp['bound_std'].sum() > 0:
             lower = np.maximum(df_gp['bound_mean'] - df_gp['bound_std'], 1e-10)
             upper = df_gp['bound_mean'] + df_gp['bound_std']
-            ax.fill_between(df_gp['iteration'], lower, upper, color=GP_COLOR, alpha=0.1)
+            ax.fill_between(df_gp['iteration'], lower, upper, color=color_gp, alpha=0.2)
     
     ax.set_xlabel('Iterations')
     ax.set_ylabel('Bound (log)')
