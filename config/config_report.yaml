@@ -28,23 +28,49 @@ output:
 experiments:
   standard_spmi:
     enabled: true
-    max_iter: 100
+    max_iter: 1000
 
 
   federated_spmi:
     enabled: true
     configurations:
       - n_agents: 2
+        episodes_per_round: 100
+        max_rounds: 1000
+      - n_agents: 2
         episodes_per_round: 200
-        max_rounds: 100
+        max_rounds: 1000
       - n_agents: 2
         episodes_per_round: 400
-        max_rounds: 100
+        max_rounds: 1000
+      - n_agents: 2
+        episodes_per_round: 800
+        max_rounds: 1000
+
+      - n_agents: 4
+        episodes_per_round: 100
+        max_rounds: 1000
       - n_agents: 4
         episodes_per_round: 200
-        max_rounds: 100
+        max_rounds: 1000
       - n_agents: 4
         episodes_per_round: 400
-        max_rounds: 100
+        max_rounds: 1000
+      - n_agents: 4
+        episodes_per_round: 800
+        max_rounds: 1000
+
+      - n_agents: 8
+        episodes_per_round: 100
+        max_rounds: 1000
+      - n_agents: 8
+        episodes_per_round: 200
+        max_rounds: 1000
+      - n_agents: 8
+        episodes_per_round: 400
+        max_rounds: 1000
+      - n_agents: 8
+        episodes_per_round: 800
+        max_rounds: 1000
 
   
